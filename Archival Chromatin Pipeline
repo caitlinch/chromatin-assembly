@@ -1,0 +1,100 @@
+Archival Chromatin Pipeline
+
+###### Step 1 - Genome preparation w/ RepeatMasker ###### 
+Part 1 - masking
+
+Inputs - 1) Fasta file for reference genome, e.g., EWD_hifiasm_HiC.fasta 2) Illumina adapter file, e.g., adap_cont_rna.fa
+Output - Repeat-masked reference genome
+
+Example Scripts:
+
+1) slurm_waterdragon_RM.sh
+
+Part 2 - create kalign suffix array from the genome. I don't have a script for this one as it's a one-liner, e.g.:
+
+ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked -r waterdragon
+
+
+###### Step 2 - Raw read QC w/ FastQC ###### 
+
+Input - Paired end read files
+Output - FastQC html files
+
+Example Scripts:
+
+1) slurm_fastqc.sh
+
+
+###### Step 3 - UMI extraction w/ FGBio & Picard ###### 
+
+Input - Raw paired end read files
+Output - Paired end read files prepped such that UMIs can be read by PICARD during deduplication in Step 5
+
+Example Scripts:
+
+1) slurm_extractUMI.sh
+
+
+###### Step 4 - Read alignment w/ kalign ###### 
+
+Input - 1) Masked genome kalign suffix array from Step 1, 2) UMI-extracted paired end reads from Step 3
+Output - Alignment file
+
+Example Scripts:
+
+1) slurm_kalign_umi.sh
+
+
+###### Step 5 - Alignment Deduplication w/ PICARD ###### 
+
+Input - Alignment file from Step 4
+Output - Alignment with PCR & optical duplicates removed
+
+Example Scripts:
+
+1) slurm_dedup.sh
+
+
+###### Step 6 - Alignment GC Bias Correction w/ deepTools ###### 
+
+Input - 1) Dedupplicated alignment file from Step 4, 2) Genome effective size, 3) 2bit genome file
+Output - GC bias corrected alignment file
+
+Example Scripts:
+
+1) slurm_computeGCBias.sh
+2) slurm_correctGCBias.sh
+
+Note, to calculate effective genome size:
+
+Run faCount - https://hgdownload.soe.ucsc.edu/admin/exe/linux.x86_64/
+
+Note, to generate the 2bit genome:
+
+	module load ucsctools
+	faToTwoBit EWD_hifiasm_HiC.fasta.masked EWD_hifiasm_HiC.fasta.masked.2bit
+
+
+###### Step 7 - Calculate alignment stats w/ PICARD & estimate mean nuclear genome cover ###### 
+
+Input - GC-corrected alignment file from Step 6
+Output - Size metrics summary files (.txt & .pdf)
+
+Example Scripts:
+
+1) slurm_sizemetrics.sh
+2) slurm_read_count_GCcorrect.sh
+
+Note, the second script gives you the number of aligned reads. To compute genome cover, we multiply the number of aligned reads by the mean insert length divided by the unmasked genome size.
+
+
+###### Step 8 - Peak Analysis with DANPOS3 ###### 
+
+Input - GC-corrected alignments for TEST & INPUT samples
+Output - Folder with DANPOS results (lots of files)
+
+Example Scripts:
+
+1) slurm_dtriple_1_vs_27-29.sh
+
+Note, this script runs sample number 1 against a pool of three samples (27-19) as an input control
