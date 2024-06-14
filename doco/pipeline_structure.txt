@@ -1,0 +1,32 @@
+## Chromatin Assembly 
+# Snakemake pipeline directory structure
+
+.
+├── README.md
+├── LICENSE.md
+├── .gitignore
+├── .gitattributes
+├── workflow/
+│   ├── scripts
+│   ├── envs
+│   ├── reports
+│   ├── rules
+│   └── Snakefile
+├── config/
+│   ├── chromatin_assembly_config.tsv
+│   ├── chromatin_assembly.yml
+│   └── data.fasta
+├── resources/
+│   ├── adapters/
+│   │   └── adap_cont_rna.fa
+│   ├── faCount
+│   └── citations.txt
+└── results/
+    ├── 01_MaskRepeats
+    ├── 02_ReadQC
+    ├── 03_ExtractUMI
+    ├── 04_AlignReads
+    ├── 05_Deduplication
+    ├── 06_GCBias
+    ├── 07_Stats
+    └── 08_Peaks
