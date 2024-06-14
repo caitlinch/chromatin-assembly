@@ -1,0 +1,37 @@
+## Snakemake - Chromatin Assembly
+## NCMI, CSIRO
+##
+## Caitlin Cherryh, 2024
+## Developed using scripts from Erin Hahn and Jiri Stiller
+
+# --- Pipeline steps --- #
+## peak_analysis: Peak analysis using DANPOS3 (Step 8)
+
+## read_count:Estimate mean nuclear genome cover with Picard (Step 7b)
+
+## size_metrics: Calculate alignment statistics with Picard (Step 7a)
+
+## correct_GC_bias: Correct GC bias with deeptools (Step 6c)
+
+## compute_GC_bias: Compute GC bias with deeptools (Step 6b)
+
+## effective_genome_size: Calculate effetcive genome size with faCount (Step 6a)
+
+## alignment_deduplication: Remove PCR and optial duplicates from alignment with Picard (Step 5)
+
+## read_alignment: Align reads with kalign (Step 4)
+
+## extract_UMI: UMI extraction with FGBio and Picard (Step 3)
+
+## raw_read_QC: Perform quality control using FastQC (Step 2)
+
+## suffix_array: Create suffix array with kalign (Step 1b)
+
+## mask_repeats: Masking with RepeatMasker (Step 1a)
+
+# --- Help Rules --- #
+## help               : prints help comments for Snakefile
+rule help:
+    input: "Snakefile"
+    shell:
+        "sed -n 's/^##//p' {input}"
