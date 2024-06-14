@@ -132,16 +132,19 @@ rule suffix_array:
 ## mask_repeats: Masking with RepeatMasker (Step 1a)
 rule mask_repeats:
     input:
-        fasta="/config/genomes/{clade_id}/EWD_hifiasm_HiC.fasta"
-        adapters="/resources/adapters/adap_cont_rna.fa"
+        fasta="config/genomes/{clade_id}/EWD_hifiasm_HiC.fasta"
     output:
-        "/results/01_MaskRepeats/{clade_id}/"
+        "results/{clade_id}/"
     envmodules:
         "repeatmasker/4.1.0"
     shell:
         """
-        RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir ${OUT_DIR} -lib ${LIB_DIR}/adap_cont_rna.fa  ${INPUT_DIR}/EWD_hifiasm_HiC.fasta
+        mkdir results/{wildcards.clade_id}/
+        RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir results/01_MaskRepeats/{wildcards.clade_id}/ -lib resources/adapters/adap_cont_rna.fa {input.fasta}
         """
+
+# --- Helper Rules --- #
+
 
 # --- Help Rules --- #
 ## help               : prints help comments for Snakefile
