@@ -1,0 +1,7 @@
+step1:
+  slurm_job_name: "repeatmasker"
+  slurm_job_time: "2-00:00:00"
+  slurm_job_mem: "80GB"
+  slurm_job_nodes: "1"
+  slurm_job_cpus: "20" 
+
