@@ -4,30 +4,144 @@
 ## Caitlin Cherryh, 2024
 ## Developed using scripts from Erin Hahn and Jiri Stiller
 
+# --- Config file --- #
+config: "config/chromatin_assembly_config.yml"
+
 # --- Pipeline steps --- #
 ## peak_analysis: Peak analysis using DANPOS3 (Step 8)
+rule peak_analysis:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## read_count:Estimate mean nuclear genome cover with Picard (Step 7b)
+rule read_count:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## size_metrics: Calculate alignment statistics with Picard (Step 7a)
+rule size_metrics:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## correct_GC_bias: Correct GC bias with deeptools (Step 6c)
+rule correct_GC_bias:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## compute_GC_bias: Compute GC bias with deeptools (Step 6b)
+rule compute_GC_bias:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## effective_genome_size: Calculate effetcive genome size with faCount (Step 6a)
+rule effective_genome_size:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## alignment_deduplication: Remove PCR and optial duplicates from alignment with Picard (Step 5)
+rule alignment_deduplication:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## read_alignment: Align reads with kalign (Step 4)
+rule read_alignment:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## extract_UMI: UMI extraction with FGBio and Picard (Step 3)
+rule extract_UMI:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## raw_read_QC: Perform quality control using FastQC (Step 2)
+rule raw_read_QC:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## suffix_array: Create suffix array with kalign (Step 1b)
+rule suffix_array:
+    input:
+        ""
+    output:
+        ""
+    envmodules:
+        ""
+    shell:
+        ""
 
 ## mask_repeats: Masking with RepeatMasker (Step 1a)
+rule mask_repeats:
+    input:
+        fasta="/config/genomes/{clade_id}/EWD_hifiasm_HiC.fasta"
+        adapters="/resources/adapters/adap_cont_rna.fa"
+    output:
+        "/results/01_MaskRepeats/{clade_id}/"
+    envmodules:
+        "repeatmasker/4.1.0"
+    shell:
+        """
+        RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir ${OUT_DIR} -lib ${LIB_DIR}/adap_cont_rna.fa  ${INPUT_DIR}/EWD_hifiasm_HiC.fasta
+        """
 
 # --- Help Rules --- #
 ## help               : prints help comments for Snakefile
