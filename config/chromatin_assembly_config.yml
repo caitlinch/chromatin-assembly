@@ -1,9 +1,13 @@
 input:
-  run_id:               "test_central_dragon"
-  sample_files:         "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*"
-  reference_genome:     "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/GCF_900067755.1_pvi1.1_genomic.fna"
-  input_control_files1: "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
-  input_control_files2: "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
+  run_id:                "test_central_dragon"
+  sample_files:          "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*"
+  reference_genome_dir:  "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/"
+  reference_genome_file: "GCF_900067755.1_pvi1.1_genomic.fna"
+  input_control_files1:  "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
+  input_control_files2:  "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
+
+output:
+  out_dir: "/scratch3/che318/chromatin-assembly/results/"
 
 params:
   adapters: "/scratch3/che318/chromatin-assembly/config/adapters/adap_cont_rna.fa"

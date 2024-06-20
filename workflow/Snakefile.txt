@@ -4,12 +4,18 @@
 ## Caitlin Cherryh, 2024
 ## Developed using scripts from Erin Hahn and Jiri Stiller
 
-# Caitlin's notes
+## Caitlin's notes
+# Run script from dir that contains chromatin-assembly dir (not from within chromatin-assembly/)
+
+## Slurm output file paths
 # output file: #SBATCH --error=/log/%x_%A_%a.err 
 # error file:  #SBATCH --out=/log/%x_%A_%a.out 
 
 # --- Config file --- #
-configfile: "config/chromatin_assembly_config.yml"
+configfile: "chromatin-assembly/config/chromatin_assembly_config.yml"
+
+# --- Global Variables --- #
+OUTDIR = config["output"]["out_dir"] + config["input"]["run_id"] + "/"
 
 # --- Pipeline steps --- #
 ## peak_analysis: Peak analysis using DANPOS3 (Step 8)
@@ -156,17 +162,17 @@ rule suffix_array:
 # Original Slurm script: slurm_waterdragon_RM.sh
 rule mask_repeats:
     input:
-        fasta=config["input"]["reference_genome"]
+        fasta = config["input"]["reference_genome_dir"] + config["input"]["reference_genome_file"]
     output:
-        dir="directory(results/{clade_id}/)"
+        masked = OUTDIR + config["input"]["reference_genome_file"] + ".masked"
     params:
-        adapter=config["params"]["adapters"]
+        adapter = config["params"]["adapters"]
+        outdir = OUTDIR
     envmodules:
         "repeatmasker/4.1.0"
     shell:
         """
-        mkdir results/{wildcards.clade_id}/
-        RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir {output.dir} -lib {params.adapter} {input.fasta}
+        RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir {params.outdir} -lib {params.adapter} {input.fasta}
         """
 
 # --- Helper Rules --- #
@@ -178,3 +184,4 @@ rule help:
     input: "Snakefile"
     shell:
         "sed -n 's/^##//p' {input}"
+

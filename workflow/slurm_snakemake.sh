@@ -12,6 +12,7 @@
 #SBATCH --error=/scratch3/che318/snakemake_tut/results/smt_%A_%a.err
 #SBATCH --out=/scratch3/che318/snakemake_tut/results/smt_%A_%a.out
 
+module load python
 cd /scratch3/che318/snakemake_tut/
 snakemake -s workflow/Snakefile --reason --printshellcmds /scratch3/che318/snakemake_tut/results/b_a.txt
 
