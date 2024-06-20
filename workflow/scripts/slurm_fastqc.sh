@@ -10,10 +10,10 @@
 #SBATCH --array=1-48
 
 # one may use %j instead of %A in below
-#SBATCH --error=/scratch1/sti089/ACC_Pvitticeps_June2022/fastqc/log/%A_%a.err
-#SBATCH --out=/scratch1/sti089/ACC_Pvitticeps_June2022/fastqc/log/%A_%a.out
+#SBATCH --error=/scratch3/sti089/ACC_Pvitticeps_June2022/fastqc/log/%A_%a.err
+#SBATCH --out=/scratch3/sti089/ACC_Pvitticeps_June2022/fastqc/log/%A_%a.out
 
-WORK_DIR="/scratch1/sti089/ACC_Pvitticeps_June2022"
+WORK_DIR="/scratch3/sti089/ACC_Pvitticeps_June2022"
 FASTQC_DIR="${WORK_DIR}/fastqc"
 READS_DIR="${WORK_DIR}/orig_reads"
 RESULTS_DIR="${FASTQC_DIR}"

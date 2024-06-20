@@ -16,6 +16,7 @@ configfile: "chromatin-assembly/config/chromatin_assembly_config.yml"
 
 # --- Global Variables --- #
 OUTDIR = config["output"]["out_dir"] + config["input"]["run_id"] + "/"
+SAMPLE_NAME = config["input"]["input_pattern"]
 
 # --- Pipeline steps --- #
 ## peak_analysis: Peak analysis using DANPOS3 (Step 8)
@@ -72,7 +73,7 @@ rule correct_GC_bias:
     shell:
         ""
 
-## compute_GC_bias: Compute GC bias with deeptools (Step 6b)
+## compute_GC_bias: Compute GC bias with deeptools (Step 6c)
 # Step 6b: GC bias computation
 # Original Slurm script: slurm_computeGCBias.sh
 rule compute_GC_bias:
@@ -86,7 +87,18 @@ rule compute_GC_bias:
     shell:
         ""
 
-## effective_genome_size: Calculate effective genome size with faCount (Step 6a)
+## effective_genome_size: Calculate effective genome size with faCount (Step 6b)
+rule effective_genome_size:
+    input:
+        ""
+    output:
+        ""
+    params:
+        faCount = config["params"]["faCount"]
+    shell:
+        ""
+
+## two_bit_genome: Calculate effective genome size with faCount (Step 6a)
 rule effective_genome_size:
     input:
         ""
@@ -139,16 +151,20 @@ rule extract_UMI:
 
 ## raw_read_QC: Perform quality control using FastQC (Step 2)
 # Step 2: Raw read QC
-# Original Slurm script: slurm_fastqc.sh
+# Original Slurm script: slurm_fastqc.sh (array = 1-48)
 rule raw_read_QC:
     input:
-        ""
+        r1 = config["input_dir"] + SAMPLE_NAME + "{num}_R1.fastq.gz"
+        r2 = config["input_dir"] + SAMPLE_NAME + "{num}_R2.fastq.gz"
     output:
-        ""
+        html = OUTDIR + "fastqc/" + SAMPLE_NAME + "{num}_R1_fastq.html"
+        zip =  OUTDIR + "fastqc/" + SAMPLE_NAME + "{num}_R1_fastq.zip"
+    params:
+        outdir = OUTDIR
     envmodules:
         "fastqc/0.11.9"
     shell:
-        ""
+        "fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}"
 
 ## mask_repeats: Masking with RepeatMasker (Step 1)
 # Step 1: Repeat masking and suffix array
