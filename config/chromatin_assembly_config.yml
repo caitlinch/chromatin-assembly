@@ -1,3 +1,10 @@
+input_paths:
+  reference_genome_dir: "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/"
+  test_sample: "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*"
+  test_sample_dir: "/scratch3/che318/chromatin-assembly/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
+  input_control_dir1: "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
+  input_control_dir2: "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
+
 step1:
   slurm_job_name: "repeatmasker"
   slurm_job_time: "2-00:00:00"
