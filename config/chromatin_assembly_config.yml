@@ -1,14 +1,118 @@
-input_paths:
+input:
+  run_id:               "test_central_dragon"
+  output_dir:           "/scratch3/che318/chromatin-assembly/results/"
+  log_dir:              "/scratch3/che318/chromatin-assembly/results/logs/"
+  sample_files:         "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*"
+  sample_dir:           "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
   reference_genome_dir: "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/"
-  test_sample: "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*"
-  test_sample_dir: "/scratch3/che318/chromatin-assembly/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
-  input_control_dir1: "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
-  input_control_dir2: "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
+  reference_genome:     "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/GCF_900067755.1_pvi1.1_genomic.fna"
+  input_control_dir1:   "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/"
+  input_control_files1: "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
+  input_control_dir2:   "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
+  input_control_files2: "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/" 
+  log_dir:              "/scratch3/che318/"
 
+params:
+  adapters: "/scratch3/che318/chromatin-assembly/config/adapters/adap_cont_rna.fa"
+  faCount:  "/scratch3/che318/chromatin-assembly/config/faCount" 
+
+# Step 1: Repeat masking
+# Original Slurm script: slurm_waterdragon_RM.sh
 step1:
-  slurm_job_name: "repeatmasker"
-  slurm_job_time: "2-00:00:00"
-  slurm_job_mem: "80GB"
-  slurm_job_nodes: "1"
-  slurm_job_cpus: "20" 
+  slurm_name: "1_repeatmasker"
+  slurm_time: "2-00:00:00"
+  slurm_mem: "80GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "20" 
+
+# Step 2: Raw read QC
+# Original Slurm script: slurm_fastqc.sh
+step2:
+  slurm_name: "2_fastqc"
+  slurm_time: "12-00:00:00"
+  slurm_mem: "12GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "3" 
+  slurm_array: "1-48"
+
+# Step 3: UMI extraction
+# Original Slurm script: slurm_extractUMI.sh
+step3:
+  slurm_name: "3_UMIext"
+  slurm_time: "3-00:00:00"
+  slurm_mem: "512GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "64" 
+  slurm_array: "1-6"
+
+# Step 4: Read alignment
+# Original Slurm script: slurm_kalign.umi
+step4:
+  slurm_name: "4_kalign_UMI"
+  slurm_time: "7-00:00:00"
+  slurm_mem: "512GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "64" 
+  slurm_array: "1-6"
+
+# Step 5: Alignment deduplication
+# Original Slurm script: slurm_depup.sh
+step5:
+  slurm_name: "5_dedup"
+  slurm_time: "12-00:00:00"
+  slurm_mem: "48GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "5" 
+  slurm_array: "1-6"
+
+# Step 6b: GC bias computation
+# Original Slurm script: slurm_computeGCBias.sh
+step6_compute:
+  slurm_name: "6b_computeGCbias"
+  slurm_time: "08:00:00"
+  slurm_mem: "48GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "2" 
+  slurm_array: "1-6"
+
+# Step 6c: GC bias correction
+# Original Slurm script: slurm_correctGCBias.sh
+step6_correct:
+  slurm_name: "6c_correctGCbias"
+  slurm_time: "12:00:00"
+  slurm_mem: "48GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "10" 
+  slurm_array: "1-6"
+
+# Step 7a: Summary statistics - calculate alignment statistics
+# Original Slurm script: slurm_sizemetrics.sh
+step7:
+  slurm_name: "7a_metrics"
+  slurm_time: "01:00:00"
+  slurm_mem: "6GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "2" 
+  slurm_array: "1-6"
+
+# Step 7b: Summary statistics - estimate mean nuclear genome coverage
+# Original Slurm script: slurm_read_count_GCcorrect.sh
+step7:
+  slurm_name: "7b_view"
+  slurm_time: "01:00:00"
+  slurm_mem: "6GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "2" 
+  slurm_array: "1-6"
+
+# Step 8: Peak analysis
+# Original Slurm script: slurm_dtriple_1_vs_27-29.sh
+step8:
+  slurm_name: "8_dtriple"
+  slurm_time: "60:00:00"
+  slurm_mem: "48GB"
+  slurm_nodes: "1"
+  slurm_cpus_per_task: "2" 
+
+
 

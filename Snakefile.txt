@@ -4,11 +4,17 @@
 ## Caitlin Cherryh, 2024
 ## Developed using scripts from Erin Hahn and Jiri Stiller
 
+# Caitlin's notes
+# output file: #SBATCH --error=/log/%x_%A_%a.err 
+# error file:  #SBATCH --out=/log/%x_%A_%a.out 
+
 # --- Config file --- #
 config: "config/chromatin_assembly_config.yml"
 
 # --- Pipeline steps --- #
 ## peak_analysis: Peak analysis using DANPOS3 (Step 8)
+# Step 8: Peak analysis
+# Original Slurm script: slurm_dtriple_1_vs_27-29.sh
 rule peak_analysis:
     input:
         ""
@@ -20,6 +26,8 @@ rule peak_analysis:
         ""
 
 ## read_count:Estimate mean nuclear genome cover with Picard (Step 7b)
+# Step 7b: Summary statistics - estimate mean nuclear genome coverage
+# Original Slurm script: slurm_read_count_GCcorrect.sh
 rule read_count:
     input:
         ""
@@ -31,6 +39,8 @@ rule read_count:
         ""
 
 ## size_metrics: Calculate alignment statistics with Picard (Step 7a)
+# Step 7a: Summary statistics - calculate alignment statistics
+# Original Slurm script: slurm_sizemetrics.sh
 rule size_metrics:
     input:
         ""
@@ -42,6 +52,8 @@ rule size_metrics:
         ""
 
 ## correct_GC_bias: Correct GC bias with deeptools (Step 6c)
+# Step 6c: GC bias correction
+# Original Slurm script: slurm_correctGCBias.sh
 rule correct_GC_bias:
     input:
         ""
@@ -53,6 +65,8 @@ rule correct_GC_bias:
         ""
 
 ## compute_GC_bias: Compute GC bias with deeptools (Step 6b)
+# Step 6b: GC bias computation
+# Original Slurm script: slurm_computeGCBias.sh
 rule compute_GC_bias:
     input:
         ""
@@ -75,6 +89,8 @@ rule effective_genome_size:
         ""
 
 ## alignment_deduplication: Remove PCR and optial duplicates from alignment with Picard (Step 5)
+# Step 5: Alignment deduplication
+# Original Slurm script: slurm_depup.sh
 rule alignment_deduplication:
     input:
         ""
@@ -86,6 +102,8 @@ rule alignment_deduplication:
         ""
 
 ## read_alignment: Align reads with kalign (Step 4)
+# Step 4: Read alignment
+# Original Slurm script: slurm_kalign.umi
 rule read_alignment:
     input:
         ""
@@ -97,6 +115,8 @@ rule read_alignment:
         ""
 
 ## extract_UMI: UMI extraction with FGBio and Picard (Step 3)
+# Step 3: UMI extraction
+# Original Slurm script: slurm_extractUMI.sh
 rule extract_UMI:
     input:
         ""
@@ -108,6 +128,8 @@ rule extract_UMI:
         ""
 
 ## raw_read_QC: Perform quality control using FastQC (Step 2)
+# Step 2: Raw read QC
+# Original Slurm script: slurm_fastqc.sh
 rule raw_read_QC:
     input:
         ""
@@ -125,22 +147,24 @@ rule suffix_array:
     output:
         ""
     envmodules:
-        ""
+        "kit4b/200218"
     shell:
-        ""
+        "ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked -r waterdragon"
 
 ## mask_repeats: Masking with RepeatMasker (Step 1a)
+# Step 1: Repeat masking
+# Original Slurm script: slurm_waterdragon_RM.sh
 rule mask_repeats:
     input:
         fasta="config/genomes/{clade_id}/EWD_hifiasm_HiC.fasta"
     output:
-        "results/{clade_id}/"
+        "directory(results/{clade_id}/)"
     envmodules:
         "repeatmasker/4.1.0"
     shell:
         """
         mkdir results/{wildcards.clade_id}/
-        RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir results/01_MaskRepeats/{wildcards.clade_id}/ -lib resources/adapters/adap_cont_rna.fa {input.fasta}
+        RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir results/{wildcards.clade_id}/ -lib config["input_paths"]["reference_genome_fna"] {input.fasta}
         """
 
 # --- Helper Rules --- #
