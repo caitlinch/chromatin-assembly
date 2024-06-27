@@ -24,147 +24,157 @@ SAMPLE_NAME = config["input"]["input_pattern"]
 # Original Slurm script: slurm_dtriple_1_vs_27-29.sh
 rule peak_analysis:
     input:
-        ""
+        "step6d.txt"
     output:
-        ""
-    envmodules:
-        "danpos/3.1.1"
+        "step8.txt"
     shell:
-        ""
+        """
+        module load danpos/3.1.1
+        touch {output}
+        """
 
 ## read_count:Estimate mean nuclear genome cover with Picard (Step 7b)
 # Step 7b: Summary statistics - estimate mean nuclear genome coverage
 # Original Slurm script: slurm_read_count_GCcorrect.sh
 rule read_count:
     input:
-        ""
+        "step6d.txt"
     output:
-        ""
-    envmodules:
-        "samtools/1.12"
+        "step7b.txt"
     shell:
-        ""
+        """
+        module load samtools/1.12
+        touch {output}
+        """
 
 ## size_metrics: Calculate alignment statistics with Picard (Step 7a)
 # Step 7a: Summary statistics - calculate alignment statistics
 # Original Slurm script: slurm_sizemetrics.sh
 rule size_metrics:
     input:
-        ""
+        "step6d.txt"
     output:
-        ""
-    envmodules:
-        "R"
-        "picard/2.26.10"
+        "step7a.txt"
     shell:
-        ""
+        """
+        module load R
+        module load picard/2.26.10
+        touch {output}
+        """
 
-## correct_GC_bias: Correct GC bias with deeptools (Step 6c)
+## correct_GC_bias: Correct GC bias with deeptools (Step 6d)
 # Step 6c: GC bias correction
 # Original Slurm script: slurm_correctGCBias.sh
 rule correct_GC_bias:
     input:
-        ""
+        "step6b.txt"
     output:
-        ""
-    envmodules:
-        "python"
-        "samtools/1.12"
+        "step6d.txt"
     shell:
-        ""
+        """
+        module load python
+        module load samtools/1.12
+        touch {output}
+        """
 
 ## compute_GC_bias: Compute GC bias with deeptools (Step 6c)
 # Step 6b: GC bias computation
 # Original Slurm script: slurm_computeGCBias.sh
 rule compute_GC_bias:
     input:
-        ""
+        "step5.txt"
     output:
-        ""
-    envmodules:
-        "python"
-        "samtools/1.12"
+        "step6c.txt"
     shell:
-        ""
+        """
+        module load python
+        module load samtools/1.12
+        touch {output}
+        """
 
 ## effective_genome_size: Calculate effective genome size with faCount (Step 6b)
 rule effective_genome_size:
     input:
-        ""
+        "step5.txt"
     output:
-        ""
+        "step6b.txt"
     params:
         faCount = config["params"]["faCount"]
     shell:
-        ""
+        "touch {output}"
 
 ## two_bit_genome: Calculate effective genome size with faCount (Step 6a)
-rule effective_genome_size:
+rule two_bit_genome:
     input:
-        ""
+        "step5.txt"
     output:
-        ""
+        "step6a.txt"
     params:
         faCount = config["params"]["faCount"]
     shell:
-        ""
+        "touch {output}"
 
 ## alignment_deduplication: Remove PCR and optial duplicates from alignment with Picard (Step 5)
 # Step 5: Alignment deduplication
 # Original Slurm script: slurm_depup.sh
 rule alignment_deduplication:
     input:
-        ""
+        "step5.txt"
     output:
-        ""
-    envmodules:
-        "picard/2.26.10"
+        "step4.txt"
     shell:
-        ""
+        """
+        module load picard/2.26.10
+        touch {output}
+        """
 
 ## read_alignment: Align reads with kalign (Step 4)
 # Step 4: Read alignment
 # Original Slurm script: slurm_kalign_umi.sh
 rule read_alignment:
     input:
-        ""
+        "step3.txt"
     output:
-        ""
-    envmodules:
-        "kit4b/200218"
+        "step4.txt"
     shell:
-        ""
+        """
+        module load kit4b/200218
+        touch {output}
+        """
 
 ## extract_UMI: UMI extraction with FGBio and Picard (Step 3)
 # Step 3: UMI extraction
 # Original Slurm script: slurm_extractUMI.sh
 rule extract_UMI:
     input:
-        ""
+        "step2.txt"
     output:
-        ""
-    envmodules:
-        "picard/2.26.9"
-        "fgbio/1.3.0"
+        "step3.txt"
     shell:
-        ""
+        """
+        module load picard/2.26.9
+        module load fgbio/1.3.0
+        touch {output}
+        """
 
 ## raw_read_QC: Perform quality control using FastQC (Step 2)
 # Step 2: Raw read QC
-# Original Slurm script: slurm_fastqc.sh (array = 1-48)
 rule raw_read_QC:
     input:
-        r1 = config["input_dir"] + SAMPLE_NAME + "{num}_R1.fastq.gz"
-        r2 = config["input_dir"] + SAMPLE_NAME + "{num}_R2.fastq.gz"
+        r1 = config["input"]["input_dir"] + SAMPLE_NAME + "{num}_R1.fastq.gz",
+        r2 = config["input"]["input_dir"] + SAMPLE_NAME + "{num}_R2.fastq.gz"
     output:
-        html = OUTDIR + "fastqc/" + SAMPLE_NAME + "{num}_R1_fastq.html"
-        zip =  OUTDIR + "fastqc/" + SAMPLE_NAME + "{num}_R1_fastq.zip"
+        zip1 =  OUTDIR + "fastqc/" + SAMPLE_NAME + "{num}_R1_fastq.zip",
+        zip2 =  OUTDIR + "fastqc/" + SAMPLE_NAME + "{num}_R2_fastq.zip"
     params:
         outdir = OUTDIR
-    envmodules:
-        "fastqc/0.11.9"
     shell:
-        "fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}"
+        """
+        module load fastqc/0.11.9
+        touch {output.zip1} | touch {output.zip2}
+        """
+#        fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}
+        
 
 ## mask_repeats: Masking with RepeatMasker (Step 1)
 # Step 1: Repeat masking and suffix array
@@ -176,17 +186,18 @@ rule mask_repeats:
     output:
         masked = OUTDIR + config["input"]["reference_genome_file"] + ".masked"
     params:
-        outdir = OUTDIR
-        adapter = config["params"]["adapters"]
+        outdir = OUTDIR,
+        adapter = config["params"]["adapters"],
         ref_species = config["input"]["reference_species_name"]
-    envmodules:
-        "repeatmasker/4.1.0"
-        "kit4b/200218"
     shell:
         """
-        RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir {params.outdir} -lib {params.adapter} {input.fasta}
-        ngskit4b index -i {output.masked} -o {output.masked} -r {params.ref_species}
+        module load repeatmasker/4.1.0
+        module load kit4b/200218
+        touch {output.masked}
         """
+#        RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir {params.outdir} -lib {params.adapter} {input.fasta}
+#        ngskit4b index -i {output.masked} -o {output.masked} -r {params.ref_species}
+
 
 # --- Helper Rules --- #
 

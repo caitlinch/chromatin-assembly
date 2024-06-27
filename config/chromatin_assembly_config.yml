@@ -1,3 +1,8 @@
+# Chromatin assembly pipeline
+# Configuration file
+
+# Note: Run script from dir that contains chromatin-assembly dir (not from within chromatin-assembly/ dir)
+
 input:
   run_id:                 "test_central_dragon"
   input_dir:              "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
@@ -14,6 +19,7 @@ output:
 params:
   adapters: "/scratch3/che318/chromatin-assembly/config/adapters/adap_cont_rna.fa"
   faCount:  "/scratch3/che318/chromatin-assembly/config/faCount" 
+  faToTwoBit: "/scratch3/che318/chromatin-assembly/config/faToTwoBit" 
 
 # Directories and files that may or may not be needed
 potential_input:
