@@ -22,12 +22,11 @@ SAMPLE_NAME = config["input"]["input_pattern"]
 ## peak_analysis: Peak analysis using DANPOS3 (Step 8)
 # Step 8: Peak analysis
 # Original Slurm script: slurm_dtriple_1_vs_27-29.sh
-rule peak_analysis:
+rule s8_peak_analysis:
     input:
-        test_sample = "step6d.gc_corrected.txt",
-        input_samples = ""
+        test_sample = OUTDIR + "step6d.gc_corrected.txt",
     output:
-        danpos_results = "step8.danpos.txt"
+        danpos_results = OUTDIR + "step8.danpos.txt"
     shell:
         """
         module load danpos/3.1.1
@@ -37,11 +36,11 @@ rule peak_analysis:
 ## read_count:Estimate mean nuclear genome cover with Picard (Step 7b)
 # Step 7b: Summary statistics - estimate mean nuclear genome coverage
 # Original Slurm script: slurm_read_count_GCcorrect.sh
-rule read_count:
+rule s7b_read_count:
     input:
-        gc_corrected = "step6d.gc_corrected.txt"
+        gc_corrected = OUTDIR + "step6d.gc_corrected.txt"
     output:
-        summ_stats = "step7b.summary_stats.txt"
+        summ_stats = OUTDIR + "step7b.summary_stats.txt"
     shell:
         """
         module load samtools/1.12
@@ -51,11 +50,11 @@ rule read_count:
 ## size_metrics: Calculate alignment statistics with Picard (Step 7a)
 # Step 7a: Summary statistics - calculate alignment statistics
 # Original Slurm script: slurm_sizemetrics.sh
-rule size_metrics:
+rule s7a_size_metrics:
     input:
-        gc_corrected = "step6d.gc_corrected.txt"
+        gc_corrected = OUTDIR + "step6d.gc_corrected.txt"
     output:
-        size_metrics = "step7a.size_metrics.txt"
+        size_metrics = OUTDIR + "step7a.size_metrics.txt"
     shell:
         """
         module load R
@@ -66,14 +65,14 @@ rule size_metrics:
 ## correct_GC_bias: Correct GC bias with deeptools (Step 6d)
 # Step 6d: GC bias correction
 # Original Slurm script: slurm_correctGCBias.sh
-rule correct_GC_bias:
+rule s6d_correct_GC_bias:
     input:
-        masked_ref_genome = "step1.masked_ref_genome.txt",
-        eff_gen_size = "step6b.eff_gen_size.txt",
-        twobit_genome = "step6a.2bit_genome.txt",
-        freq_file = "step6c.freqs.txt"
+        masked_ref_genome = OUTDIR + "step1.masked_ref_genome.txt",
+        eff_gen_size = OUTDIR + "step6b.eff_gen_size.txt",
+        twobit_genome = OUTDIR + "step6a.2bit_genome.txt",
+        freq_file = OUTDIR + "step6c.freqs.txt"
     output:
-        gc_corrected = "step6d.gc_corrected.txt"
+        gc_corrected = OUTDIR + "step6d.gc_corrected.txt"
     shell:
         """
         module load python
@@ -84,13 +83,13 @@ rule correct_GC_bias:
 ## compute_GC_bias: Compute GC bias with deeptools (Step 6c)
 # Step 6c: GC bias computation
 # Original Slurm script: slurm_computeGCBias.sh
-rule compute_GC_bias:
+rule s6c_compute_GC_bias:
     input:
-        masked_ref_genome = "step1.masked_ref_genome.txt",
-        eff_gen_size = "step6b.eff_gen_size.txt",
-        twobit_genome = "step6a.2bit_genome.txt"
+        masked_ref_genome = OUTDIR + "step1.masked_ref_genome.txt",
+        eff_gen_size = OUTDIR + "step6b.eff_gen_size.txt",
+        twobit_genome = OUTDIR + "step6a.2bit_genome.txt"
     output:
-        freq_file = "step6c.freqs.txt"
+        freq_file = OUTDIR + "step6c.freqs.txt"
     shell:
         """
         module load python
@@ -100,11 +99,11 @@ rule compute_GC_bias:
 
 ## effective_genome_size: Calculate effective genome size with faCount (Step 6b)
 # Step 6b: Calculate effective genome size
-rule effective_genome_size:
+rule s6b_effective_genome_size:
     input:
-        masked_ref_genome = "step1.masked_ref_genome.txt"
+        masked_ref_genome = OUTDIR + "step1.masked_ref_genome.txt"
     output:
-        eff_gen_size = "step6b.eff_gen_size.txt"
+        eff_gen_size = OUTDIR + "step6b.eff_gen_size.txt"
     params:
         faCount = config["params"]["faCount"]
     shell:
@@ -112,11 +111,11 @@ rule effective_genome_size:
 
 ## two_bit_genome: Generate 2Bit genome with faToTwoBit (Step 6a)
 # Step 6a: Generate 2Bit genome
-rule two_bit_genome:
+rule s6a_two_bit_genome:
     input:
-        masked_ref_genome = "step1.masked_ref_genome.txt"
+        masked_ref_genome = OUTDIR + "step1.masked_ref_genome.txt"
     output:
-        twobit_genome = "step6a.2bit_genome.txt"
+        twobit_genome = OUTDIR + "step6a.2bit_genome.txt"
     params:
         faCount = config["params"]["faCount"]
     shell:
@@ -125,11 +124,11 @@ rule two_bit_genome:
 ## alignment_deduplication: Remove PCR and optial duplicates from alignment with Picard (Step 5)
 # Step 5: Alignment deduplication
 # Original Slurm script: slurm_depup.sh
-rule alignment_deduplication:
+rule s5_alignment_deduplication:
     input:
-        alignment = "step4.alignment.txt"
+        alignment = OUTDIR + "step4.alignment.txt"
     output:
-        dedup = "step5.alignment.dedup.txt"
+        dedup = OUTDIR + "step5.alignment.dedup.txt"
     shell:
         """
         module load picard/2.26.10
@@ -139,13 +138,13 @@ rule alignment_deduplication:
 ## read_alignment: Align reads with kalign (Step 4)
 # Step 4: Read alignment
 # Original Slurm script: slurm_kalign_umi.sh
-rule read_alignment:
+rule s4_read_alignment:
     input:
         masked = OUTDIR + "step1.masked_ref_genome.txt",
         r1 = OUTDIR + "step3_output_R1.UMIextr.txt",
         r2 = OUTDIR + "step3_output_R2.UMIextr.txt"
     output:
-        alignment = "step4.alignment.txt"
+        alignment = OUTDIR + "step4.alignment.txt"
     shell:
         """
         module load kit4b/200218
@@ -155,7 +154,7 @@ rule read_alignment:
 ## extract_UMI: UMI extraction with FGBio and Picard (Step 3)
 # Step 3: UMI extraction
 # Original Slurm script: slurm_extractUMI.sh
-rule extract_UMI:
+rule s3_extract_UMI:
     input:
         r1 = OUTDIR + "step2_output_R1.txt",
         r2 = OUTDIR + "step2_output_R2.txt"
@@ -171,7 +170,7 @@ rule extract_UMI:
 
 ## raw_read_QC: Perform quality control using FastQC (Step 2)
 # Step 2: Raw read QC
-rule raw_read_QC:
+rule s2_raw_read_QC:
     input:
         r1 = config["input"]["input_dir"] + SAMPLE_NAME + "{num}_R1.fastq.gz",
         r2 = config["input"]["input_dir"] + SAMPLE_NAME + "{num}_R2.fastq.gz"
@@ -194,7 +193,7 @@ rule raw_read_QC:
 # Step 1: Repeat masking and suffix array
 # Original Slurm script: slurm_waterdragon_RM.sh
 # Original suffix array command:  ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked -r waterdragon
-rule mask_repeats:
+rule s1_mask_repeats:
     input:
         fasta = config["input"]["reference_genome_dir"] + config["input"]["reference_genome_file"]
     output:
