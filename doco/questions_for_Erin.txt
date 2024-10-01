@@ -1,0 +1,25 @@
+Questions for Erin:
+
+
+QUESTION: Extracting UMIs in the script slurm_extractUMI.sh
+The script slurm_extractUMI.sh has three steps:
+1. Picard FastqToSam
+2. fgbio ExtractUmisFromBam
+3. Picard SamToFastq
+
+Am I correct in interpreting that this process occurs per lane? I.e., that I should structure the pipeline to run these commands once per lane.
+
+For example, examining the test sample which was run across 4 lanes for a total of 8 files, with the file path:
+/dir/path/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*
+
+This script would then need to run four times.
+The input files for any given one of the four lanes would be:
+	/dir/path/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*_R1.fastq
+	/dir/path/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*_R2.fastq
+And the desired output from the whole script for that lane would be a fastq file with UMI:
+	/dir/path/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*_R1_withUMI.fastq
+	/dir/path/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00*_R2_withUMI.fastq
+
+
+
+

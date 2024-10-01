@@ -1,0 +1,210 @@
+## Snakemake - Chromatin Assembly
+## NCMI, CSIRO
+##
+## Caitlin Cherryh, 2024
+## Developed using scripts from Erin Hahn and Jiri Stiller
+
+## Caitlin's notes
+# Run script from dir that contains chromatin-assembly dir (not from within chromatin-assembly/)
+
+## Slurm output file paths
+# output file: #SBATCH --error=/log/%x_%A_%a.err 
+# error file:  #SBATCH --out=/log/%x_%A_%a.out 
+
+# --- Config file --- #
+configfile: "config/test_config.yml"
+
+# --- Global Variables --- #
+OUTDIR = config["output"]["out_dir"] + config["input"]["run_id"] + "/"
+SAMPLE_NAME = config["input"]["input_pattern"]
+
+# --- Pipeline steps --- #
+## peak_analysis: Peak analysis using DANPOS3 (Step 8)
+# Step 8: Peak analysis
+# Original Slurm script: slurm_dtriple_1_vs_27-29.sh
+rule s8_peak_analysis:
+    input:
+        test_sample = OUTDIR + "step6d_gc_corrected.txt",
+    output:
+        danpos_results = OUTDIR + "step8_danpos.txt"
+    shell:
+        """
+        touch {output.danpos_results}
+        """
+
+## read_count:Estimate mean nuclear genome cover with Picard (Step 7b)
+# Step 7b: Summary statistics - estimate mean nuclear genome coverage
+# Original Slurm script: slurm_read_count_GCcorrect.sh
+rule s7b_read_count:
+    input:
+        gc_corrected = OUTDIR + "step6d_gc_corrected.txt"
+    output:
+        summ_stats = OUTDIR + "step7b_summary_stats.txt"
+    shell:
+        """
+        touch {output.summ_stats}
+        """
+
+## size_metrics: Calculate alignment statistics with Picard (Step 7a)
+# Step 7a: Summary statistics - calculate alignment statistics
+# Original Slurm script: slurm_sizemetrics.sh
+rule s7a_size_metrics:
+    input:
+        gc_corrected = OUTDIR + "step6d_gc_corrected.txt"
+    output:
+        size_metrics = OUTDIR + "step7a_size_metrics.txt"
+    shell:
+        """
+        touch {output.size_metrics}
+        """
+
+## correct_GC_bias: Correct GC bias with deeptools (Step 6d)
+# Step 6d: GC bias correction
+# Original Slurm script: slurm_correctGCBias.sh
+rule s6d_correct_GC_bias:
+    input:
+        masked_ref_genome = OUTDIR + "step1_masked_ref_genome_" + config["input"]["reference_species_name"] + ".txt",
+        eff_gen_size = OUTDIR + "step6b_eff_gen_size.txt",
+        twobit_genome = OUTDIR + "step6a_2bit_genome.txt",
+        freq_file = OUTDIR + "step6c.freqs.txt"
+    output:
+        gc_corrected = OUTDIR + "step6d_gc_corrected.txt"
+    shell:
+        """
+        touch {output.gc_corrected}
+        """
+
+## compute_GC_bias: Compute GC bias with deeptools (Step 6c)
+# Step 6c: GC bias computation
+# Original Slurm script: slurm_computeGCBias.sh
+rule s6c_compute_GC_bias:
+    input:
+        masked_ref_genome = OUTDIR + "step1_masked_ref_genome_" + config["input"]["reference_species_name"] + ".txt",
+        eff_gen_size = OUTDIR + "step6b_eff_gen_size.txt",
+        twobit_genome = OUTDIR + "step6a_2bit_genome.txt"
+    output:
+        freq_file = OUTDIR + "step6c_freqs.txt"
+    shell:
+        """
+        touch {output.freq_file}
+        """
+
+## effective_genome_size: Calculate effective genome size with faCount (Step 6b)
+# Step 6b: Calculate effective genome size
+rule s6b_effective_genome_size:
+    input:
+        masked_ref_genome = OUTDIR + "step1_masked_ref_genome_" + config["input"]["reference_species_name"] + ".txt",
+    output:
+        eff_gen_size = OUTDIR + "step6b_eff_gen_size.txt"
+    params:
+        faCount = config["params"]["faCount"]
+    shell:
+        "touch {output.eff_gen_size}"
+
+## two_bit_genome: Generate 2Bit genome with faToTwoBit (Step 6a)
+# Step 6a: Generate 2Bit genome
+rule s6a_two_bit_genome:
+    input:
+        masked_ref_genome = OUTDIR + "step1_masked_ref_genome_" + config["input"]["reference_species_name"] + ".txt"
+    output:
+        twobit_genome = OUTDIR + "step6a_2bit_genome.txt"
+    params:
+        faCount = config["params"]["faCount"]
+    shell:
+        "touch {output.twobit_genome}"
+
+## alignment_deduplication: Remove PCR and optial duplicates from alignment with Picard (Step 5)
+# Step 5: Alignment deduplication
+# Original Slurm script: slurm_depup.sh
+rule s5_alignment_deduplication:
+    input:
+        alignment = OUTDIR + "step4_kalign_alignment.txt"
+    output:
+        dedup = OUTDIR + "step5_dedup_alignment.txt"
+    shell:
+        """
+        touch {output.dedup}
+        """
+
+## read_alignment: Align reads with kalign (Step 4)
+# Step 4: Read alignment
+# Original Slurm script: slurm_kalign_umi.sh
+rule s4_read_alignment:
+    input:
+        masked = OUTDIR + "step1_masked_ref_genome_" + config["input"]["reference_species_name"] + ".txt",
+        r1 = OUTDIR + "step3_UMIextr_" + SAMPLE_NAME + "{num}_R1.fastq",
+        r2 = OUTDIR + "step3_UMIextr_" + SAMPLE_NAME + "{num}_R2.fastq"
+    output:
+        alignment = OUTDIR + "step4_kalign_alignment.txt"
+
+    shell:
+        """
+        touch {output.alignment}
+	ngskit4b kalign -c25 -l25 -d50 -U4 -i${READ_DIR}/${BASENAME}_withUMI_R1.fastq -u${READ_DIR}/${BASENAME}_withUMI_R2.fastq -I ${DB_DIR}/GCF_900067755.1_pvi1.1_genomic_RM_nhmm_adapt -o ${ALIGN_DIR}/${BASENAME}_pe_c25_l25_d50_U4.sam -T ${SLURM_CPUS_PER_TASK} -F ${LOG_DIR}/${BASENAME}_kalign_pe_c25_l25_d50_U4.log
+        """
+
+## extract_UMI: UMI extraction with FGBio and Picard (Step 3)
+# Step 3: UMI extraction
+# Original Slurm script: slurm_extractUMI.sh
+rule s3_extract_UMI:
+    input:
+        r1 = OUTDIR + "step2_FastQC_" + SAMPLE_NAME + "{num}_R1.fastq",
+        r2 = OUTDIR + "step2_FastQC_" + SAMPLE_NAME + "{num}_R2.fastq"
+    output:
+        r1 = OUTDIR + "step3_UMIextr_" + SAMPLE_NAME + "{num}_R1.fastq",
+        r2 = OUTDIR + "step3_UMIextr_" + SAMPLE_NAME + "{num}_R2.fastq"
+    shell:
+        """
+        touch {output.r1} | touch {output.r2}
+        """
+
+
+## raw_read_QC: Perform quality control using FastQC (Step 2)
+# Step 2: Raw read QC
+rule s2_raw_read_QC:
+    input:
+        r1 = config["input"]["input_dir"] + SAMPLE_NAME + "{num}_R1.fastq.gz",
+        r2 = config["input"]["input_dir"] + SAMPLE_NAME + "{num}_R2.fastq.gz"
+    output:
+        zip1 =  OUTDIR + "step2_FastQC_" + SAMPLE_NAME + "{num}_R1.fastq.gz",
+        zip2 =  OUTDIR + "step2_FastQC_" + SAMPLE_NAME + "{num}_R2.fastq.gz"
+    params:
+        outdir = OUTDIR
+    shell:
+        """
+        touch {output.zip1} | touch {output.zip2}
+	# fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}
+        """
+
+
+## mask_repeats: Masking with RepeatMasker (Step 1)
+# Step 1: Repeat masking and suffix array
+# Original Slurm script: slurm_waterdragon_RM.sh
+# Original suffix array command:  ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked -r waterdragon
+rule s1_mask_repeats:
+    input:
+        fasta = config["input"]["ref_genome_file"]
+    output:
+        masked = OUTDIR + "step1_masked_ref_genome_" + config["input"]["reference_species_name"] + ".fasta"
+    params:
+        outdir = OUTDIR,
+        adapter = config["params"]["adapters"],
+        ref_species = config["input"]["reference_species_name"]
+    shell:
+        """
+        touch {output.masked}
+	# RepeatMasker -pa config["step1"]["slurm_job_cpus"] -qq -dir {params.outdir} -lib {params.adapter} {input.fasta}
+	# ngskit4b index -i {output.masked} -o {output.masked} -r {params.ref_species}
+        """
+
+
+# --- Helper Rules --- #
+
+
+# --- Help Rules --- #
+## help               : prints help comments for Snakefile
+rule help:
+    input: "Snakefile"
+    shell:
+        "sed -n 's/^##//p' {input}"
+
