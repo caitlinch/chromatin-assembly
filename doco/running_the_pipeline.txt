@@ -1,0 +1,26 @@
+## Running the pipeline
+# To run a dry run (using the flag -n)
+% snakemake -n
+
+# To run the entire pipeline with one core:
+% snakemake -c1
+
+# To run the pipeline until a certain point: snakemake --until {target}
+% snakemake --until s1_mask_repeats
+% snakemake --until s3_extract_UMI
+
+# To omit steps from the pipeline (run the pipeline without this step): snakemake --omit {target}
+# You can omit any step - the pipeline will run all other connected steps, stopping when rules become dependent on completion of the target rule
+% snakemake --omit s8_peak_analysis
+% snakemake --omit s5_alignment_deduplication
+
+# To run a single step of the pipeline, you need to start with the output file path
+# To generate a single file (where you know the desired output file path): % snakemake -p {output_file_path}
+% snakemake -p results/step5_dedup.txt
+
+## Useful resources
+Executing the pipeline (including individual steps):
+https://snakemake.readthedocs.io/en/v3.10.0/executable.html
+
+Details on the command line interface: 
+https://snakemake.readthedocs.io/en/stable/executing/cli.html
