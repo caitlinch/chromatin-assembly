@@ -1,0 +1,225 @@
+## Snakemake - Chromatin Assembly
+## NCMI, CSIRO
+##
+## Caitlin Cherryh, 2024
+## Developed using scripts from Erin Hahn and Jiri Stiller
+
+## Caitlin's notes
+# Run script from dir that contains chromatin-assembly dir (not from within chromatin-assembly/)
+
+## Slurm output file paths
+# output file: #SBATCH --error=/log/%x_%A_%a.err 
+# error file:  #SBATCH --out=/log/%x_%A_%a.out 
+
+# --- Config file --- #
+configfile: "config/chromatin_assembly_config.yml"
+
+# --- Global Variables --- #
+READS = ["1", "2"]
+SAMPLE = config["input"]["input_pattern"]
+OUTDIR = "results/" + config["input"]["ref_species"] + "/"
+
+# --- Complete pipeline run --- #
+# Run all rules
+rule run_all:
+    input:
+        size_metrics = OUTDIR + config["step7a"]["name"] + "/" + "sizeMetrics.txt",
+        summ_stats = OUTDIR + config["step7b"]["name"] + "/" + "summaryStatistics.txt",
+        danpos_op = OUTDIR + config["step8"]["name"] + "/" + "DANPOS.txt"
+
+
+# --- Pipeline steps --- #
+## mask_repeats: Masking with RepeatMasker (Step 1)
+# Step 1: Repeat masking and suffix array
+# Original Slurm script: slurm_waterdragon_RM.sh
+# Original suffix array command:  ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked -r waterdragon
+rule s1_mask_repeats:
+    input:
+        ref_genome = config["input"]["reference_genome_filepath"]
+    output:
+        masked    = OUTDIR + config["step1"]["name"] + "/" + "masked_ref_genome.fasta",
+        index     = OUTDIR + config["step1"]["name"] + "/" + "index_masked_ref_genome.fasta",
+        index_log = OUTDIR + config["step1"]["name"] + "/" + "index_logs.log"
+    params:
+        step1_dir   = OUTDIR + config["step1"]["name"] + "/",
+        adapter     = config["params"]["adapters"],
+        ref_species = config["input"]["ref_species"]
+    threads: config["step1"]["slurm_cpus"]
+    shell:
+        """
+        # module load repeatmasker/4.1.0
+        # module load kit4b/200218
+        # RepeatMasker -pa config["step1"]["slurm_cpus"] -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome}
+        # ngskit4b index -i {output.masked} -o {output.index} -r {params.ref_species} -T config["step1"]["slurm_cpus"] -F {output.index_log}
+        
+        """
+
+## raw_read_QC: Perform quality control using FastQC (Step 2)
+# Step 2: Raw read QC
+#       module load fastqc/0.11.9 
+#       fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}
+rule s2_raw_read_QC:
+    input:
+        config["input"]["read_dir"] + expand("{sample}{num}_R{read}.fastq", sample = SAMPLE, read = READS)
+    output:
+        OUTDIR + config["step2"]["name"] + expand("{sample}{num}_R{read}.fastq", sample = SAMPLE, read = READS)
+    threads: config["step2"]["slurm_cpus"]
+    shell:
+        """
+        cat {input.r1} > {output.r1_zip}
+        cat {input.r2} > {output.r2_zip}
+        """
+"""
+r1 = "data/reads/{sample}_L00{num}_R1.fastq.gz",
+r2 =  "data/reads/{sample}_L00{num}_R2.fastq.gz"
+"""
+
+## extract_UMI: UMI extraction with FGBio and Picard (Step 3)
+# Step 3: UMI extraction
+# Original Slurm script: slurm_extractUMI.sh
+rule s3_extract_UMI:
+    input:
+        r1 = OUTDIR + config["step2"]["name"] + "/" + "{sample}_L00{num}_R1.fastq.gz",
+        r2 = OUTDIR + config["step2"]["name"] + "/" + "{sample}_L00{num}_R2.fastq.gz"
+    output:
+        r1 = OUTDIR + config["step3"]["name"] + "/{sample}_L00{num}_R1.fastq.gz",
+        r2 = OUTDIR + config["step3"]["name"] + "/{sample}_L00{num}_R2.fastq.gz"
+    shell:
+        """
+        echo 'Step 3' >> {output.r1}
+        echo 'Step 3' >> {output.r2}
+        """
+
+## read_alignment: Align reads with kalign (Step 4)
+# Step 4: Read alignment
+# Original Slurm script: slurm_kalign_umi.sh
+rule s4_read_alignment:
+    input:
+        masked = OUTDIR + config["step1"]["name"] + "/" + "masked_ref_genome.fasta",
+        r1     = OUTDIR + config["step3"]["name"] + "/{sample}_L00{num}_R1.fastq.gz",
+        r2     = OUTDIR + config["step3"]["name"] + "/{sample}_L00{num}_R2.fastq.gz"
+    output:
+        alignment = OUTDIR + config["step4"]["name"] + "/alignment.txt"
+    shell:
+        """
+        echo 'Step 4' >> {output.alignment}
+        """
+
+## alignment_deduplication: Remove PCR and optial duplicates from alignment with Picard (Step 5)
+# Step 5: Alignment deduplication
+# Original Slurm script: slurm_depup.sh
+rule s5_alignment_deduplication:
+    input:
+        alignment = OUTDIR + config["step4"]["name"] + "/alignment.txt"
+    output:
+        dedup = OUTDIR + config["step5"]["name"] + "/alignment_dedup.txt"
+    shell:
+        """
+        echo 'Step 5' >> {output.dedup}
+        """
+
+## two_bit_genome: Generate 2Bit genome with faToTwoBit (Step 6a)
+# Step 6a: Generate 2Bit genome with faToTwoBit
+rule s6a_two_bit_genome:
+    input:
+        masked_ref_genome = OUTDIR + config["step1"]["name"] + "/masked_ref_genome.fasta"
+    output:
+        twobit_genome = OUTDIR + config["step6a"]["name"] + "/TwoBitGenome.txt"
+    shell:
+        """
+        echo 'Step 6a' >> {output.twobit_genome}
+        """
+
+## effective_genome_size: Calculate effective genome size with faCount (Step 6b)
+# Step 6b: Calculate effective genome size
+rule s6b_effective_genome_size:
+    input:
+        masked_ref_genome = OUTDIR + config["step1"]["name"] + "/masked_ref_genome.fasta"
+    output:
+        eff_gen_size = OUTDIR + config["step6b"]["name"] + "/effGenSize.txt"
+    shell:
+        """
+        echo 'Step 6b' >> {output.eff_gen_size}
+        """
+
+## compute_GC_bias: Compute GC bias with deeptools (Step 6c)
+# Step 6c: GC bias computation
+# Original Slurm script: slurm_computeGCBias.sh
+rule s6c_compute_GC_bias:
+    input:
+        dedup         = OUTDIR + config["step5"]["name"] + "/alignment_dedup.txt",
+        twobit_genome = OUTDIR + config["step6a"]["name"] + "/TwoBitGenome.txt",
+        eff_gen_size  = OUTDIR + config["step6b"]["name"] + "/effGenSize.txt"
+    output:
+        freq_file = OUTDIR + config["step6c"]["name"] + "/computeGCbias.txt"
+    shell:
+        """
+        echo 'Step 6c' >> {output.freq_file}
+        """
+
+## correct_GC_bias: Correct GC bias with deeptools (Step 6d)
+# Step 6d: GC bias correction
+# Original Slurm script: slurm_correctGCBias.sh
+rule s6d_correct_GC_bias:
+    input:
+        dedup         = OUTDIR + config["step5"]["name"] + "/alignment_dedup.txt",
+        twobit_genome = OUTDIR + config["step6a"]["name"] + "/TwoBitGenome.txt",
+        eff_gen_size  = OUTDIR + config["step6b"]["name"] + "/effGenSize.txt",
+        freq_file     = OUTDIR + config["step6c"]["name"] + "/computeGCbias.txt"
+    output:
+        gc_corrected = OUTDIR + config["step6d"]["name"] + "/correctGCbias.txt"
+    shell:
+        """
+        echo 'Step 6d' >> {output.gc_corrected}
+        """
+
+## size_metrics: Calculate alignment statistics with Picard (Step 7a)
+# Step 7a: Summary statistics - calculate alignment statistics
+# Original Slurm script: slurm_sizemetrics.sh
+rule s7a_size_metrics:
+    input:
+        gc_corrected = OUTDIR + config["step6d"]["name"] + "/correctGCbias.txt"
+    output:
+        size_metrics = OUTDIR + config["step7a"]["name"] + "/sizeMetrics.txt"
+    shell:
+        """
+        echo 'Step 7a' >> {output.size_metrics}
+        """
+
+## read_count:Estimate mean nuclear genome cover with Picard (Step 7b)
+# Step 7b: Summary statistics - estimate mean nuclear genome coverage
+# Original Slurm script: slurm_read_count_GCcorrect.sh
+rule s7b_read_count:
+    input:
+        gc_corrected = OUTDIR + config["step6d"]["name"] + "/correctGCbias.txt"
+    output:
+        summ_stats = OUTDIR + config["step7b"]["name"] + "/summaryStatistics.txt"
+    shell:
+        """
+        echo 'Step 7b' >> {output.summ_stats}
+        """
+
+## peak_analysis: Peak analysis using DANPOS3 (Step 8)
+# Step 8: Peak analysis
+# Original Slurm script: slurm_dtriple_1_vs_27-29.sh
+rule s8_peak_analysis:
+    input:
+        gc_corrected = OUTDIR + config["step6d"]["name"] + "/correctGCbias.txt"
+    output:
+        danpos_op = OUTDIR + config["step8"]["name"] + "/DANPOS.txt"
+    shell:
+        """
+        echo 'Step 8' >> {output.danpos_op}
+        """
+
+
+# --- Helper Rules --- #
+
+
+# --- Help Rules --- #
+## help               : prints help comments for Snakefile
+rule help:
+    input: "Snakefile"
+    shell:
+        "sed -n 's/^##//p' {input}"
+

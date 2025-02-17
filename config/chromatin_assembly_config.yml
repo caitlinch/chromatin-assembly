@@ -5,27 +5,19 @@
 
 input:
   ref_species:                 "central_dragon"
-  input_dir:                   "/data/reads/"
-  reference_genome_filepath:   "/data/reference_genome/central_dragon_genome.txt"
-  input_control_files1:        "/data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
-  input_control_files2:        "/data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
+  read_dir:                    "data/reads/"
+  read_lanes:                  ["1", "2", "3", "4", "5", "6", "7", "8"]
+  read_path_pattern:           "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00"
+  reference_genome_filepath:   "data/reference_genome/central_dragon_genome.txt"
+  input_control_files1:        "data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
+  input_control_files2:        "data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
 
 params:
   adapters: "/scratch3/che318/chromatin-assembly/config/adapters/adap_cont_rna.fa"
   faCount:  "/scratch3/che318/chromatin-assembly/config/faCount" 
   faToTwoBit: "/scratch3/che318/chromatin-assembly/config/faToTwoBit" 
 
-# Copies of input param
-input_copy:
- ref_species:                 "central_dragon"
- input_dir:                   "/data/test_files/"
- input_pattern:               "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00"
- reference_genome_filepath:   "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/GCF_900067755.1_pvi1.1_genomic.fna"
- input_control_files1:        "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
- input_control_files2:        "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
-
-
-# Directories and files that may or may not be needed
+# Directories and files that may or may not be needed (file paths refer to Petrichor)
 potential_input:
   input_dir:            "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
   input_pattern:        "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L"
