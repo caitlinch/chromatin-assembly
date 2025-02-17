@@ -44,7 +44,7 @@ step1:
   slurm_time: "2-00:00:00"
   slurm_mem: "80GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 20
 
 ##### TO DO STEPS #####
 # Step 2: Raw read QC
@@ -54,7 +54,7 @@ step2:
   slurm_time: "12-00:00:00"
   slurm_mem: "12GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 3
   slurm_array: "1-48"
 
 # Step 3: UMI extraction
@@ -64,7 +64,7 @@ step3:
   slurm_time: "3-00:00:00"
   slurm_mem: "512GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 64 
   slurm_array: "1-6"
 
 # Step 4: Read alignment
@@ -74,7 +74,7 @@ step4:
   slurm_time: "7-00:00:00"
   slurm_mem: "512GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 64 
   slurm_array: "1-6"
 
 # Step 5: Alignment deduplication
@@ -84,7 +84,7 @@ step5:
   slurm_time: "12-00:00:00"
   slurm_mem: "48GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 5 
   slurm_array: "1-6"
 
 # Step 6a: Two-bit genome
@@ -94,7 +94,7 @@ step6a:
   slurm_time: "08:00:00"
   slurm_mem: "48GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 2 
   slurm_array: "1-6"
 
 # Step 6b: Effective genome size
@@ -104,7 +104,7 @@ step6a:
   slurm_time: "08:00:00"
   slurm_mem: "48GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 2 
   slurm_array: "1-6"
 
 # Step 6c: GC bias computation
@@ -114,7 +114,7 @@ step6c:
   slurm_time: "08:00:00"
   slurm_mem: "48GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 2 
   slurm_array: "1-6"
 
 # Step 6d: GC bias correction
@@ -124,7 +124,7 @@ step6d:
   slurm_time: "12:00:00"
   slurm_mem: "48GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 10 
   slurm_array: "1-6"
 
 # Step 7a: Summary statistics - calculate alignment statistics
@@ -134,7 +134,7 @@ step7:
   slurm_time: "01:00:00"
   slurm_mem: "6GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 2 
   slurm_array: "1-6"
 
 # Step 7b: Summary statistics - estimate mean nuclear genome coverage
@@ -144,7 +144,7 @@ step7:
   slurm_time: "01:00:00"
   slurm_mem: "6GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 2 
   slurm_array: "1-6"
 
 # Step 8: Peak analysis
@@ -154,7 +154,7 @@ step8:
   slurm_time: "60:00:00"
   slurm_mem: "48GB"
   slurm_nodes: 1
-  slurm_cpus: 2
+  slurm_cpus: 2 
 
 
 
