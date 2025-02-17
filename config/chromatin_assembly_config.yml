@@ -4,10 +4,10 @@
 # Note: Run script from dir that contains chromatin-assembly dir (not from within chromatin-assembly/ dir)
 
 input:
-  reference_species:           "central_dragon"
+  ref_species:                 "central_dragon"
   input_dir:                   "/data/test_files/"
   input_pattern:               "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00"
-  reference_genome_filepath:   "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/GCF_900067755.1_pvi1.1_genomic.fna"
+  reference_genome_filepath:   "/data/central_dragon_genome.txt"
   input_control_files1:        "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
   input_control_files2:        "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
 
@@ -15,6 +15,16 @@ params:
   adapters: "/scratch3/che318/chromatin-assembly/config/adapters/adap_cont_rna.fa"
   faCount:  "/scratch3/che318/chromatin-assembly/config/faCount" 
   faToTwoBit: "/scratch3/che318/chromatin-assembly/config/faToTwoBit" 
+
+# Copies of input param
+input_copy:
+ ref_species:                 "central_dragon"
+ input_dir:                   "/data/test_files/"
+ input_pattern:               "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00"
+ reference_genome_filepath:   "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/GCF_900067755.1_pvi1.1_genomic.fna"
+ input_control_files1:        "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
+ input_control_files2:        "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
+
 
 # Directories and files that may or may not be needed
 potential_input:
