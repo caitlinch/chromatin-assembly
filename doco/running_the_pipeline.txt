@@ -58,8 +58,12 @@ https://snakemake.readthedocs.io/en/v3.10.0/executable.html
 Details on the command line interface: 
 https://snakemake.readthedocs.io/en/stable/executing/cli.html
 
-Creating a dag of the rules:
-snakemake -n --forceall --dag | dot -Tpdf > dag.pdf
+Creating a dag of the rules (includes all the files being sent through the pipeline):
+snakemake --forceall --dag | dot -Tpdf > dag.pdf
+
+Creating a rule graph of all the rules:
+snakemake --forceall --rulegraph | dot -Tpdf > rulegraph.pdf
+
 
 
 
