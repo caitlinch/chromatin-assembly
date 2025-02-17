@@ -18,8 +18,6 @@ configfile: "config/test_config.yml"
 
 # --- Global Variables --- #
 OUTDIR = "results/" + config["input"]["reference_species"] + "/"
-SAMPLE_NAME = config["input"]["input_pattern"] 
-
 
 # --- Complete pipeline run --- #
 # Run all rules
@@ -75,27 +73,52 @@ echo '  ...completed'
 # Step 2: Raw read QC
 rule s2_raw_read_QC:
     input:
-        r1 = "data/input_r1.txt",
-        r2 = "data/input_r2.txt"
+        r1 = config["input"]["input_dir"] + config["input"]["input_pattern"] + "{num}_R1.fastq.gz",
+        r2 = config["input"]["input_dir"] + config["input"]["input_pattern"] + "{num}_R2.fastq.gz"
     output:
-        zip1 = OUTDIR +  config["step2"]["name"] + "/" + "step2_r1.zip",
-        zip2 = OUTDIR +  config["step2"]["name"] + "/" + "step2_r2.zip"
+        r1_zip =  OUTDIR +  config["step2"]["name"] + "/" + config["input"]["input_pattern"] + "{num}_R1.fastq.gz",
+        r2_zip =  OUTDIR +  config["step2"]["name"] + "/" + config["input"]["input_pattern"] + "{num}_R2.fastq.gz"
     threads: config["step2"]["slurm_cpus"]
     shell:
         """
+        cat {input.r1} > {output.r1_zip}
+        cat {input.r2} > {output.r2_zip}
+        """
+
+"""
+Step 2 shell command:
+    module load fastqc/0.11.9 
+    fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}
+"""
+
+"""
+test Step 2 shell command
         module load fastqc/0.11.9
         echo 'Step 2' >> {output.zip1}
         echo 'Step 2' >> {output.zip2}
-        """
+"""
 
+""" 
+# Original script
+WORK_DIR="/scratch3/sti089/ACC_Pvitticeps_June2022"
+FASTQC_DIR="${WORK_DIR}/fastqc"
+READS_DIR="${WORK_DIR}/orig_reads"
+RESULTS_DIR="${FASTQC_DIR}"
+module load fastqc/0.11.9 
+CMD="fastqc -t 2 ${READS_DIR}/${SLURM_ARRAY_TASK_ID}_*_R1.fastq ${READS_DIR}/${SLURM_ARRAY_TASK_ID}_*_R2.fastq -o ${RESULTS_DIR}"
+echo "Executing command [$CMD]..."
+eval "$CMD"
+echo '	...completed'
+"""
+
+""" 
+# Translating step 2 to snakemake language
 ## Will want to do something like this:
 samples = [1,2,3,4,5]
 rule x:
     input:
         file_paths = expand("data/{sample}", sample = samples)
-    shell:
-        
-
+"""
 
 ## extract_UMI: UMI extraction with FGBio and Picard (Step 3)
 # Step 3: UMI extraction
