@@ -13,7 +13,7 @@
 
 
 # --- Config file --- #
-config: "config/chromatin_assembly_config.yml"
+configfile: "config/chromatin_assembly_config.yml"
 
 # --- Global Variables --- #
 OUTDIR = "results/" + config["input"]["ref_species"] + "/"
