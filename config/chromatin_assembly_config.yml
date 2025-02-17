@@ -5,7 +5,7 @@
 
 input:
   reference_species:           "central_dragon"
-  input_dir:                   "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
+  input_dir:                   "/data/test_files/"
   input_pattern:               "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00"
   reference_genome_filepath:   "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/GCF_900067755.1_pvi1.1_genomic.fna"
   input_control_files1:        "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
@@ -18,6 +18,8 @@ params:
 
 # Directories and files that may or may not be needed
 potential_input:
+  input_dir:            "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
+  input_pattern:        "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L"
   sample_dir:           "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
   output_dir:           "/scratch3/che318/chromatin-assembly/results/"
   reference_genome_dir: "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/"
@@ -34,6 +36,8 @@ step1:
   slurm_nodes: "1"
   slurm_cpus: "20" 
 
+
+##### TO DO STEPS #####
 # Step 2: Raw read QC
 # Original Slurm script: slurm_fastqc.sh
 step2:
