@@ -3,8 +3,19 @@
 conda activate snakemake
 
 
+### Data organisation and structure ####
+# Reference genome filepath
+- Store in folder: data/reference_genome/
 
-### Running on HPC with slurs ###
+# Input controls
+- Store in folder: data/input_controls/
+
+# FASTQ files (R1 and R2)
+- Store in folder: data/fastq_files/
+- Use naming structure: {sample}_L00{num}_R1.fastq.gz
+
+
+### Running on HPC with Slurm ###
 TBC
 
 

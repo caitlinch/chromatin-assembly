@@ -5,11 +5,10 @@
 
 input:
   ref_species:                 "central_dragon"
-  input_dir:                   "/data/test_files/"
-  input_pattern:               "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00"
-  reference_genome_filepath:   "/data/central_dragon_genome.txt"
-  input_control_files1:        "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
-  input_control_files2:        "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
+  input_dir:                   "/data/reads/"
+  reference_genome_filepath:   "/data/reference_genome/central_dragon_genome.txt"
+  input_control_files1:        "/data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
+  input_control_files2:        "/data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
 
 params:
   adapters: "/scratch3/che318/chromatin-assembly/config/adapters/adap_cont_rna.fa"
@@ -99,7 +98,7 @@ step6a:
 
 # Step 6b: Effective genome size
 # Calculate with faCount
-step6a:
+step6b:
   name: "6a_2BitGenome"
   slurm_time: "08:00:00"
   slurm_mem: "48GB"
@@ -129,7 +128,7 @@ step6d:
 
 # Step 7a: Summary statistics - calculate alignment statistics
 # Original Slurm script: slurm_sizemetrics.sh
-step7:
+step7a:
   name: "7a_metrics"
   slurm_time: "01:00:00"
   slurm_mem: "6GB"
@@ -139,7 +138,7 @@ step7:
 
 # Step 7b: Summary statistics - estimate mean nuclear genome coverage
 # Original Slurm script: slurm_read_count_GCcorrect.sh
-step7:
+step7b:
   name: "7b_view"
   slurm_time: "01:00:00"
   slurm_mem: "6GB"

@@ -22,9 +22,9 @@ OUTDIR = "results/" + config["input"]["ref_species"] + "/"
 # Run all rules
 rule run_all:
     input:
-        "results/step7a_sizeMetrics.txt",
-        "results/step7b_summaryStatistics.txt",
-        "results/step8_DANPOS.txt"
+        size_metrics = OUTDIR + config["step7a"]["name"] + "/" + "sizeMetrics.txt",
+        summ_stats = OUTDIR + config["step7b"]["name"] + "/" + "summaryStatistics.txt",
+        danpos_op = OUTDIR + config["step8"]["name"] + "/" + "DANPOS.txt"
 
 
 # --- Pipeline steps --- #
@@ -59,11 +59,11 @@ rule s1_mask_repeats:
 #       fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}
 rule s2_raw_read_QC:
     input:
-        r1 = config["input"]["input_dir"] + config["input"]["input_pattern"] + "{num}_R1.fastq.gz",
-        r2 = config["input"]["input_dir"] + config["input"]["input_pattern"] + "{num}_R2.fastq.gz"
+        r1 = "data/fastq_files/{sample}_L00{num}_R1.fastq.gz",
+        r2 =  "data/fastq_files/{sample}_L00{num}_R2.fastq.gz"
     output:
-        r1_zip = OUTDIR + config["step2"]["name"] + "/" + config["input"]["input_pattern"] + "{num}_R1.fastq.gz",
-        r2_zip = OUTDIR + config["step2"]["name"] + "/" + config["input"]["input_pattern"] + "{num}_R2.fastq.gz"
+        r1_zip = OUTDIR + config["step2"]["name"] + "/{sample}_L00{num}_R1.fastq.gz",
+        r2_zip = OUTDIR + config["step2"]["name"] + "/{sample}_L00{num}_R2.fastq.gz"
     threads: config["step2"]["slurm_cpus"]
     shell:
         """
@@ -79,8 +79,8 @@ rule s3_extract_UMI:
         r1 = OUTDIR + config["step2"]["name"] + "/" + "{sample}_L00{num}_R1.fastq.gz",
         r2 = OUTDIR + config["step2"]["name"] + "/" + "{sample}_L00{num}_R2.fastq.gz"
     output:
-        r1 = OUTDIR + config["step3"]["name"] + "/" + "{sample}_L00{num}_R1.fastq.gz",
-        r2 = OUTDIR + config["step3"]["name"] + "/" + "{sample}_L00{num}_R2.fastq.gz"
+        r1 = OUTDIR + config["step3"]["name"] + "/{sample}_L00{num}_R1.fastq.gz",
+        r2 = OUTDIR + config["step3"]["name"] + "/{sample}_L00{num}_R2.fastq.gz"
     shell:
         """
         echo 'Step 3' >> {output.r1}
@@ -93,10 +93,10 @@ rule s3_extract_UMI:
 rule s4_read_alignment:
     input:
         masked = OUTDIR + config["step1"]["name"] + "/" + "masked_ref_genome.fasta",
-        r1     = OUTDIR + config["step3"]["name"] + "/" + "{sample}_L00{num}_R1.fastq.gz",
-        r2     = OUTDIR + config["step3"]["name"] + "/" + "{sample}_L00{num}_R2.fastq.gz"
+        r1     = OUTDIR + config["step3"]["name"] + "/{sample}_L00{num}_R1.fastq.gz",
+        r2     = OUTDIR + config["step3"]["name"] + "/{sample}_L00{num}_R2.fastq.gz"
     output:
-        alignment = OUTDIR + config["step4"]["name"] + "/" + "alignment.txt"
+        alignment = OUTDIR + config["step4"]["name"] + "/alignment.txt"
     shell:
         """
         echo 'Step 4' >> {output.alignment}
@@ -107,9 +107,9 @@ rule s4_read_alignment:
 # Original Slurm script: slurm_depup.sh
 rule s5_alignment_deduplication:
     input:
-        alignment = OUTDIR + config["step4"]["name"] + "/" + "alignment.txt"
+        alignment = OUTDIR + config["step4"]["name"] + "/alignment.txt"
     output:
-        dedup = OUTDIR + config["step5"]["name"] + "/" + "alignment_dedup.txt"
+        dedup = OUTDIR + config["step5"]["name"] + "/alignment_dedup.txt"
     shell:
         """
         echo 'Step 5' >> {output.dedup}
@@ -119,9 +119,9 @@ rule s5_alignment_deduplication:
 # Step 6a: Generate 2Bit genome with faToTwoBit
 rule s6a_two_bit_genome:
     input:
-        masked_ref_genome = OUTDIR + config["step1"]["name"] + "/" + "masked_ref_genome.fasta"
+        masked_ref_genome = OUTDIR + config["step1"]["name"] + "/masked_ref_genome.fasta"
     output:
-        twobit_genome = OUTDIR + config["step6a"]["name"] + "/" + "TwoBitGenome.txt"
+        twobit_genome = OUTDIR + config["step6a"]["name"] + "/TwoBitGenome.txt"
     shell:
         """
         echo 'Step 6a' >> {output.twobit_genome}
@@ -131,9 +131,9 @@ rule s6a_two_bit_genome:
 # Step 6b: Calculate effective genome size
 rule s6b_effective_genome_size:
     input:
-        masked_ref_genome = OUTDIR + config["step1"]["name"] + "/" + "masked_ref_genome.fasta"
+        masked_ref_genome = OUTDIR + config["step1"]["name"] + "/masked_ref_genome.fasta"
     output:
-        eff_gen_size = OUTDIR + config["step6b"]["name"] + "/" + "effGenSize.txt"
+        eff_gen_size = OUTDIR + config["step6b"]["name"] + "/effGenSize.txt"
     shell:
         """
         echo 'Step 6b' >> {output.eff_gen_size}
@@ -144,11 +144,11 @@ rule s6b_effective_genome_size:
 # Original Slurm script: slurm_computeGCBias.sh
 rule s6c_compute_GC_bias:
     input:
-        dedup         = OUTDIR + config["step5"]["name"] + "/" + "alignment_dedup.txt",
-        twobit_genome = OUTDIR + config["step6a"]["name"] + "/" + "TwoBitGenome.txt",
-        eff_gen_size  = OUTDIR + config["step6b"]["name"] + "/" + "effGenSize.txt"
+        dedup         = OUTDIR + config["step5"]["name"] + "/alignment_dedup.txt",
+        twobit_genome = OUTDIR + config["step6a"]["name"] + "/TwoBitGenome.txt",
+        eff_gen_size  = OUTDIR + config["step6b"]["name"] + "/effGenSize.txt"
     output:
-        freq_file = OUTDIR + config["step6c"]["name"] + "/" + "computeGCbias.txt"
+        freq_file = OUTDIR + config["step6c"]["name"] + "/computeGCbias.txt"
     shell:
         """
         echo 'Step 6c' >> {output.freq_file}
@@ -159,12 +159,12 @@ rule s6c_compute_GC_bias:
 # Original Slurm script: slurm_correctGCBias.sh
 rule s6d_correct_GC_bias:
     input:
-        dedup         = OUTDIR + config["step5"]["name"] + "/" + "alignment_dedup.txt",
-        twobit_genome = OUTDIR + config["step6a"]["name"] + "/" + "TwoBitGenome.txt",
-        eff_gen_size  = OUTDIR + config["step6b"]["name"] + "/" + "effGenSize.txt",
-        freq_file     = OUTDIR + config["step6c"]["name"] + "/" + "computeGCbias.txt"
+        dedup         = OUTDIR + config["step5"]["name"] + "/alignment_dedup.txt",
+        twobit_genome = OUTDIR + config["step6a"]["name"] + "/TwoBitGenome.txt",
+        eff_gen_size  = OUTDIR + config["step6b"]["name"] + "/effGenSize.txt",
+        freq_file     = OUTDIR + config["step6c"]["name"] + "/computeGCbias.txt"
     output:
-        gc_corrected = OUTDIR + config["step6d"]["name"] + "/" + "correctGCbias.txt"
+        gc_corrected = OUTDIR + config["step6d"]["name"] + "/correctGCbias.txt"
     shell:
         """
         echo 'Step 6d' >> {output.gc_corrected}
@@ -175,9 +175,9 @@ rule s6d_correct_GC_bias:
 # Original Slurm script: slurm_sizemetrics.sh
 rule s7a_size_metrics:
     input:
-        gc_corrected = OUTDIR + config["step6d"]["name"] + "/" + "correctGCbias.txt"
+        gc_corrected = OUTDIR + config["step6d"]["name"] + "/correctGCbias.txt"
     output:
-        size_metrics = OUTDIR + config["step7a"]["name"] + "/" + "sizeMetrics.txt"
+        size_metrics = OUTDIR + config["step7a"]["name"] + "/sizeMetrics.txt"
     shell:
         """
         echo 'Step 7a' >> {output.size_metrics}
@@ -188,9 +188,9 @@ rule s7a_size_metrics:
 # Original Slurm script: slurm_read_count_GCcorrect.sh
 rule s7b_read_count:
     input:
-        gc_corrected = OUTDIR + config["step6d"]["name"] + "/" + "correctGCbias.txt"
+        gc_corrected = OUTDIR + config["step6d"]["name"] + "/correctGCbias.txt"
     output:
-        summ_stats = OUTDIR + config["step7b"]["name"] + "/" + "summaryStatistics.txt"
+        summ_stats = OUTDIR + config["step7b"]["name"] + "/summaryStatistics.txt"
     shell:
         """
         echo 'Step 7b' >> {output.summ_stats}
@@ -201,9 +201,9 @@ rule s7b_read_count:
 # Original Slurm script: slurm_dtriple_1_vs_27-29.sh
 rule s8_peak_analysis:
     input:
-        gc_corrected = OUTDIR + config["step6d"]["name"] + "/" + "correctGCbias.txt"
+        gc_corrected = OUTDIR + config["step6d"]["name"] + "/correctGCbias.txt"
     output:
-        danpos_op = OUTDIR + config["step8"]["name"] + "/" + "DANPOS.txt"
+        danpos_op = OUTDIR + config["step8"]["name"] + "/DANPOS.txt"
     shell:
         """
         echo 'Step 8' >> {output.danpos_op}
