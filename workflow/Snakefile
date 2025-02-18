@@ -46,7 +46,6 @@ rule run_all:
         s7b_stats  = OUTDIR + config["step7b"]["name"] + "/summaryStatistics.txt",
         s8_danpos  = OUTDIR + config["step8"]["name"] + "/DANPOS.txt"
 
-
 # --- Pipeline steps --- #
 ## mask_repeats: Masking with RepeatMasker (Step 1)
 # Step 1: Repeat masking and suffix array
@@ -59,19 +58,20 @@ rule s1_mask_repeats:
         masked = OUTDIR + config["step1"]["name"] + "/masked_ref_genome.fasta",
         index  = OUTDIR + config["step1"]["name"] + "/index_masked_ref_genome.fasta"
     params:
+        cpus = config["step1"]["cpus"],
         step1_dir   = OUTDIR + config["step1"]["name"] + "/",
         adapter     = config["params"]["adapters"],
         ref_species = REF_SPECIES, 
-        index_log   = OUTDIR + config["step1"]["name"] + "/index_logs.log"
-    threads: config["step1"]["slurm_cpus"]
+        log   = OUTDIR + config["step1"]["name"] + "/index_logs.log"
+    threads: config["step1"]["cpus"]
     shell:
         """
         # module load repeatmasker/4.1.0
         # module load kit4b/200218
-        # RepeatMasker -pa config["step1"]["slurm_cpus"] -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome}
-        # ngskit4b index -i {output.masked} -o {output.index} -r {params.ref_species} -T config["step1"]["slurm_cpus"] -F {params.index_log}
+        # RepeatMasker -pa {params.cpus} -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome}
+        # ngskit4b index -i {output.masked} -o {output.index} -r {params.ref_species} -T {params.cpus} -F {params.log}
         cat {input.ref_genome} > {output.masked}
-        cat {input.ref_genome} > {params.index_log}
+        cat {input.ref_genome} > {params.log}
         cat {input.ref_genome} > {output.index}
         """
 
@@ -89,7 +89,7 @@ rule s2_raw_read_QC:
         r2_zip = OUTDIR + STEP2_NAME + "/" + SAMPLE + "{lane}_R2.fastq"
     params:
         outdir = OUTDIR + STEP2_NAME + "/"
-    threads: config["step2"]["slurm_cpus"]
+    threads: config["step2"]["cpus"]
     shell:
         """
         # module load fastqc/0.11.9 
@@ -109,7 +109,7 @@ rule s3_extract_UMI:
     output:
         r1_zip = OUTDIR + STEP3_NAME + "/" + SAMPLE + "{lane}_R1.fastq",
         r2_zip = OUTDIR + STEP3_NAME + "/" + SAMPLE + "{lane}_R2.fastq"
-    threads: config["step3"]["slurm_cpus"]
+    threads: config["step3"]["cpus"]
     shell:
         """
         # module load picard/2.26.9
@@ -132,7 +132,7 @@ rule s4_read_alignment:
     params:
         r1 = OUTDIR + STEP3_NAME + "/" + SAMPLE + "*_R1.fastq",
         r2 = OUTDIR + STEP3_NAME + "/" + SAMPLE + "*_R2.fastq"
-    threads: config["step4"]["slurm_cpus"]
+    threads: config["step4"]["cpus"]
     shell:
         """
         # module load kit4b/200218
@@ -223,7 +223,7 @@ rule s7a_size_metrics:
         echo 'Step 7a' >> {output.size_metrics}
         """
 
-## read_count:Estimate mean nuclear genome cover with Picard (Step 7b)
+## read_count: Estimate mean nuclear genome cover with Picard (Step 7b)
 # Step 7b: Summary statistics - estimate mean nuclear genome coverage
 # Original Slurm script: slurm_read_count_GCcorrect.sh
 rule s7b_read_count:
