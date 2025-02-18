@@ -1,0 +1,30 @@
+---
+title: "References"
+author: "Caitlin Cherryh"
+date: "2025-02-18"
+output: html_document
+---
+
+## Citing this pipeline
+TODO add authors 
+TODO publish release when pipeline complete and tested
+TODO reference specific release 
+
+Cherryh, C., Stiller, J., Hahn, E. E. 2025. Chromatin assembly pipeline. GitHub 
+repository. https://github.com/caitlinch/chromatin-assembly
+
+
+## Related papers
+Hahn, E. E., Alexander, M. R., Grealy, A., Holleley, C. E. 2024. Hot alkaline 
+lysis gDNA extraction from formalin-fixed archival tissues. Version 2. 
+**protocols.io**. https://dx.doi.org/10.17504/protocols.io.yxmvm32p6l3p/v2
+
+Hahn, E.E., Stiller, J., Alexander, M.R., Grealy, A., Taylor, J. M., Jackson, N.,
+Frere, C. H., Holleley, C. E. 2024. Century-old chromatin architecture revealed 
+in formalin-fixed vertebrates. *Nature Communications* 15:6378. 
+https://doi.org/10.1038/s41467-024-50668-4
+
+Hahn, E. E., Alexander, M. R., Grealy, A., Stiller, J., Gardiner, D. M., 
+Holleley, C. E. 2022. Unlocking inaccessible historical genomes preserved in 
+formalin. *Molecular Ecology Resources* 22:2130–2147. 
+https://doi.org/10.1111/1755-0998.13505

@@ -1,0 +1,21 @@
+---
+title: "Running the pipeline"
+author: "Caitlin Cherryh"
+date: "2025-02-18"
+output: html_document
+---
+
+## Testing for your data
+
+### Dry runs
+
+### Visualising the Snakemake process
+
+- DAG (shows how the files will be input and output)
+- Rulegraph (shows relationship between rules)
+
+
+## Local runs
+
+
+## HPC use
