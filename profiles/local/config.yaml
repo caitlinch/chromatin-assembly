@@ -1,0 +1,66 @@
+default-resources:
+    slurm_partition: "<your default partition>"
+    slurm_account:   "<your account>
+
+set-resources:
+    s1_mask_repeats:
+        runtime: "2-00:00:00"
+        mem: "80GB"
+        cpus_per_task: 40
+        nodes: 1
+    s2_raw_read_QC:
+        runtime: "12-00:00:00"
+        mem: "12GB"
+        nodes: 1
+        cpus_per_task: 2
+    3_extract_UMI:
+        runtime: "3-00:00:00"
+        mem: "512GB"
+        nodes: 1
+        cpus_per_task: 2
+    s4_read_alignment:
+        runtime: "7-00:00:00"
+        mem: "512GB"
+        nodes: 1
+        cpus_per_task: 2
+    s5_alignment_deduplication:
+        runtime: "12-00:00:00"
+        mem: "48GB"
+        nodes: 1
+        cpus_per_task: 2
+    s6a_two_bit_genome:
+        runtime: "08:00:00"
+        mem: "48GB"
+        nodes: 1
+        cpus_per_task: 2
+    s6b_effective_genome_size:
+        runtime: "08:00:00"
+        mem: "48GB"
+        nodes: 1
+        cpus_per_task: 2
+    s6c_compute_GC_bias:
+        runtime: "08:00:00"
+        mem: "48GB"
+        nodes: 1
+        cpus_per_task: 2
+    s6d_correct_GC_bias:
+        runtime: "08:00:00"
+        mem: "48GB"
+        nodes: 1
+        cpus_per_task: 2
+    s7a_size_metrics:
+        runtime: "01:00:00"
+        mem: "6GB"
+        nodes: 1
+        cpus_per_task: 2
+    s7b_read_count:
+        runtime: "01:00:00"
+        mem: "6GB"
+        nodes: 1
+        cpus_per_task: 2
+    s8_peak_analysis:
+        runtime: "60:00:00"
+        mem: "48GB"
+        nodes: 1
+        cpus_per_task: 2
+
