@@ -57,7 +57,6 @@ rule s1_mask_repeats:
         masked = OUTDIR + config["output_name"]["step1"] + "/masked_ref_genome.fasta",
         index  = OUTDIR + config["output_name"]["step1"] + "/index_masked_ref_genome.fasta"
     params:
-        cpus = config["step1"]["cpus"],
         step1_dir   = OUTDIR + config["output_name"]["step1"] + "/",
         adapter     = config["params"]["adapters"],
         ref_species = REF_SPECIES, 
