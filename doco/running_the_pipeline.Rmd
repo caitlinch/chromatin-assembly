@@ -5,36 +5,29 @@ date: "2025-02-18"
 output: html_document
 ---
 
+Some key points to remember:
+
+- All file paths in this document assume the working directory is the `chromatin-assembly/` folder
+
 
 ## Installation
 
-The Smakemake 
-[Installation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) 
-documentation recommends installing/loading Snakemake into a conda environment.
-
-### Local installation
+#### Local installation
 If running the pipeline locally, follow the [Installation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html) 
-instructions from the Snakemake documentation.
+instructions from the Snakemake documentation. The Snakemake documentation 
+recommends installing/loading Snakemake into a conda environment.
 
 You will also need to install `graphviz` to visualise the Snakemake pipeline.
 
-### CSIRO HPC access
-On the CSIRO system, Snakemake is available in the python/3.6.1 module. Load it with:
+#### CSIRO HPC
+On the CSIRO system Petrichor, Snakemake is available in the `python` module. Load it with:
+
 ```
-module load python/3.6.1
+module load python
 module load graphviz
 ```
 
 The `graphviz` module allows you to create plots of the logic within the pipeline.
-
-## Preparation
-
-1. Clone the `chromatin-assembly` repository into the location you wish to run 
-the pipeline in, then navigate into the `chromatin-assembly` folder. 
-2. Copy your input data into the `data/` folder. 
-3. Update the file paths and variables within the `config/chromatin-assembly-config.yml`
-file.
-4. *If using conda environments:* Open the conda environment: `conda activate snakemake`
 
 ## Dry runs
 A dry run allows you to test the workflow prior to performing computationally 
@@ -61,7 +54,7 @@ A DAG (directed acyclic graph) shows how individual files pass through the
 pipeline by creating a node for each job (i.e., a job for each lane in the reads)
 and connecting them via dependencies. 
 
-### Rulegraph 
+#### Rulegraph 
 
 To generate a rulegraph:
 ```
@@ -72,7 +65,7 @@ snakemake -n -p --forceall --rulegraph | dot -Tpdf > rulegraph.pdf
 knitr::include_graphics("figures/rulegraph.png")
 ```
 
-### DAG
+#### DAG
 
 To generate a DAG:
 ```
@@ -86,7 +79,19 @@ knitr::include_graphics("figures/dag.png")
 ```
 
 
-## Local runs
+## Local use
+1. Clone the `chromatin-assembly` repository into the location you wish to run 
+the pipeline in, then navigate into the `chromatin-assembly` folder. 
+2. Copy your input data into the `data/` folder. 
+3. Update the file paths and variables within the `config/chromatin-assembly-config.yml`
+file.
+4. *If using conda environments:* Open the conda environment: `conda activate snakemake`
+5. Perform a dry run (with 1 core): `snakemake -n -p -c1`
+6. Run the snakemake pipeline with one core: `snakemake -c1` 
+
+#### Controlling pipeline execution
+Instead of running the entire pipeline with 1 core, you can control which
+steps are executed and what computational resources are allowed.
 
 To run the entire pipeline with `N` cores: 
 ```
@@ -126,6 +131,77 @@ TODO update output filepath for step 5
 
 ## HPC use
 
+#### Preparing the conda environment
+
+Snakemake provides a plugin called [snakemake-executor-plugin-slurm](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#snakemake-executor-plugin-slurm) to facilitate Slurm use. 
+
+To create a conda environment for use with Snakemake and Slurm:
+
+- Create new conda environment with the name `slurm_snakemake`
+  - `$ conda create -n slurm_snakemake`
+- Activate the new environment
+  - `$ conda activate slurm_snakemake`
+- Configure conda to enable the bioconda channel
+  - `$ conda config --add channels bioconda`
+  - `$ conda config --add channels conda-forge`
+- Load the python module (which contains Snakemake)
+  - `$ module load python`
+- Load the graphviz module (to allow pipeline visualisation)
+  - `$ module load graphviz`
+- Install the [snakemake-executor-plugin-slurm](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#snakemake-executor-plugin-slurm) plugin from 
+[bioconda](https://anaconda.org/bioconda/snakemake-executor-plugin-slurm) 
+  - `$ conda install bioconda::snakemake-executor-plugin-slurm`
+- Save a list of the packages in the conda environment as YAML format
+  - `$ conda env export -n slurm_snakemake > slurm_snakemake_conda.yaml`
+- Save a list of the loaded modules as a text file
+  - `$ module list > slurm_snakemake_modules.txt`
+
+### Specifying resources
+https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#advanced-resource-specifications
+
+To specify account and partition in the command line:
+```
+snakemake --executor slurm --default-resources slurm_account=<your SLURM account> slurm_partition=<your SLURM partition>
+```
+
+Account and partition details can also be specified using a configuration profile. 
+```
+snakemake --executor slurm --workflow-profile profiles/slurm/config.yaml
+```
+TODO add configuration profile
+
+To specify
+
+
+#### Running pipeline on the HPC
+1. Clone the `chromatin-assembly` repository into the location you wish to run 
+the pipeline in, then navigate into the `chromatin-assembly` folder. 
+2. Copy your input data into the `data/` folder. 
+3. Update the file paths and variables within the `config/chromatin-assembly-config.yml`
+file.
+4. Update the Slurm resources in the `profiles/slurm/config.yaml` file
+5. Open the conda environment: `conda activate slurm_snakemake`
+6. Perform a local dry run to identify any issues:
+```
+snakemake -n -p -c1
+```
+7. Execute the desired rules using the `--executor` flag and the slurm workflow profile (and other commands as desired):
+```
+snakemake --executor slurm -workflow-profile profiles/slurm/config.yaml ...
+```
+
+As when executing locally, pipeline execution can be limited to specific rules
+by adding flags to the Snakemake command line call.
+For example: 
+
+- Execute Steps 1--3: `--until s3_extract_UMI`
+- Execute pipeline, omitting Step 8: `--omit s8_peak_analysis`
+- Execute Steps 2-3: `--until s3_extract_UMI --omit s1_mark_repeats`
+
+The complete command line to execute Steps 2-3 would be:
+```
+snakemake --executor slurm -workflow-profile profiles/slurm/config.yaml --until s3_extract_UMI --omit s1_mark_repeats
+```
 
 ## Useful command line options
 
@@ -136,6 +212,7 @@ For further details, see the Snakemake documentation page
 
 | Command option | Usage example | Explanation |
 | --- | --- | --- |
+| `--snakefile`, `-s` | `-s {SNAKEFILE}` | Specify the Snakefile. You will not need to specify the Snakefile as input -- by default, Snakemake looks for the snakefile at `Snakefile` and `workflow/Snakefile`. In this repository, the Snakefile is located at `workflow/Snakefile`. Use only if you have a specific snakefile to use in a different location. |
 | `--dry-run`, `--dryrun`, `-n` | `-n` | Perform dry run - do not execute anything, but display would would be run |
 | `--printshellcmds`, `-p` | `-p` | Print the shell commands that will be executed |
 | `--cores`, `-c` | `-cN` | Use at most`N` CPU cores. Sets maximum number of cores requested from cluster or scheduler |
@@ -147,6 +224,8 @@ For further details, see the Snakemake documentation page
 | `--forcerun` `-R` | `-R` | Force re-execution of given rule/file. Used if a rule has been changed. |
 | `--until`, `-U` | `-U {target}` |Run pipeline until it reaches target rule/file |
 | `--omit-from`, `-O` | `-O {target}` | Prevent execution of the target rule/file and any downstream rules/files |
+| `-executor`, `-e` | `-e {executor}` i.e., `-e slurm` or `-e local` | Specify a custom executor - use `slurm` for HPC execution |
+| `--workflow-profile` | `--workflow-profile {target}` | Path (relative to current directory) for workflow profile used to configure Snakemake with parameters for a specific workflow (e.g., allowed resources for Slurm) |
 
 ## Documentation and resources
 
@@ -157,5 +236,16 @@ From the Snakemake 8.28.0 documentation:
 - [Using environment modules](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#using-environment-modules) 
 - [Resources and remote execution](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#resources-remote-execution)
 
+Executing Snakemake on a HPC/cluster using Slurm:
+
+- [snakemake-executor-plugin-slurm](https://github.com/snakemake/snakemake-executor-plugin-slurm/tree/main)
+- [snakemake-executor-plugin-slurm documentation](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#snakemake-executor-plugin-slurm)
+- [bioconda/packages/snakemake-executor-plugin-slurm](https://anaconda.org/bioconda/snakemake-executor-plugin-slurm)
+
+Other resources:
+
+- [The Snakemake wrappers repository](https://snakemake-wrappers.readthedocs.io/en/stable/index.html) 
+has wrappers for using popular tools as Snakemake rules (e.g., BAMTools, 
+BCFTools, FastQC, FGBio, DeepTools, Picard)
 
 
