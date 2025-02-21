@@ -168,8 +168,17 @@ Account and partition details can also be specified using a configuration profil
 ```
 snakemake --executor slurm --workflow-profile profiles/slurm/config.yaml
 ```
-TODO add configuration profile
 
+Some notes on [Running Snakemake on a cluster](https://docs.s3it.uzh.ch/how-to_articles/how_to_run_snakemake/#resources):
+
+- Resources can be referenced within a rule's `shell` and `run` sections e.g., `{resources.mem_mb}`, `{resources.threads}`
+  - This is useful for applications that accept memory or thread parameters in the command line
+  - For example, in rule `s2_raw_read_QC`: `fastqc -t {resources.threads} {input.r1} {input.r2} -o {params.outdir}` 
+- Snakefiles and configuration profiles can specify both `threads` and `cpus_per_task`
+  - `cpus_per_task` is specific to Slurm.
+  - `threads` is independent of environment and always available, even when not explicitly set for a rule. 
+  - `threads` can be determined based on how well the task can be parallelised
+  - Snakemake uses `threads` to determine how many jobs to execute when running a pipeline locally
 To specify
 
 
@@ -247,5 +256,7 @@ Other resources:
 - [The Snakemake wrappers repository](https://snakemake-wrappers.readthedocs.io/en/stable/index.html) 
 has wrappers for using popular tools as Snakemake rules (e.g., BAMTools, 
 BCFTools, FastQC, FGBio, DeepTools, Picard)
+- [Managing Workflows with Snakemake](https://eriqande.github.io/eca-bioinf-handbook/snakemake-chap.html),
+in Anderson, E. C. 2024, [Practical Computing and Bioinformatics for Conservation and Evolutionary Genomics](https://eriqande.github.io/eca-bioinf-handbook/), Accessed 21/02/2025
 
 
