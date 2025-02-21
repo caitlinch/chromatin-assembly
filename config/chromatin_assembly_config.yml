@@ -13,9 +13,23 @@ input:
   input_control_files2:        "data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
 
 params:
-  adapters: "/scratch3/che318/chromatin-assembly/config/adapters/adap_cont_rna.fa"
-  faCount:  "/scratch3/che318/chromatin-assembly/config/faCount" 
-  faToTwoBit: "/scratch3/che318/chromatin-assembly/config/faToTwoBit" 
+  adapters: "resources/adapters/adap_cont_rna.fa"
+  faCount:  "resources/faCount" 
+  faToTwoBit: "resources/faToTwoBit" 
+
+output_name:
+  step1: "1_repeatmasker"
+  step2: "2_fastqc"
+  step3: "3_UMIext"
+  step4: "4_kalign_UMI"
+  step5: "5_dedup"
+  step6a: "6a_2BitGenome"
+  step6b: "6b_effGenSize"
+  step6c: "6c_computeGCbias"
+  step6d: "6d_correctGCbias"
+  step7a: "7a_alignmentStatistics"
+  step7b: "7b_genomeCoverage"
+  step8: "8_dtriple"
 
 # Directories and files that may or may not be needed (file paths refer to Petrichor)
 potential_input:
@@ -27,125 +41,4 @@ potential_input:
   input_control_dir1:   "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/"
   input_control_dir2:   "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/" 
   log_dir:              "/scratch3/che318/chromatin-assembly/results/logs/"
-
-# Step 1: Repeat masking
-# Original Slurm script: slurm_waterdragon_RM.sh
-step1:
-  name: "1_repeatmasker"
-  time: "2-00:00:00"
-  mem: "80GB"
-  nodes: 1
-  cpus: 2
-
-##### TO DO STEPS #####
-# Step 2: Raw read QC
-# Original Slurm script: slurm_fastqc.sh
-step2:
-  name: "2_fastqc"
-  time: "12-00:00:00"
-  mem: "12GB"
-  nodes: 1
-  cpus: 2
-  array: "1-48"
-
-# Step 3: UMI extraction
-# Original Slurm script: slurm_extractUMI.sh
-step3:
-  name: "3_UMIext"
-  time: "3-00:00:00"
-  mem: "512GB"
-  nodes: 1
-  cpus: 2
-  array: "1-6"
-
-# Step 4: Read alignment
-# Original Slurm script: slurm_kalign_umi.sh
-step4:
-  name: "4_kalign_UMI"
-  time: "7-00:00:00"
-  mem: "512GB"
-  nodes: 1
-  cpus: 2
-  array: "1-6"
-
-# Step 5: Alignment deduplication
-# Original Slurm script: slurm_depup.sh
-step5:
-  name: "5_dedup"
-  time: "12-00:00:00"
-  mem: "48GB"
-  nodes: 1
-  cpus: 2
-  array: "1-6"
-
-# Step 6a: Two-bit genome
-# Generated with faToTwoBit
-step6a:
-  name: "6a_2BitGenome"
-  time: "08:00:00"
-  mem: "48GB"
-  nodes: 1
-  cpus: 2
-  array: "1-6"
-
-# Step 6b: Effective genome size
-# Calculate with faCount
-step6b:
-  name: "6a_2BitGenome"
-  time: "08:00:00"
-  mem: "48GB"
-  nodes: 1
-  cpus: 2
-  array: "1-6"
-
-# Step 6c: GC bias computation
-# Original Slurm script: slurm_computeGCBias.sh
-step6c:
-  name: "6c_computeGCbias"
-  time: "08:00:00"
-  mem: "48GB"
-  nodes: 1
-  cpus: 2
-  array: "1-6"
-
-# Step 6d: GC bias correction
-# Original Slurm script: slurm_correctGCBias.sh
-step6d:
-  name: "6c_correctGCbias"
-  time: "12:00:00"
-  mem: "48GB"
-  nodes: 1
-  cpus: 2
-  array: "1-6"
-
-# Step 7a: Summary statistics - calculate alignment statistics
-# Original Slurm script: slurm_sizemetrics.sh
-step7a:
-  name: "7a_metrics"
-  time: "01:00:00"
-  mem: "6GB"
-  nodes: 1
-  cpus: 2
-  array: "1-6"
-
-# Step 7b: Summary statistics - estimate mean nuclear genome coverage
-# Original Slurm script: slurm_read_count_GCcorrect.sh
-step7b:
-  name: "7b_view"
-  time: "01:00:00"
-  mem: "6GB"
-  nodes: 1
-  cpus: 2
-  array: "1-6"
-
-# Step 8: Peak analysis
-# Original Slurm script: slurm_dtriple_1_vs_27-29.sh
-step8:
-  name: "8_dtriple"
-  time: "60:00:00"
-  mem: "48GB"
-  nodes: 1
-  cpus: 2
-
-
 
