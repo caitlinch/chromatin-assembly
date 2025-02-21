@@ -1,0 +1,147 @@
+---
+title: "Quickstart guide"
+author: "Caitlin Cherryh"
+date: "2025-02-21"
+output: html_document
+---
+
+Key points to remember:
+
+- All file paths in this document assume the working directory is the `chromatin-assembly/` folder
+
+## Local use
+
+1. Clone the `chromatin-assembly` repository into the location you wish to run 
+the pipeline in, then navigate into the `chromatin-assembly` folder. 
+2. Copy your input data into the `data/` folder. 
+3. Update the file paths and variables within the `config/chromatin-assembly-config.yml`
+file.
+4. Update the allowed resources for the run in the `profiles/local/config.yaml` 
+file. For the local run (which is usually a dry or test run), all rules have 
+the same resources.
+5. *If using conda environments:* Activate the conda environment: `conda activate snakemake`
+6. Perform a dry run with one core (`-c1`): `snakemake -n -p -c1`
+7. Run the snakemake pipeline with the local profile:
+
+```
+snakemake --workflow-profile profiles/local/  
+``` 
+
+#### Controlling pipeline execution
+Instead of running the entire pipeline with 1 core, you can control which
+steps are executed and what computational resources are allowed.
+
+To run the entire pipeline with `N` cores: 
+```
+snakemake -cN
+```
+
+To run the pipeline until it reaches a certain rule, use `snakemake --until {target}`
+(where `{target}` is the rule name). For example, to execute Steps 1-3:
+``` 
+snakemake --until s3_extract_UMI  -cN
+```
+
+To omit steps from the pipeline (i.e., run the pipeline without executing a
+specific rule or any downstream rules) use `snakemake --omit {target}`. Any 
+step can be omitted. Execution of the pipeline will stop when downstream rules
+become dependent on completion of the target rule. For example, to omit Step 8
+(peak analysis in DANPOS3):
+```
+snakemake --omit s8_peak_analysis -cN
+```
+
+The `--until` and `--omit` flags can be combined, for example if you want to process
+Steps 2-3 (raw read quality control and extract UMIs) without executing Step 1 
+(mask repeats):
+```
+snakemake --until s3_extract_UMI --omit s1_mark_repeats -cN
+```
+
+You can also execute a single rule of the pipeline by using the desired output 
+file path with `snakemake -p {output_file_path}`.
+
+## HPC use
+
+#### Preparing the conda environment
+
+Snakemake provides a plugin called [snakemake-executor-plugin-slurm](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#snakemake-executor-plugin-slurm) to facilitate Slurm use. 
+
+To create a conda environment for use with Snakemake and Slurm:
+
+- Create new conda environment with the name `slurm_snakemake`
+  - `$ conda create -n slurm_snakemake`
+- Activate the new environment
+  - `$ conda activate slurm_snakemake`
+- Configure conda to enable the bioconda channel
+  - `$ conda config --add channels bioconda`
+  - `$ conda config --add channels conda-forge`
+- Load the python module (which contains Snakemake)
+  - `$ module load python`
+- Load the graphviz module (to allow pipeline visualisation)
+  - `$ module load graphviz`
+- Install the [snakemake-executor-plugin-slurm](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#snakemake-executor-plugin-slurm) plugin from 
+[bioconda](https://anaconda.org/bioconda/snakemake-executor-plugin-slurm) 
+  - `$ conda install bioconda::snakemake-executor-plugin-slurm`
+- Save a list of the packages in the conda environment as YAML format
+  - `$ conda env export -n slurm_snakemake > slurm_snakemake_conda.yaml`
+- Save a list of the loaded modules as a text file
+  - `$ module list > slurm_snakemake_modules.txt`
+
+#### Specifying resources
+
+To specify account and partition in the command line:
+```
+snakemake --executor slurm --default-resources slurm_account=<your SLURM account> slurm_partition=<your SLURM partition>
+```
+
+Account and partition details can also be specified using a configuration profile. 
+```
+snakemake --executor slurm --workflow-profile profiles/slurm/config.yaml
+```
+
+Some notes on [Running Snakemake on a cluster](https://docs.s3it.uzh.ch/how-to_articles/how_to_run_snakemake/#resources):
+
+- Resources can be referenced within a rule's `shell` and `run` sections e.g., `{resources.mem_mb}`, `{resources.threads}`
+  - This is useful for applications that accept memory or thread parameters in the command line
+  - For example, in rule `s2_raw_read_QC`: `fastqc -t {resources.threads} {input.r1} {input.r2} -o {params.outdir}` 
+- Snakefiles and configuration profiles can specify both `threads` and `cpus_per_task`
+  - `cpus_per_task` is specific to Slurm.
+  - `threads` is independent of environment and always available, even when not explicitly set for a rule. 
+  - `threads` can be determined based on how well the task can be parallelised
+  - Snakemake uses `threads` to determine how many jobs to execute when running a pipeline locally
+  
+**Note**: Snakemake and Slurm have different names for resources (refer to 
+[Advanced Resource Specifications](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#advanced-resource-specifications) )
+
+
+#### Running pipeline on the HPC
+1. Clone the `chromatin-assembly` repository into the location you wish to run 
+the pipeline in, then navigate into the `chromatin-assembly` folder. 
+2. Copy your input data into the `data/` folder. 
+3. Update the file paths and variables within the `config/chromatin-assembly-config.yml`
+file.
+4. Update the Slurm resources in the `profiles/slurm/config.yaml` file
+5. Open the conda environment: `conda activate slurm_snakemake`
+6. Perform a local dry run to identify any issues:
+```
+snakemake -n -p -c1
+```
+7. Execute the desired rules using the `--executor` flag and the slurm workflow profile (and other commands as desired):
+```
+snakemake --executor slurm -workflow-profile profiles/slurm/config.yaml ...
+```
+If no additional commands are added, Snakemake will execute the entire pipeline.
+
+As when executing locally, pipeline execution can be limited to specific rules
+by adding flags to the Snakemake command line call.
+For example: 
+
+- Execute Steps 1--3: `--until s3_extract_UMI`
+- Execute pipeline, omitting Step 8: `--omit s8_peak_analysis`
+- Execute Steps 2-3: `--until s3_extract_UMI --omit s1_mark_repeats`
+
+The complete command line to execute Steps 2-3 would be:
+```
+snakemake --executor slurm -workflow-profile profiles/slurm/config.yaml --until s3_extract_UMI --omit s1_mark_repeats
+```
