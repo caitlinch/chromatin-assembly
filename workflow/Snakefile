@@ -65,8 +65,6 @@ rule s1_mask_repeats:
         """
         # module load repeatmasker/4.1.0
         # module load kit4b/200218
-        # RepeatMasker -pa {params.cpus} -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome}
-        # ngskit4b index -i {output.masked} -o {output.index} -r {params.ref_species} -T {params.cpus} -F {params.log}
         # RepeatMasker -pa {resources.threads} -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome}
         # ngskit4b index -i {output.masked} -o {output.index} -r {params.ref_species} -T {resources.threads} -F {params.log}
         cat {input.ref_genome} > {output.masked}
@@ -87,7 +85,6 @@ rule s2_raw_read_QC:
     shell:
         """
         # module load fastqc/0.11.9 
-        # fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}
         # fastqc -t {resources.threads} {input.r1} {input.r2} -o {params.outdir}
         cat {input.r1} > {output.r1_zip}
         cat {input.r2} > {output.r2_zip}
@@ -116,7 +113,7 @@ rule s4_read_alignment:
     input:
         r1_zip = expand("results/{ref_species}/{s3_name}/{sample}{lane}_R1.fastq", ref_species = REF_SPECIES, s3_name = STEP3_NAME, sample = SAMPLE, lane = LANES),
         r2_zip = expand("results/{ref_species}/{s3_name}/{sample}{lane}_R2.fastq", ref_species = REF_SPECIES, s3_name = STEP3_NAME, sample = SAMPLE, lane = LANES),
-        masked = rules.s1_mask_repeats.masked
+        masked = rules.s1_mask_repeats.output.masked
     output:
         alignment = OUTDIR + config["output_name"]["step4"] + "/alignment.txt"
     params:
@@ -137,7 +134,7 @@ rule s5_alignment_deduplication:
         dedup_alignment = OUTDIR + config["output_name"]["step5"] + "/alignment_dedup.txt"
     shell:
         """
-        echo 'Step 5' >> {output.dedup}
+        echo 'Step 5' >> {output.dedup_alignment}
         """
 
 ## Step 6a: Generate 2Bit genome with faToTwoBit
