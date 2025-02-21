@@ -1,0 +1,17 @@
+---
+title: "Table of Contents"
+author: "Caitlin Cherryh"
+date: "2025-02-21"
+output: html_document
+---
+
+[Introduction](doco/start_here.html) - Introduction to the chromatin-assembly pipeline
+
+[Input and Output](doco/input_and_output.html) - Guide to data selection
+
+[Quickstart guide](doco/quickstart_guide.html) - Instructions to get the pipeline running locally or on a HPC
+
+[Running the pipeline](doco/running_the_pipeline.html) - More details about installation, execution, command line options, and suggested resources.
+
+[References](doco/references.html) - How to cite the pipeline and references to related papers
+
