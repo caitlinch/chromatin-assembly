@@ -29,7 +29,7 @@ output_name:
   step6d: "6d_correctGCbias"
   step7a: "7a_alignmentStatistics"
   step7b: "7b_genomeCoverage"
-  step8: "8_dtriple"
+  step8:  "8_dtriple"
 
 # Directories and files that may or may not be needed (file paths refer to Petrichor)
 potential_input:

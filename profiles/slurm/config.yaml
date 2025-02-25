@@ -6,28 +6,28 @@ set-resources:
     s1_mask_repeats:
         runtime: "2-00:00:00"
         mem: "80GB"
-        cpus_per_task: 40
         nodes: 1
+        cpus_per_task: 20
     s2_raw_read_QC:
         runtime: "12-00:00:00"
         mem: "12GB"
         nodes: 1
-        cpus_per_task: 2
+        cpus_per_task: 3
     3_extract_UMI:
         runtime: "3-00:00:00"
         mem: "512GB"
         nodes: 1
-        cpus_per_task: 2
+        cpus_per_task: 64
     s4_read_alignment:
         runtime: "7-00:00:00"
         mem: "512GB"
         nodes: 1
-        cpus_per_task: 2
+        cpus_per_task: 64
     s5_alignment_deduplication:
         runtime: "12-00:00:00"
         mem: "48GB"
         nodes: 1
-        cpus_per_task: 2
+        cpus_per_task: 5
     s6a_two_bit_genome:
         runtime: "08:00:00"
         mem: "48GB"
@@ -47,7 +47,7 @@ set-resources:
         runtime: "08:00:00"
         mem: "48GB"
         nodes: 1
-        cpus_per_task: 2
+        cpus_per_task: 10
     s7a_size_metrics:
         runtime: "01:00:00"
         mem: "6GB"
