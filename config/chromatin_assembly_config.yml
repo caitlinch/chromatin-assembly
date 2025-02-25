@@ -1,7 +1,7 @@
 # Chromatin assembly pipeline
 # Configuration file
 
-# Note: Run script from dir that contains chromatin-assembly dir (not from within chromatin-assembly/ dir)
+# Note: Run script from within chromatin-assembly/ dir
 
 input:
   ref_species:                 "central_dragon"
