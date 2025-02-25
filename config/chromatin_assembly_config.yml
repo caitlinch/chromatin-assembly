@@ -3,6 +3,7 @@
 
 # Note: Run script from within chromatin-assembly/ dir
 
+# Input data paths and details
 input:
   ref_species:                 "central_dragon"
   read_dir:                    "data/reads/"
@@ -12,11 +13,13 @@ input:
   input_control_files1:        "data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
   input_control_files2:        "data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
 
+# Programs and files needed for specific pipeline steps
 params:
   adapters: "resources/adapters/adap_cont_rna.fa"
   faCount:  "resources/faCount" 
   faToTwoBit: "resources/faToTwoBit" 
 
+# Names of the output directory generated for each step
 output_name:
   step1: "1_repeatmasker"
   step2: "2_fastqc"
@@ -31,6 +34,35 @@ output_name:
   step7b: "7b_genomeCoverage"
   step8:  "8_dtriple"
 
+# Program parameters for UMI extraction with FGBio and Picard (Step 3)
+s3_extract_UMI:
+  FGBio_read_structure: "8M143T 8M143T"
+  FGBio_molecular_index_tags: "ZA ZB"
+  FGBio_single_tag: "RX"
+
+# Program parameters for aligning reads with kalign (Step 4)
+#   kalign-c: --minchimeric - minimum chimeric length as a percentage of probe length (default is 0 to disable, otherwise 15..99)
+#   kalign-l: --minacceptreadlen - after any end trimming only accept read for further processing if read is at least this length (default is 50bp, range 15..2000)
+#   kalign-d: --pairminlen -  accept paired end alignments with observed insert sizes of at least this (minimum 25, default = 100)
+#   kalign-U: --pemode - paired end processing mode: 0 - none, 1 - paired end with recover orphan ends, 2 - paired end no orphan recovery, 3 - paired end with recover orphan ends treating orphan ends as SE, 4 - paired end no orphan recovery treating orphan ends as SE (default: 0)
+#   kalign-id: string to be included in output filepath
+s4_read_alignment:
+  kalign-c: "25"
+  kalign-l: "25"
+  kalign-d: "50"
+  kalign-U: "4"
+  kalign-id: "pe_c25_l25_d50_U4"
+
+# Program parameters for removing PCR and optical duplicates from alignment with Picard (Step 5)
+s5_alignment_deduplication:
+  Picard_remove_duplicates: "TRUE"
+  Picard_barcode_tag: "RX"
+
+
+
+
+
+#################################################################################################################
 # Directories and files that may or may not be needed (file paths refer to Petrichor)
 potential_input:
   input_dir:            "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
@@ -41,4 +73,5 @@ potential_input:
   input_control_dir1:   "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/"
   input_control_dir2:   "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/" 
   log_dir:              "/scratch3/che318/chromatin-assembly/results/logs/"
+
 

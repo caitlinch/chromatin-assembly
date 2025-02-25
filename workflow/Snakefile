@@ -97,40 +97,117 @@ rule s3_extract_UMI:
     output:
         r1_zip = OUTDIR + STEP3_NAME + "/" + SAMPLE + "{lane}_R1.fastq",
         r2_zip = OUTDIR + STEP3_NAME + "/" + SAMPLE + "{lane}_R2.fastq"
+    param:
+        basename             = SAMPLE + "{lane}",
+        unmapped_bam         = OUTDIR + STEP3_NAME + "/" + SAMPLE + "{lane}_unmapped.bam",
+        unmapped_bam_withUMI = OUTDIR + STEP3_NAME + "/" + SAMPLE + "{lane}_unmapped_withUMI.bam",
+        fgbio_read_structure = config["s3_extract_UMI"]["FGBio_read_structure"],
+        fgbio_mol_index_tags = config["s3_extract_UMI"]["FGBio_molecular_index_tags"],
+        fgbio_single_tag     = config["s3_extract_UMI"]["FGBio_single_tag"]
     shell:
         """
-        # module load picard/2.26.9
-        # module load fgbio/1.3.0
-        cat {input.r1_zip} > {output.r1_zip}
-        cat {input.r2_zip} > {output.r2_zip}
+        # module load picard
+        # module load fgbio
+        # 
+        # CMD1 = "JAVAOPTS=-Xmx2g java -jar $PICARD_HOME/picard.jar FastqToSam \
+	    # 	F1={input.r1_zip} \
+	    # 	F2={input.r2_zip} \
+	    # 	O={param.unmapped_bam} \
+	    # 	SM={param.basename}
+        # eval "$CMD1"
+        # 
+        # CMD2="JAVAOPTS=-Xmx50g java -jar $FGBIO_HOME/fgbio-1.3.0.jar ExtractUmisFromBam \
+	    # 	--input={param.unmapped_bam} \
+        #   --output={param.unmapped_bam_withUMI} \
+	    # 	--read-structure={param.fgbio_read_structure} \
+        #   --molecular-index-tags={param.fgbio_mol_index_tags} \
+        #   --single-tag={param.fgbio_single_tag}"
+        # eval "$CMD2"
+        # 
+        # CMD3="JAVAOPTS=-Xmx2g java -jar $PICARD_HOME/picard.jar SamToFastq \
+	    #   I={param.unmapped_bam_withUMI} \
+	    #   F={output.r1_zip} \
+	    #   F2={output.r2_zip}" 
+        # eval "$CMD3"
+
+        cat {input.r1} > {output.r1_zip}
+        cat {input.r2} > {output.r2_zip}
         """
 
 ## Step 4: Align reads with kalign (slurm_kalign_umi.sh)
 rule s4_read_alignment:
     input:
-        r1_zip = expand("results/{ref_species}/{s3_name}/{sample}{lane}_R1.fastq", ref_species = REF_SPECIES, s3_name = STEP3_NAME, sample = SAMPLE, lane = LANES),
-        r2_zip = expand("results/{ref_species}/{s3_name}/{sample}{lane}_R2.fastq", ref_species = REF_SPECIES, s3_name = STEP3_NAME, sample = SAMPLE, lane = LANES),
-        masked = rules.s1_mask_repeats.output.masked
+        r1_zip = OUTDIR + STEP3_NAME + "/" + SAMPLE + "{lane}_R1.fastq",
+        r2_zip = OUTDIR + STEP3_NAME + "/" + SAMPLE + "{lane}_R2.fastq",
+        index = rules.s1_mask_repeats.output.index
     output:
-        alignment = OUTDIR + config["output_name"]["step4"] + "/alignment.txt"
+        alignment = OUTDIR + config["output_name"]["step4"] + "/" + SAMPLE + "_" + config["s4_read_alignment"]["kalign-id"] + "_alignment.sam"
     params:
-        r1 = OUTDIR + STEP3_NAME + "/" + SAMPLE + "*_R1.fastq",
-        r2 = OUTDIR + STEP3_NAME + "/" + SAMPLE + "*_R2.fastq"
+        kalign-c      = config["s4_read_alignment"]["kalign-c"],
+        kalign-l      = config["s4_read_alignment"]["kalign-l"],
+        kalign-d      = config["s4_read_alignment"]["kalign-d"],
+        kalign-U      = config["s4_read_alignment"]["kalign-U"],
+        log_file      = OUTDIR + config["output_name"]["step4"] + "/" + SAMPLE + "_" + config["s4_read_alignment"]["kalign-id"] + ".log"
     shell:
         """
         # module load kit4b/200218
+        # CMD="ngskit4b kalign \
+        #   --minchimeric={params.kalign-c} \
+        #   --minacceptreadlen={params.kalign-l} \
+        #   --pairminlen={params.kalign-d} \
+        #   --pemode={params.kalign-U} \
+	    #   --in={input.r1_zip} \
+	    #   --pair={input.r2_zip} \
+	    #   --sfx={input.index} \
+	    #   --out={output.alignment} \
+	    #   --threads={resources.threads} \
+	    #   --log={params.log_file}"
+        # eval "$CMD"
+
         echo 'Step 4' >> {output.alignment}
         """
 
-## Step 5: Remove PCR and optial duplicates from alignment with Picard (slurm_depup.sh)
+""" 
+To input all r1 and all r2 files at once (need to add block comments for SHELL command):
+input:
+        r1s_zip = expand("results/{ref_species}/{s3_name}/{sample}{lane}_R1.fastq", ref_species = REF_SPECIES, s3_name = STEP3_NAME, sample = SAMPLE, lane = LANES),
+        r2s_zip = expand("results/{ref_species}/{s3_name}/{sample}{lane}_R2.fastq", ref_species = REF_SPECIES, s3_name = STEP3_NAME, sample = SAMPLE, lane = LANES),
+shell:
+        # module load kit4b/200218
+        # CMD="ngskit4b kalign \
+        #   --minchimeric={params.kalign-c} \
+        #   --minacceptreadlen={params.kalign-l} \
+        #   --pairminlen={params.kalign-d} \
+        #   --pemode={params.kalign-U} \
+	    #   --in={input.r1s_zip) \
+	    #   --pair={input.r2s_zip} \
+	    #   --sfx={input.index} \
+	    #   --out={output.alignment} \
+	    #   --threads={resources.threads} \
+	    #   --log={params.log_file}"
+        # eval "$CMD"
+"""
+
+## Step 5: Remove PCR and optical duplicates from alignment with Picard (slurm_depup.sh)
 rule s5_alignment_deduplication:
     input:
         alignment = rules.s4_read_alignment.output.alignment
     output:
         dedup_alignment = OUTDIR + config["output_name"]["step5"] + "/alignment_dedup.txt"
+    params:
+        picard_remove_dupes = config["s5_alignment_deduplication"]["Picard_remove_duplicates"],
+        picard_barcode_tag = config["s5_alignment_deduplication"]["Picard_barcode_tag"]
     shell:
         """
         # module load picard/2.26.10
+        # CMD="JAVAOPTS=-Xmx100g java -jar $PICARD_HOME/picard.jar MarkDuplicates\
+        #     I= ${BAM_DIR}/${SLURM_ARRAY_TASK_ID}_*_sorted.bam \
+        #     O= ${DEDUP_DIR}/${BASENAME}_dedup.bam \
+        #     M= ${LOG_DIR}/${BASENAME}_removeduplicates.metrics.txt \
+        #     REMOVE_DUPLICATES={params.picard_remove_dupes} \
+        #     BARCODE_TAG={params.picard_barcode_tag}"
+        # eval "$CMD"
+
         echo 'Step 5' >> {output.dedup_alignment}
         """
 
@@ -140,8 +217,11 @@ rule s6a_two_bit_genome:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
         twobit_genome = OUTDIR + config["output_name"]["step6a"] + "/TwoBitGenome.txt"
+    params:
+        faToTwoBit = config["params"]["faToTwoBit"]
     shell:
         """
+        # {params.faToTwoBit} {input.masked_ref_genome} {output.twobit_genome}
         echo 'Step 6a' >> {output.twobit_genome}
         """
 
@@ -151,8 +231,11 @@ rule s6b_effective_genome_size:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
         eff_gen_size = OUTDIR + config["output_name"]["step6b"] + "/effGenSize.txt"
+    params:
+        faCount = config["params"]["faCount"]
     shell:
         """
+        # {params.faCount} {input.masked_ref_genome} > {output.eff_gen_size}
         echo 'Step 6b' >> {output.eff_gen_size}
         """
 
@@ -168,6 +251,13 @@ rule s6c_compute_GC_bias:
         """
         # module load python/3.9.4
         # module load samtools/1.12
+        # CMD="computeGCBias \
+        # -b ${BAM_DIR}/${SLURM_ARRAY_TASK_ID}_*_dedup.bam \
+        # --effectiveGenomeSize 1716675060 \
+        # -g ${BIT_DIR}/GCF_900067755.1_pvi1.1_genomic_RM_nhmm_adapt.2bit \
+        # --GCbiasFrequenciesFile ${GC_COMPUTE_DIR}/${BASENAME}.txt"
+        # eval "$CMD"
+
         echo 'Step 6c' >> {output.freq_file}
         """
 
