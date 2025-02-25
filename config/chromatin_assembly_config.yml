@@ -3,12 +3,13 @@
 
 # Note: Run script from within chromatin-assembly/ dir
 
+##### Input data and other resources #####
 # Input data paths and details
 input:
   ref_species:                 "central_dragon"
   read_dir:                    "data/reads/"
   read_lanes:                  ["1", "2", "3", "4", "5", "6", "7", "8"]
-  read_path_pattern:           "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00"
+  read_path_pattern:           "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC" # Seperate out the lane number from sample pattern - don't include "_L00" in string here
   reference_genome_filepath:   "data/reference_genome/central_dragon_genome.txt"
   input_control_files1:        "data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
   input_control_files2:        "data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
@@ -19,8 +20,10 @@ params:
   faCount:  "resources/faCount" 
   faToTwoBit: "resources/faToTwoBit" 
 
+##### Output names #####
 # Names of the output directory generated for each step
 output_name:
+  step0: "0_mergedReads"
   step1: "1_repeatmasker"
   step2: "2_fastqc"
   step3: "3_UMIext"
@@ -34,6 +37,7 @@ output_name:
   step7b: "7b_genomeCoverage"
   step8:  "8_dtriple"
 
+##### Program parameters #####
 # Program parameters for UMI extraction with FGBio and Picard (Step 3)
 s3_extract_UMI:
   FGBio_read_structure: "8M143T 8M143T"
@@ -58,7 +62,10 @@ s5_alignment_deduplication:
   Picard_remove_duplicates: "TRUE"
   Picard_barcode_tag: "RX"
 
-
+##### Intermediate output #####
+# Effective genome size, extracted from the output of Step 6b
+s6b_output:
+  effective_genome_size: 1716675060
 
 
 
