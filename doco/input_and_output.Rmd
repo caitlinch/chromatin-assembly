@@ -100,6 +100,8 @@ and Steps (to specify resources needed for each step).
     - `nodes` - number of nodes to allow for the given rule
     - `cpus` - the number of CPUs to allow for the given rule 
 
+TODO update config file doco - the structure has changed
+
 # Output
 
 Three main outputs:
