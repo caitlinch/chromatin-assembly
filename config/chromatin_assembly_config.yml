@@ -39,28 +39,25 @@ output_name:
 
 ##### Program parameters #####
 # Program parameters for UMI extraction with FGBio and Picard (Step 3)
+#   FGBio_params: user-specified parameters for FGBio call
 s3_extract_UMI:
-  FGBio_read_structure: "8M143T 8M143T"
-  FGBio_molecular_index_tags: "ZA ZB"
-  FGBio_single_tag: "RX"
+  FGBio_params: "--read-structure=8M143T 8M143T --molecular-index-tags=ZA ZB --single-tag=RX"
 
 # Program parameters for aligning reads with kalign (Step 4)
-#   kalign-c: --minchimeric - minimum chimeric length as a percentage of probe length (default is 0 to disable, otherwise 15..99)
-#   kalign-l: --minacceptreadlen - after any end trimming only accept read for further processing if read is at least this length (default is 50bp, range 15..2000)
-#   kalign-d: --pairminlen -  accept paired end alignments with observed insert sizes of at least this (minimum 25, default = 100)
-#   kalign-U: --pemode - paired end processing mode: 0 - none, 1 - paired end with recover orphan ends, 2 - paired end no orphan recovery, 3 - paired end with recover orphan ends treating orphan ends as SE, 4 - paired end no orphan recovery treating orphan ends as SE (default: 0)
-#   kalign-id: string to be included in output filepath
+#   kalign_params: user-specified parameters for kalign call
+#       -c, --minchimeric: minimum chimeric length as a percentage of probe length (default is 0 to disable, otherwise 15..99)
+#       -l, --minacceptreadlen: after any end trimming only accept read for further processing if read is at least this length (default is 50bp, range 15..2000)
+#       -d, --pairminlen:  accept paired end alignments with observed insert sizes of at least this (minimum 25, default = 100)
+#       -U, --pemode: paired end processing mode: 0 - none, 1 - paired end with recover orphan ends, 2 - paired end no orphan recovery, 3 - paired end with recover orphan ends treating orphan ends as SE, 4 - paired end no orphan recovery treating orphan ends as SE (default: 0)
+#   kalign-id: user-specified string to be included in output filepath
 s4_read_alignment:
-  kalign-c: "25"
-  kalign-l: "25"
-  kalign-d: "50"
-  kalign-U: "4"
+  kalign_params: "-c25 -l25 -d50 -U4"
   kalign-id: "pe_c25_l25_d50_U4"
 
 # Program parameters for removing PCR and optical duplicates from alignment with Picard (Step 5)
+#   Picard_params: user-specified parameters for Picard call
 s5_alignment_deduplication:
-  Picard_remove_duplicates: "TRUE"
-  Picard_barcode_tag: "RX"
+  Picard_params: "REMOVE_DUPLICATES=TRUE BARCODE_TAG=RX"
 
 ##### Intermediate output #####
 # Effective genome size, extracted from the output of Step 6b

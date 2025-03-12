@@ -114,27 +114,23 @@ rule s3_extract_UMI:
         basename             = SAMPLE + "_L00{lane}",
         unmapped_bam         = OUTDIR + STEP3_NAME + "/" + SAMPLE + "_L00{lane}_unmapped.bam",
         unmapped_bam_withUMI = OUTDIR + STEP3_NAME + "/" + SAMPLE + "_L00{lane}_unmapped_withUMI.bam",
-        fgbio_read_structure = config["s3_extract_UMI"]["FGBio_read_structure"],
-        fgbio_mol_index_tags = config["s3_extract_UMI"]["FGBio_molecular_index_tags"],
-        fgbio_single_tag     = config["s3_extract_UMI"]["FGBio_single_tag"]
+        fgbio_params = config["s3_extract_UMI"]["FGBio_params"]
     shell:
         """
         # module load picard
         # module load fgbio/1.3.0
         # 
         # CMD1 = "JAVAOPTS=-Xmx2g java -jar $PICARD_HOME/picard.jar FastqToSam \
-	    # 	F1={input.r1_zip} \
-	    # 	F2={input.r2_zip} \
-	    # 	O={param.unmapped_bam} \
-	    # 	SM={param.basename}"
+	    # 	F1= {input.r1_zip} \
+	    # 	F2= {input.r2_zip} \
+	    # 	O= {param.unmapped_bam} \
+	    # 	SM= {param.basename}"
         # eval "$CMD1"
         # 
         # CMD2 = "JAVAOPTS=-Xmx50g java -jar $FGBIO_HOME/fgbio-1.3.0.jar ExtractUmisFromBam \
-	    # 	input={param.unmapped_bam} \
-        #   output={param.unmapped_bam_withUMI} \
-	    # 	read-structure={param.fgbio_read_structure} \
-        #   molecular-index-tags={param.fgbio_mol_index_tags} \
-        #   single-tag={param.fgbio_single_tag}"
+	    # 	--input={param.unmapped_bam} \
+        #   --output={param.unmapped_bam_withUMI} \
+	    # 	{param.fgbio_params}"
         # eval "$CMD2"
         # 
         # CMD3="JAVAOPTS=-Xmx2g java -jar $PICARD_HOME/picard.jar SamToFastq \
@@ -154,22 +150,16 @@ rule s4_read_alignment:
         r2_zip = OUTDIR + STEP3_NAME + "/" + SAMPLE + "_L00{lane}_R2.fastq",
         index = rules.s1_mask_repeats.output.index
     output:
-        alignment = OUTDIR + config["output_name"]["step4"] + "/" + SAMPLE + "_" + config["s4_read_alignment"]["kalign-id"] + "_alignment.sam"
+        alignment = OUTDIR + config["output_name"]["step4"] + "/" + SAMPLE + "_" + config["s4_read_alignment"]["kalign_id"] + "_alignment.sam"
     params:
-        kalign-c      = config["s4_read_alignment"]["kalign-c"],
-        kalign-l      = config["s4_read_alignment"]["kalign-l"],
-        kalign-d      = config["s4_read_alignment"]["kalign-d"],
-        kalign-U      = config["s4_read_alignment"]["kalign-U"],
-        log_file      = OUTDIR + config["output_name"]["step4"] + "/" + SAMPLE + "_" + config["s4_read_alignment"]["kalign-id"] + ".log",
-        alignment_id  = SAMPLE + "_" + config["s4_read_alignment"]["kalign-id"]
+        kalign_params  = config["s4_read_alignment"]["kalign_params"],
+        kalign_id      = config["s4_read_alignment"]["kalign_id"],
+        log_file      = OUTDIR + config["output_name"]["step4"] + "/" + SAMPLE + "_" + config["s4_read_alignment"]["kalign_id"] + ".log",
     shell:
         """
         # module load kit4b/200218
         # CMD="ngskit4b kalign \
-        #   --minchimeric={params.kalign-c} \
-        #   --minacceptreadlen={params.kalign-l} \
-        #   --pairminlen={params.kalign-d} \
-        #   --pemode={params.kalign-U} \
+        #   {params.kalign_params) \
 	    #   --in={input.r1_zip} \
 	    #   --pair={input.r2_zip} \
 	    #   --sfx={input.index} \
@@ -209,18 +199,16 @@ rule s5_alignment_deduplication:
     output:
         dedup_alignment = OUTDIR + config["output_name"]["step5"] + "/" + SAMPLE + "alignment_dedup.bam"
     params:
-        picard_remove_dupes = config["s5_alignment_deduplication"]["Picard_remove_duplicates"],
-        picard_barcode_tag = config["s5_alignment_deduplication"]["Picard_barcode_tag"],
+        picard_params = config["s5_alignment_deduplication"]["Picard_params"],
         metrics_file = OUTDIR + config["output_name"]["step5"] + "/" + SAMPLE + "_removeduplicates.metrics.txt"
     shell:
         """
         # module load picard/2.26.10
         # CMD="JAVAOPTS=-Xmx100g java -jar $PICARD_HOME/picard.jar MarkDuplicates\
-        #     I={input.alignment} \
-        #     O={output.dedup_alignment} \
-        #     M={params.metrics_file} \
-        #     REMOVE_DUPLICATES={params.picard_remove_dupes} \
-        #     BARCODE_TAG={params.picard_barcode_tag}"
+        #     I= {input.alignment} \
+        #     O= {output.dedup_alignment} \
+        #     M= {params.metrics_file} \
+        #     {params.picard_params}"
         # eval "$CMD"
 
         echo 'Step 5' >> {output.dedup_alignment}
@@ -305,7 +293,7 @@ rule s6d_correct_GC_bias:
         echo 'Step 6d' >> {output.gc_corrected}
         """
 
-## Step 7a: SCalculate alignment statistics with Picard (slurm_sizemetrics.sh)
+## Step 7a: Calculate alignment statistics with Picard (slurm_sizemetrics.sh)
 rule s7a_size_metrics:
     input:
         gc_corrected = rules.s6d_correct_GC_bias.output.gc_corrected
