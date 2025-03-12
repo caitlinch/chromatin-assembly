@@ -1,0 +1,8 @@
+TODO
+- test dry run with text file data
+- test dry run with real data
+- test run with real data
+- get DANPOS working in server
+- add input control to DANPOS rule (Step 8)
+- test DANPOS rule
+- complete doco
