@@ -16,61 +16,67 @@ configfile: "config/chromatin_assembly_config.yml"
 
 
 # --- Global Variables --- #
-REF_SPECIES = config["input"]["ref_species"]
-READ_DIR = config["input"]["read_dir"]
-SAMPLE = config["input"]["read_path_pattern"]
-LANES = config["input"]["read_lanes"]
-OUTDIR = "results/" + config["input"]["ref_species"] + "/"
+REF_SPECIES = config["ref_species"]
+OUTDIR      = "results/" + config["ref_species"] + "/"
+SAMPLE      = config["input"]["sample"]
+
+READ_DIR    = config["merge_reads"]["read_dir"]
+READ_SAMPLE = config["merge_reads"]["read_path_pattern"]
+READ_LANES  = config["merge_reads"]["read_lanes"]
+
 
 
 # --- Complete pipeline run --- #
 # Run all rules
 rule run_all:
     input:
-        s1_masked  = OUTDIR + config["output_name"]["step1"] + "/masked_ref_genome.fasta",
-        s1_index   = OUTDIR + config["output_name"]["step1"] + "/index_masked_ref_genome.fasta",
-        s2_r1      = OUTDIR + config["output_name"]["step2"] + "/" + SAMPLE + "_merged_FastQC_R1.fastq.gz",
-        s2_r2      = OUTDIR + config["output_name"]["step2"] + "/" + SAMPLE + "_merged_FastQC_R2.fastq.gz",
-        s3_r1      = OUTDIR + config["output_name"]["step3"] + "/" + SAMPLE + "_merged_withUMI_R1.fastq.gz",
-        s3_r2      = OUTDIR + config["output_name"]["step3"] + "/" + SAMPLE + "_merged_withUMI_R2.fastq.gz",
-        s4_algnmt  = OUTDIR + config["output_name"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + "_alignment.sam",
-        s5_dedup   = OUTDIR + config["output_name"]["step5"] + "/" + SAMPLE + "alignment_dedup.bam",
-        s6a_2bit   = OUTDIR + config["output_name"]["step6a"] + "/" + SAMPLE + "_TwoBitGenome.2bit",
-        s6b_gSize  = OUTDIR + config["output_name"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt",
-        s6c_GCfreq = OUTDIR + config["output_name"]["step6c"] + "/" + SAMPLE + "_computeGCbias.txt",
-        s6d_GCbias = OUTDIR + config["output_name"]["step6d"] + "/" + SAMPLE + "_alignment_dedup_gcCorrected.bam",
-        s7a_metric = OUTDIR + config["output_name"]["step7a"] + "/" + REF_SPECIES + "_" + SAMPLE + "_insert_size_metrics.txt",
-        s7b_stats  = OUTDIR + config["output_name"]["step7b"] + "/" + REF_SPECIES + "_" + SAMPLE + "_count.txt",
-        s8_danpos  = OUTDIR + config["output_name"]["step8"] + "/DANPOS.txt"
+        s1_masked  = OUTDIR + config["output_dir"]["step1"] + "/" + REF_SPECIES + "_masked_ref_genome.fasta",
+        s1_index   = OUTDIR + config["output_dir"]["step1"] + "/" + REF_SPECIES + "_index_masked_ref_genome.fasta",
+        s2_r1      = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R1.fastq.gz",
+        s2_r2      = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R2.fastq.gz",
+        s3_r1      = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R1.fastq.gz",
+        s3_r2      = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R2.fastq.gz",
+        s4_algnmt  = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + "_alignment.sam",
+        s5_dedup   = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "alignment_dedup.bam",
+        s6a_2bit   = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_TwoBitGenome.2bit",
+        s6b_gSize  = OUTDIR + config["output_dir"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt",
+        s6c_GCfreq = OUTDIR + config["output_dir"]["step6c"] + "/" + SAMPLE + "_computeGCbias.txt",
+        s6d_GCbias = OUTDIR + config["output_dir"]["step6d"] + "/" + SAMPLE + "_alignment_dedup_gcCorrected.bam",
+        s7a_metric = OUTDIR + config["output_dir"]["step7a"] + "/" + REF_SPECIES + "_" + SAMPLE + "_insert_size_metrics.txt",
+        s7b_stats  = OUTDIR + config["output_dir"]["step7b"] + "/" + REF_SPECIES + "_" + SAMPLE + "_count.txt",
+        s8_danpos  = OUTDIR + config["output_dir"]["step8"] + "/" + REF_SPECIES + "_" + SAMPLE + "_DANPOS.txt"
 
 # --- Pipeline steps --- #
 ## Step 0: Read collation (SLURM_MergeSamples.sh)
 rule s0_merge_samples:
     input:
-        r1s = expand("{read_dir}{sample}_L00{lane}_R1.fastq.gz", read_dir = READ_DIR, sample = SAMPLE, lane = LANES),
-        r2s = expand("{read_dir}{sample}_L00{lane}_R2.fastq.gz", read_dir = READ_DIR, sample = SAMPLE, lane = LANES)
+        r1s = expand("{read_dir}{sample}_L00{lane}_R1.fastq.gz", read_dir = READ_DIR, sample = READ_SAMPLE, lane = READ_LANES),
+        r2s = expand("{read_dir}{sample}_L00{lane}_R2.fastq.gz", read_dir = READ_DIR, sample = READ_SAMPLE, lane = READ_LANES)
     output:
-        r1_merged = OUTDIR + config["output_name"]["step0"] + "/" + SAMPLE + "_R1_merged.fastq.gz",
-        r2_merged = OUTDIR + config["output_name"]["step0"] + "/" + SAMPLE + "_R2_merged.fastq.gz"
+        r1_merged = OUTDIR + config["output_dir"]["step0"] + "/" + SAMPLE + "_merged_R1.fastq.gz",
+        r2_merged = OUTDIR + config["output_dir"]["step0"] + "/" + SAMPLE + "_merged_R2.fastq.gz"
+    params:
+        merge_reads = config["merge_reads"]["perform_merge"]
     shell:
         """
-        cat {input.r1s} > {output.r1_merged}
-        cat {input.r2s} > {output.r2_merged}
+        if {params.merge_reads} == TRUE:
+            cat {input.r1s} > {output.r1_merged}
+            cat {input.r2s} > {output.r2_merged}
         """
 
 ## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
 # Original suffix array command:  ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked -r waterdragon
 rule s1_mask_repeats:
     input:
-        ref_genome = config["input"]["reference_genome_filepath"]
+        ref_genome = config["input"]["reference_genome"]
     output:
-        masked = OUTDIR + config["output_name"]["step1"] + "/masked_ref_genome.fasta",
-        index  = OUTDIR + config["output_name"]["step1"] + "/index_masked_ref_genome.fasta"
+        masked = OUTDIR + config["output_dir"]["step1"] + "/" + REF_SPECIES + "_masked_ref_genome.fasta",
+        index  = OUTDIR + config["output_dir"]["step1"] + "/" + REF_SPECIES + "_index_masked_ref_genome.fasta"
     params:
-        step1_dir   = OUTDIR + config["output_name"]["step1"] + "/",
+        step1_dir   = OUTDIR + config["output_dir"]["step1"] + "/",
         adapter     = config["params"]["adapters"],
         ref_species = REF_SPECIES, 
-        log         = OUTDIR + config["output_name"]["step1"] + "/index_logs.log"
+        log         = OUTDIR + config["output_dir"]["step1"] + "/index_logs.log"
     shell:
         """
         # module load repeatmasker/4.1.0
@@ -85,13 +91,13 @@ rule s1_mask_repeats:
 ## Step 2: Perform quality control using FastQC (slurm_fastqc.sh)
 rule s2_raw_read_QC:
     input:
-        r1 = rules.s0_merge_samples.output.r1_merged,
-        r2 = rules.s0_merge_samples.output.r2_merged
+        r1 = config["input"]["r1"],
+        r2 = config["input"]["r2"]
     output:
-        r1 = OUTDIR + config["output_name"]["step2"] + "/" + SAMPLE + "_merged_FastQC_R1.fastq.gz",
-        r2 = OUTDIR + config["output_name"]["step2"] + "/" + SAMPLE + "_merged_FastQC_R2.fastq.gz"
+        r1 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R1.fastq.gz",
+        r2 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R2.fastq.gz"
     params:
-        outdir = OUTDIR + config["output_name"]["step2"] + "/"
+        outdir = OUTDIR + config["output_dir"]["step2"] + "/"
     shell:
         """
         # module load fastqc/0.11.9 
@@ -106,12 +112,12 @@ rule s3_extract_UMI:
         r1 = rules.s2_raw_read_QC.output.r1,
         r2 = rules.s2_raw_read_QC.output.r1
     output:
-        r1 = OUTDIR + config["output_name"]["step3"] + "/" + SAMPLE + "_merged_withUMI_R1.fastq.gz",
-        r2 = OUTDIR + config["output_name"]["step3"] + "/" + SAMPLE + "_merged_withUMI_R2.fastq.gz"
+        r1 = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R1.fastq.gz",
+        r2 = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R2.fastq.gz"
     params:
-        basename             = SAMPLE + "_merged",
-        unmapped_bam         = OUTDIR + config["output_name"]["step3"] + "/" + SAMPLE + "_merged_unmapped.bam",
-        unmapped_bam_withUMI = OUTDIR + config["output_name"]["step3"] + "/" + SAMPLE + "_merged_unmapped_withUMI.bam",
+        basename             = SAMPLE,
+        unmapped_bam         = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_unmapped.bam",
+        unmapped_bam_withUMI = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_unmapped_withUMI.bam",
         fgbio_params         = config["s3_extract_UMI"]["FGBio_params"]
     shell:
         """
@@ -148,10 +154,10 @@ rule s4_read_alignment:
         r2    = rules.s3_extract_UMI.output.r2,
         index = rules.s1_mask_repeats.output.index
     output:
-        alignment = OUTDIR + config["output_name"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + "_alignment.sam"
+        alignment = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + "_alignment.sam"
     params:
         kalign_params = config["s4_read_alignment"]["kalign_params"],
-        log_file      = OUTDIR + config["output_name"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + ".log"
+        log_file      = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + ".log"
     shell:
         """
         # module load kit4b/200218
@@ -173,10 +179,10 @@ rule s5_alignment_deduplication:
     input:
         alignment = rules.s4_read_alignment.output.alignment
     output:
-        dedup_alignment = OUTDIR + config["output_name"]["step5"] + "/" + SAMPLE + "alignment_dedup.bam"
+        dedup_alignment = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "alignment_dedup.bam"
     params:
         picard_params = config["s5_alignment_deduplication"]["Picard_params"],
-        metrics_file = OUTDIR + config["output_name"]["step5"] + "/" + SAMPLE + "_removeduplicates.metrics.txt"
+        metrics_file = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_removeduplicates.metrics.txt"
     shell:
         """
         # module load picard/2.26.10
@@ -195,7 +201,7 @@ rule s6a_two_bit_genome:
     input:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
-        twobit_genome = OUTDIR + config["output_name"]["step6a"] + "/" + SAMPLE + "_TwoBitGenome.2bit"
+        twobit_genome = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_TwoBitGenome.2bit"
     params:
         faToTwoBit = config["params"]["faToTwoBit"]
     shell:
@@ -209,7 +215,7 @@ rule s6b_effective_genome_size:
     input:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
-        eff_gen_size = OUTDIR + config["output_name"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt"
+        eff_gen_size = OUTDIR + config["output_dir"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt"
     params:
         faCount = config["params"]["faCount"]
     shell:
@@ -225,7 +231,7 @@ rule s6c_compute_GC_bias:
         twobit_genome   = rules.s6a_two_bit_genome.output.twobit_genome,
         eff_gen_size    = rules.s6b_effective_genome_size.output.eff_gen_size
     output:
-        freq_file = OUTDIR + config["output_name"]["step6c"] + "/" + SAMPLE + "_computeGCbias.txt"
+        freq_file = OUTDIR + config["output_dir"]["step6c"] + "/" + SAMPLE + "_computeGCbias.txt"
     params:
         eff_gen_size = config["s6b_output"]["effective_genome_size"]
     shell:
@@ -250,7 +256,7 @@ rule s6d_correct_GC_bias:
         eff_gen_size    = rules.s6b_effective_genome_size.output.eff_gen_size,
         freq_file       = rules.s6c_compute_GC_bias.output.freq_file
     output:
-        gc_corrected = OUTDIR + config["output_name"]["step6d"] + "/" + SAMPLE + "_alignment_dedup_gcCorrected.bam"
+        gc_corrected = OUTDIR + config["output_dir"]["step6d"] + "/" + SAMPLE + "_alignment_dedup_gcCorrected.bam"
     params:
         eff_gen_size = config["s6b_output"]["effective_genome_size"]
     shell:
@@ -274,8 +280,8 @@ rule s7a_size_metrics:
     input:
         gc_corrected = rules.s6d_correct_GC_bias.output.gc_corrected
     output:
-        size_metrics = OUTDIR + config["output_name"]["step7a"] + "/" + REF_SPECIES + "_" + SAMPLE + "_insert_size_metrics.txt",
-        histogram = OUTDIR + config["output_name"]["step7a"] + "/"  + REF_SPECIES + "_" + SAMPLE + "_insert_size_histogram.pdf"
+        size_metrics = OUTDIR + config["output_dir"]["step7a"] + "/" + REF_SPECIES + "_" + SAMPLE + "_insert_size_metrics.txt",
+        histogram = OUTDIR + config["output_dir"]["step7a"] + "/"  + REF_SPECIES + "_" + SAMPLE + "_insert_size_histogram.pdf"
     shell:
         """
         # module load picard/2.26.10
@@ -294,7 +300,7 @@ rule s7b_read_count:
     input:
         gc_corrected = rules.s6d_correct_GC_bias.output.gc_corrected
     output:
-        read_count = OUTDIR + config["output_name"]["step7b"] + "/" + REF_SPECIES + "_" + SAMPLE + "_count.txt"
+        read_count = OUTDIR + config["output_dir"]["step7b"] + "/" + REF_SPECIES + "_" + SAMPLE + "_count.txt"
     shell:
         """
         # module load samtools/1.12
@@ -309,7 +315,7 @@ rule s8_peak_analysis:
     input:
         gc_corrected = rules.s6d_correct_GC_bias.output.gc_corrected
     output:
-        danpos_op = OUTDIR + config["output_name"]["step8"] + "/DANPOS.txt"
+        danpos_op = OUTDIR + config["output_dir"]["step8"] + "/" + REF_SPECIES + "_" + SAMPLE + "_DANPOS.txt"
     shell:
         """
         # module load danpos/3.1.1

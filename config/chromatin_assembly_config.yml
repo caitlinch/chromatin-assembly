@@ -3,16 +3,36 @@
 
 # Note: Run script from within chromatin-assembly/ dir
 
-##### Input data and other resources #####
+##### Input data and parameters #####
+# Species name
+ref_species: "yeast"
+
+# Merging reads
+#   Merging reads is an optional step included in the pipeline, which I recommend running separately
+merge_reads: 
+  perform_merge:     FALSE # TRUE to merge reads
+  read_dir:          "data/yeast/reads/"
+  read_path_pattern: "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC" # Separate out the lane number from sample pattern - don't include "_L00" in string here
+  read_lanes:        ["1"] # Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"]
+
 # Input data paths and details
+#   Input for analysis steps, either after merging reads or if using a single lane
+#     For a single lane - enter path for R1 and R2 files
+#     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
+#
 input:
-  ref_species:                 "central_dragon"
-  read_dir:                    "data/reads/"
-  read_lanes:                  ["1", "2", "3", "4", "5", "6", "7", "8"]
-  read_path_pattern:           "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC" # Seperate out the lane number from sample pattern - don't include "_L00" in string here
-  reference_genome_filepath:   "data/reference_genome/central_dragon_genome.txt"
-  input_control_files1:        "data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/G-WD-1_HL7J7DSX3_ACTTCTGC-CCGGGACT_L00*"
-  input_control_files2:        "data/input_control/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/G-WD-1_HLT7NDSX3_ACTTCTGC-CCGGGACT_L00*" 
+#   Provide full file paths relative to `chromatin-assembly/` dir
+  sample:           "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # snippet of file path used to identify dataset
+  r1:               "data/yeast/reads/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz"
+  r2:               "data/yeast/reads/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz"
+  reference_genome: "data/yeast/reference_genome/S288C_reference_sequence_R64-2-1_20150113.fsa"
+  gff:              "data/yeast/reference_genome/saccharomyces_cerevisiae_R64-2-1_20150113.gff"
+
+# Input control for peak analysis (Step 8)
+input_control: 
+  control_directory: "data/yeast/input_control/"
+  control_pattern: "132620_HCJLVDSX2_GACGATCT-TCGTGCAT"  # Separate out the lane number id from the sample pattern - don't include "_L00" in string here
+  control_lanes: ["1"] # Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"]
 
 # Programs and files needed for specific pipeline steps
 params:
@@ -63,19 +83,3 @@ s5_alignment_deduplication:
 # Effective genome size, extracted from the output of Step 6b
 s6b_output:
   effective_genome_size: 1716675060
-
-
-
-#################################################################################################################
-# Directories and files that may or may not be needed (file paths refer to Petrichor)
-potential_input:
-  input_dir:            "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
-  input_pattern:        "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L"
-  sample_dir:           "/scratch3/che318/input/ACC_paper/AGRF_CAGRF22019398_H3NTTDSX3/"
-  output_dir:           "/scratch3/che318/chromatin-assembly/results/"
-  reference_genome_dir: "/datasets/work/efsp-faire/work/sti089/genomes/central_dragon/"
-  input_control_dir1:   "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HL7J7DSX3/"
-  input_control_dir2:   "/datasets/work/efsp-faire/source/Tuna_skink_water_dragon/AGRF_CAGRF220510576_HLT7NDSX3/" 
-  log_dir:              "/scratch3/che318/chromatin-assembly/results/logs/"
-
-
