@@ -1,8 +1,14 @@
 TODO
-- test dry run with text file data
-- test dry run with real data
-- test run with real data
-- get DANPOS working in server
-- add input control to DANPOS rule (Step 8)
-- test DANPOS rule
-- complete doco
+(X) test dry run with text file data
+(X) separate read merging and analysis steps
+(X) prepare for yeast data
+( ) test dry run with yeast data
+( ) test run with yeast data
+( ) prepare for mouse data
+( ) test dry run with mouse data
+( ) test run with mouse data
+( ) get DANPOS working in server (Step 8)
+( ) add input control to DANPOS (Step 8)
+( ) feed in multiple input control files to DANPOS (Step 8)
+( ) test DANPOS rule (Step 8)
+( ) complete doco
