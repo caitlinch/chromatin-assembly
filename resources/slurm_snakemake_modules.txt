@@ -1,0 +1,2 @@
+Currently Loaded Modulefiles:
+ 1) SC   2) slurm/current(default)   3) gcc/12.3.0(default)   4) python/3.9.4(default)   5) graphviz/2.47.0  
