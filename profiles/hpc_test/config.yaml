@@ -1,66 +1,70 @@
 default-resources:
-    slurm_partition: "<your default partition>"
-    slurm_account:   "<your account>
+    slurm_account: "OD-232072"
+    job-name: "chromAssem"
+    mail-user: "caitlin.cherryh@csiro.au"
+    mail-type: "ALL"
+    error: "/scratch3/che318/chromatin-assembly/logs/chromatin-assembly_test.err"
+    out: "/scratch3/che318/chromatin-assembly/logs/chromatin-assembly_test.out"
 
 set-resources:
     s1_mask_repeats:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s2_raw_read_QC:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     3_extract_UMI:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s4_read_alignment:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s5_alignment_deduplication:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s6a_two_bit_genome:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s6b_effective_genome_size:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s6c_compute_GC_bias:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s6d_correct_GC_bias:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s7a_size_metrics:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s7b_read_count:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
     s8_peak_analysis:
         runtime: "00:00:05"
-        mem: "1GB"
+        mem: "5MB"
         cpus_per_task: 2
         nodes: 1
 

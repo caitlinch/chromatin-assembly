@@ -1,6 +1,10 @@
 default-resources:
-    slurm_partition: "<your default partition>"
-    slurm_account:   "<your account>
+    slurm_account: "OD-232072"
+    job-name: "chromAssem"
+    mail-user: "caitlin.cherryh@csiro.au"
+    mail-type: "ALL"
+    error: "/scratch3/che318/chromatin-assembly/logs/chromatin-assembly.err"
+    out: "/scratch3/che318/chromatin-assembly/logs/chromatin-assembly.out"
 
 set-resources:
     s1_mask_repeats:
