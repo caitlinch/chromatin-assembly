@@ -11,7 +11,7 @@
 
 <meta name="author" content="Caitlin Cherryh" />
 
-<meta name="date" content="2025-02-21" />
+<meta name="date" content="2025-03-14" />
 
 <title>Quickstart guide</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">Quickstart guide</h1>
 <h4 class="author">Caitlin Cherryh</h4>
-<h4 class="date">2025-02-21</h4>
+<h4 class="date">2025-03-14</h4>
 
 </div>
 
@@ -362,6 +362,19 @@ display: none;
 <li>All file paths in this document assume the working directory is the
 <code>chromatin-assembly/</code> folder</li>
 </ul>
+<div id="useful-command-lines" class="section level2">
+<h2>Useful command lines</h2>
+<p>Preparing to run by loading modules on Petrichor:</p>
+<pre><code>module load python
+module load graphviz</code></pre>
+<p>Simplest dry run:</p>
+<pre><code>snakemake -n -p -c1</code></pre>
+<p>To merge reads:</p>
+<pre><code>snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples</code></pre>
+<p>Full run of pipeline on Petrichor with Slurm (Steps 1-8, no read
+merging):</p>
+<pre><code>snakemake --slurm --profile profiles/slurm/ --omit s0_merge_samples</code></pre>
+</div>
 <div id="local-use" class="section level2">
 <h2>Local use</h2>
 <ol style="list-style-type: decimal">
@@ -380,7 +393,7 @@ environment: <code>conda activate snakemake</code></li>
 <code>snakemake -n -p -c1</code></li>
 <li>Run the snakemake pipeline with the local profile:</li>
 </ol>
-<pre><code>snakemake --workflow-profile profiles/local/  </code></pre>
+<pre><code>snakemake --profile profiles/local/  </code></pre>
 <div id="controlling-pipeline-execution" class="section level4">
 <h4>Controlling pipeline execution</h4>
 <p>Instead of running the entire pipeline with 1 core, you can control
@@ -408,28 +421,12 @@ desired output file path with
 <code>snakemake -p {output_file_path}</code>.</p>
 </div>
 </div>
-<div id="hpc-use" class="section level2">
-<h2>HPC use</h2>
-<div id="preparing-the-conda-environment" class="section level4">
-<h4>Preparing the conda environment</h4>
-<p>Snakemake provides a plugin called <a href="https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#snakemake-executor-plugin-slurm">snakemake-executor-plugin-slurm</a>
-to facilitate Slurm use.</p>
-<p>To create a conda environment for use with Snakemake and Slurm:</p>
+<div id="hpc-use-for-snakemake-v7.24.0" class="section level2">
+<h2>HPC use for snakemake v7.24.0</h2>
+<p>The current version of Snakemake on Petrichor is v7.24.0.</p>
+<div id="preparing-the-environment" class="section level4">
+<h4>Preparing the environment</h4>
 <ul>
-<li>Create new conda environment with the name
-<code>slurm_snakemake</code>
-<ul>
-<li><code>$ conda create -n slurm_snakemake</code></li>
-</ul></li>
-<li>Activate the new environment
-<ul>
-<li><code>$ conda activate slurm_snakemake</code></li>
-</ul></li>
-<li>Configure conda to enable the bioconda channel
-<ul>
-<li><code>$ conda config --add channels bioconda</code></li>
-<li><code>$ conda config --add channels conda-forge</code></li>
-</ul></li>
 <li>Load the python module (which contains Snakemake)
 <ul>
 <li><code>$ module load python</code></li>
@@ -438,28 +435,54 @@ to facilitate Slurm use.</p>
 <ul>
 <li><code>$ module load graphviz</code></li>
 </ul></li>
-<li>Install the <a href="https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#snakemake-executor-plugin-slurm">snakemake-executor-plugin-slurm</a>
-plugin from <a href="https://anaconda.org/bioconda/snakemake-executor-plugin-slurm">bioconda</a>
-<ul>
-<li><code>$ conda install bioconda::snakemake-executor-plugin-slurm</code></li>
-</ul></li>
-<li>Save a list of the packages in the conda environment as YAML format
-<ul>
-<li><code>$ conda env export -n slurm_snakemake &gt; slurm_snakemake_conda.yaml</code></li>
-</ul></li>
-<li>Save a list of the loaded modules as a text file
-<ul>
-<li><code>$ module list &gt; slurm_snakemake_modules.txt</code></li>
-</ul></li>
 </ul>
+</div>
+<div id="running-pipeline-on-the-hpc" class="section level4">
+<h4>Running pipeline on the HPC</h4>
+<ol style="list-style-type: decimal">
+<li>Clone the <code>chromatin-assembly</code> repository into the
+location you wish to run the pipeline in, then navigate into the
+<code>chromatin-assembly</code> folder.</li>
+<li>If desired, copy your input data into the <code>data/</code>
+folder.</li>
+<li>Update the file paths and variables within the
+<code>config/chromatin-assembly-config.yml</code> file.</li>
+<li>Update the Slurm resources in the
+<code>profiles/slurm/config.yaml</code> file</li>
+<li>Perform a local dry run to identify any issues:</li>
+</ol>
+<pre><code>snakemake -n -p -c1</code></pre>
+<ol start="7" style="list-style-type: decimal">
+<li>Execute the desired rules using the <code>--slurm</code> flag and
+the slurm workflow profile (and other commands as desired):</li>
+</ol>
+<pre><code>snakemake --slurm --profile profiles/slurm/ ...</code></pre>
+<p>If no additional commands are added, Snakemake will execute the
+entire pipeline.</p>
+<p>As when executing locally, pipeline execution can be limited to
+specific rules by adding flags to the Snakemake command line call. For
+example:</p>
+<ul>
+<li>Execute read merging (Step 0):
+<code>--until s0_merge_samples</code></li>
+<li>Execute Steps 1–3: <code>--until s3_extract_UMI</code></li>
+<li>Execute pipeline, omitting Step 8:
+<code>--omit s8_peak_analysis</code></li>
+<li>Execute Steps 2-3:
+<code>--until s3_extract_UMI --omit s1_mark_repeats</code></li>
+</ul>
+<p>The complete command line to execute Steps 2-3 would be:</p>
+<pre><code>snakemake --slurm --profile profiles/slurm/ --until s3_extract_UMI --omit s1_mark_repeats</code></pre>
 </div>
 <div id="specifying-resources" class="section level4">
 <h4>Specifying resources</h4>
 <p>To specify account and partition in the command line:</p>
-<pre><code>snakemake --executor slurm --default-resources slurm_account=&lt;your SLURM account&gt; slurm_partition=&lt;your SLURM partition&gt;</code></pre>
+<pre><code>snakemake --slurm --default-resources slurm_account=&lt;your SLURM account&gt; slurm_partition=&lt;your SLURM partition&gt;</code></pre>
 <p>Account and partition details can also be specified using a
 configuration profile.</p>
-<pre><code>snakemake --executor slurm --workflow-profile profiles/slurm/config.yaml</code></pre>
+<pre><code>snakemake --slurm --profile profiles/slurm/</code></pre>
+<p>For more details and examples of slurm config profiles, see the <a href="https://github.com/Snakemake-Profiles/slurm">Snakemake-Profiles/slurm</a>
+GitHub repository</p>
 <p>Some notes on <a href="https://docs.s3it.uzh.ch/how-to_articles/how_to_run_snakemake/#resources">Running
 Snakemake on a cluster</a>:</p>
 <ul>
@@ -470,7 +493,7 @@ Snakemake on a cluster</a>:</p>
 <li>This is useful for applications that accept memory or thread
 parameters in the command line</li>
 <li>For example, in rule <code>s2_raw_read_QC</code>:
-<code>fastqc -t {resources.threads} {input.r1} {input.r2} -o {params.outdir}</code></li>
+<code>fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}</code></li>
 </ul></li>
 <li>Snakefiles and configuration profiles can specify both
 <code>threads</code> and <code>cpus_per_task</code>
@@ -487,44 +510,6 @@ execute when running a pipeline locally</li>
 <p><strong>Note</strong>: Snakemake and Slurm have different names for
 resources (refer to <a href="https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#advanced-resource-specifications">Advanced
 Resource Specifications</a> )</p>
-</div>
-<div id="running-pipeline-on-the-hpc" class="section level4">
-<h4>Running pipeline on the HPC</h4>
-<ol style="list-style-type: decimal">
-<li>Clone the <code>chromatin-assembly</code> repository into the
-location you wish to run the pipeline in, then navigate into the
-<code>chromatin-assembly</code> folder.</li>
-<li>Copy your input data into the <code>data/</code> folder.</li>
-<li>Update the file paths and variables within the
-<code>config/chromatin-assembly-config.yml</code> file.</li>
-<li>Update the Slurm resources in the
-<code>profiles/slurm/config.yaml</code> file</li>
-<li>Open the conda environment:
-<code>conda activate slurm_snakemake</code></li>
-<li>Perform a local dry run to identify any issues:</li>
-</ol>
-<pre><code>snakemake -n -p -c1</code></pre>
-<ol start="7" style="list-style-type: decimal">
-<li>Execute the desired rules using the <code>--executor</code> flag and
-the slurm workflow profile (and other commands as desired):</li>
-</ol>
-<pre><code>snakemake --executor slurm -workflow-profile profiles/slurm/config.yaml ...</code></pre>
-<p>If no additional commands are added, Snakemake will execute the
-entire pipeline.</p>
-<p>As when executing locally, pipeline execution can be limited to
-specific rules by adding flags to the Snakemake command line call. For
-example:</p>
-<ul>
-<li>Execute read merging (Step 0):
-<code>--until s3_extract_UMI</code></li>
-<li>Execute Steps 1–3: <code>--until s3_extract_UMI</code></li>
-<li>Execute pipeline, omitting Step 8:
-<code>--omit s8_peak_analysis</code></li>
-<li>Execute Steps 2-3:
-<code>--until s3_extract_UMI --omit s1_mark_repeats</code></li>
-</ul>
-<p>The complete command line to execute Steps 2-3 would be:</p>
-<pre><code>snakemake --executor slurm -workflow-profile profiles/slurm/config.yaml --until s3_extract_UMI --omit s1_mark_repeats</code></pre>
 </div>
 </div>
 

@@ -1,7 +1,7 @@
 ---
 title: "Running the pipeline"
 author: "Caitlin Cherryh"
-date: "2025-02-18"
+date: "2025-03-14"
 output: html_document
 ---
 
@@ -80,14 +80,14 @@ knitr::include_graphics("figures/dag.png")
 
 ## Useful command line options
 
-Some command line options you may find useful.
+Some command line options you may find useful (for Snakemake v7.24.0)
 
 For further details, see the Snakemake documentation page 
-[All command line options](https://snakemake.readthedocs.io/en/stable/executing/cli.html#all-options).
+[All command line options](https://snakemake.readthedocs.io/en/v7.24.0/executing/cli.html#all-options).
 
 | Command option | Usage example | Explanation |
 | --- | --- | --- |
-| `--snakefile`, `-s` | `-s {SNAKEFILE}` | Specify the Snakefile. You will not need to specify the Snakefile as input -- by default, Snakemake looks for the snakefile at `Snakefile` and `workflow/Snakefile`. In this repository, the Snakefile is located at `workflow/Snakefile`. Use only if you have a specific snakefile to use in a different location. |
+| `--snakefile`, `-s` | `-s {SNAKEFILE}` | Specify the Snakefile. You will not need to specify the Snakefile as input -- by default, Snakemake looks for the snakefile at `Snakefile` and `workflow/Snakefile`. In this repository, the Snakefile is located at `workflow/Snakefile`. |
 | `--dry-run`, `--dryrun`, `-n` | `-n` | Perform dry run - do not execute anything, but display would would be run |
 | `--printshellcmds`, `-p` | `-p` | Print the shell commands that will be executed |
 | `--cores`, `-c` | `-cN` | Use at most`N` CPU cores. Sets maximum number of cores requested from cluster or scheduler |
@@ -99,9 +99,9 @@ For further details, see the Snakemake documentation page
 | `--forcerun` `-R` | `-R` | Force re-execution of given rule/file. Used if a rule has been changed. |
 | `--until`, `-U` | `-U {target}` |Run pipeline until it reaches target rule/file |
 | `--omit-from`, `-O` | `-O {target}` | Prevent execution of the target rule/file and any downstream rules/files |
-| `-executor`, `-e` | `-e {executor}` i.e., `-e slurm` or `-e local` | Specify a custom executor - use `slurm` for HPC execution |
-| `--workflow-profile` | `--workflow-profile {target}` | Path (relative to current directory) for workflow profile used to configure Snakemake with parameters for a specific workflow (e.g., allowed resources for Slurm) |
-| `--configfile` | `----configfile {target}` | Specify or overwrite the config file of the workflow. Provide path relative to current directory. Allows separate config files for different analyses. |
+| `--slurm` | `--slurm` | Execute snakemake rules as SLURM batch jobs according to their ‘resources’ definition. SLURM resources as ‘partition’, ‘ntasks’, ‘cpus’, etc. need to be defined per rule within the ‘resources’ definition. |
+| `--profile` | `--profile {target}` | Path for workflow profile used to configure Snakemake with parameters for a specific workflow (e.g., allowed resources for Slurm) |
+| `--configfile` | `--configfile {target}` | Specify or overwrite the config file of the workflow. Provide path relative to current directory. Allows separate config files for different analyses. |
 
 
 ## Documentation and resources

@@ -1,13 +1,35 @@
 ---
 title: "Quickstart guide"
 author: "Caitlin Cherryh"
-date: "2025-02-21"
+date: "2025-03-14"
 output: html_document
 ---
 
 Key points to remember:
 
 - All file paths in this document assume the working directory is the `chromatin-assembly/` folder
+
+## Useful command lines
+Preparing to run by loading modules on Petrichor:
+```
+module load python
+module load graphviz
+```
+
+Simplest dry run:
+```
+snakemake -n -p -c1
+```
+
+To merge reads:
+```
+snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples
+```
+
+Full run of pipeline on Petrichor with Slurm (Steps 1-8, no read merging):
+```
+snakemake --slurm --profile profiles/slurm/ --omit s0_merge_samples
+```
 
 ## Local use
 
@@ -24,7 +46,7 @@ the same resources.
 7. Run the snakemake pipeline with the local profile:
 
 ```
-snakemake --workflow-profile profiles/local/  
+snakemake --profile profiles/local/  
 ``` 
 
 #### Controlling pipeline execution
@@ -61,75 +83,29 @@ snakemake --until s3_extract_UMI --omit s1_mark_repeats -cN
 You can also execute a single rule of the pipeline by using the desired output 
 file path with `snakemake -p {output_file_path}`.
 
-## HPC use
+## HPC use for snakemake v7.24.0 
+The current version of Snakemake on Petrichor is v7.24.0.
 
-#### Preparing the conda environment
-
-Snakemake provides a plugin called [snakemake-executor-plugin-slurm](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#snakemake-executor-plugin-slurm) to facilitate Slurm use. 
-
-To create a conda environment for use with Snakemake and Slurm:
-
-- Create new conda environment with the name `slurm_snakemake`
-  - `$ conda create -n slurm_snakemake`
-- Activate the new environment
-  - `$ conda activate slurm_snakemake`
-- Configure conda to enable the bioconda channel
-  - `$ conda config --add channels bioconda`
-  - `$ conda config --add channels conda-forge`
+#### Preparing the environment
 - Load the python module (which contains Snakemake)
   - `$ module load python`
 - Load the graphviz module (to allow pipeline visualisation)
   - `$ module load graphviz`
-- Install the [snakemake-executor-plugin-slurm](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#snakemake-executor-plugin-slurm) plugin from 
-[bioconda](https://anaconda.org/bioconda/snakemake-executor-plugin-slurm) 
-  - `$ conda install bioconda::snakemake-executor-plugin-slurm`
-- Save a list of the packages in the conda environment as YAML format
-  - `$ conda env export -n slurm_snakemake > slurm_snakemake_conda.yaml`
-- Save a list of the loaded modules as a text file
-  - `$ module list > slurm_snakemake_modules.txt`
-
-#### Specifying resources
-
-To specify account and partition in the command line:
-```
-snakemake --executor slurm --default-resources slurm_account=<your SLURM account> slurm_partition=<your SLURM partition>
-```
-
-Account and partition details can also be specified using a configuration profile. 
-```
-snakemake --executor slurm --workflow-profile profiles/slurm/config.yaml
-```
-
-Some notes on [Running Snakemake on a cluster](https://docs.s3it.uzh.ch/how-to_articles/how_to_run_snakemake/#resources):
-
-- Resources can be referenced within a rule's `shell` and `run` sections e.g., `{resources.mem_mb}`, `{resources.threads}`
-  - This is useful for applications that accept memory or thread parameters in the command line
-  - For example, in rule `s2_raw_read_QC`: `fastqc -t {resources.threads} {input.r1} {input.r2} -o {params.outdir}` 
-- Snakefiles and configuration profiles can specify both `threads` and `cpus_per_task`
-  - `cpus_per_task` is specific to Slurm.
-  - `threads` is independent of environment and always available, even when not explicitly set for a rule. 
-  - `threads` can be determined based on how well the task can be parallelised
-  - Snakemake uses `threads` to determine how many jobs to execute when running a pipeline locally
   
-**Note**: Snakemake and Slurm have different names for resources (refer to 
-[Advanced Resource Specifications](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#advanced-resource-specifications) )
-
-
 #### Running pipeline on the HPC
 1. Clone the `chromatin-assembly` repository into the location you wish to run 
 the pipeline in, then navigate into the `chromatin-assembly` folder. 
-2. Copy your input data into the `data/` folder. 
+2. If desired, copy your input data into the `data/` folder. 
 3. Update the file paths and variables within the `config/chromatin-assembly-config.yml`
 file.
 4. Update the Slurm resources in the `profiles/slurm/config.yaml` file
-5. Open the conda environment: `conda activate slurm_snakemake`
-6. Perform a local dry run to identify any issues:
+5. Perform a local dry run to identify any issues:
 ```
 snakemake -n -p -c1
 ```
-7. Execute the desired rules using the `--executor` flag and the slurm workflow profile (and other commands as desired):
+7. Execute the desired rules using the `--slurm` flag and the slurm workflow profile (and other commands as desired):
 ```
-snakemake --executor slurm -workflow-profile profiles/slurm/config.yaml ...
+snakemake --slurm --profile profiles/slurm/ ...
 ```
 If no additional commands are added, Snakemake will execute the entire pipeline.
 
@@ -144,5 +120,34 @@ For example:
 
 The complete command line to execute Steps 2-3 would be:
 ```
-snakemake --executor slurm -workflow-profile profiles/slurm/config.yaml --until s3_extract_UMI --omit s1_mark_repeats
+snakemake --slurm --profile profiles/slurm/ --until s3_extract_UMI --omit s1_mark_repeats
 ```
+
+#### Specifying resources
+
+To specify account and partition in the command line:
+```
+snakemake --slurm --default-resources slurm_account=<your SLURM account> slurm_partition=<your SLURM partition>
+```
+
+Account and partition details can also be specified using a configuration profile. 
+```
+snakemake --slurm --profile profiles/slurm/
+```
+
+For more details and examples of slurm config profiles, see the [Snakemake-Profiles/slurm](https://github.com/Snakemake-Profiles/slurm) GitHub
+repository
+
+Some notes on [Running Snakemake on a cluster](https://docs.s3it.uzh.ch/how-to_articles/how_to_run_snakemake/#resources):
+
+- Resources can be referenced within a rule's `shell` and `run` sections e.g., `{resources.mem_mb}`, `{resources.threads}`
+  - This is useful for applications that accept memory or thread parameters in the command line
+  - For example, in rule `s2_raw_read_QC`: `fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}` 
+- Snakefiles and configuration profiles can specify both `threads` and `cpus_per_task`
+  - `cpus_per_task` is specific to Slurm.
+  - `threads` is independent of environment and always available, even when not explicitly set for a rule. 
+  - `threads` can be determined based on how well the task can be parallelised
+  - Snakemake uses `threads` to determine how many jobs to execute when running a pipeline locally
+  
+**Note**: Snakemake and Slurm have different names for resources (refer to 
+[Advanced Resource Specifications](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#advanced-resource-specifications) )
