@@ -101,7 +101,7 @@ For further details, see the Snakemake documentation page
 | `--omit-from`, `-O` | `-O {target}` | Prevent execution of the target rule/file and any downstream rules/files |
 | `-executor`, `-e` | `-e {executor}` i.e., `-e slurm` or `-e local` | Specify a custom executor - use `slurm` for HPC execution |
 | `--workflow-profile` | `--workflow-profile {target}` | Path (relative to current directory) for workflow profile used to configure Snakemake with parameters for a specific workflow (e.g., allowed resources for Slurm) |
-| `--configfile` | `----configfile {target}` | Specify or overwrite the config file of the workflow. Provide path relative to current directory. |
+| `--configfile` | `----configfile {target}` | Specify or overwrite the config file of the workflow. Provide path relative to current directory. Allows separate config files for different analyses. |
 
 
 ## Documentation and resources
