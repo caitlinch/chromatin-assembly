@@ -21,12 +21,11 @@ merge_reads:
 #     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
 #
 input:
-#   Provide full file paths relative to `chromatin-assembly/` dir
   sample:           "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # snippet of file path used to identify dataset
-  r1:               "data/yeast/reads/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz"
-  r2:               "data/yeast/reads/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz"
-  reference_genome: "data/yeast/reference_genome/S288C_reference_sequence_R64-2-1_20150113.fsa"
-  gff:              "data/yeast/reference_genome/saccharomyces_cerevisiae_R64-2-1_20150113.gff"
+  r1:               "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz"
+  r2:               "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz"
+  reference_genome: "/scratch3/che318/data/yeast/genome/S288C_reference_sequence_R64-2-1_20150113.fsa"
+  gff:              "/scratch3/che318/data/yeast/genome/saccharomyces_cerevisiae_R64-2-1_20150113.gff"
 
 # Input control for peak analysis (Step 8)
 input_control: 
@@ -42,7 +41,7 @@ params:
 
 ##### Output names #####
 # Names of the output directory generated for each step
-output_name:
+output_dir:
   step0: "0_mergedReads"
   step1: "1_repeatmasker"
   step2: "2_fastqc"
