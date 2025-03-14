@@ -1,10 +1,16 @@
 default-resources:
-    slurm_account: "OD-232072"
-    job-name: "chromAssem"
-    mail-user: "caitlin.cherryh@csiro.au"
-    mail-type: "ALL"
-    error: "/scratch3/che318/chromatin-assembly/logs/chromatin-assembly.err"
-    out: "/scratch3/che318/chromatin-assembly/logs/chromatin-assembly.out"
+#  - slurm_account="OD-232072"
+  - slurm_account="root"
+  - mem_mb=10
+  - slurm_account="root"
+  - slurm_extra="--mail-type=ALL --mail-user=caitlin.cherryh@csiro.au"
+
+max-jobs-per-second: 5
+max-status-checks-per-second: 1
+jobs: 10
+keep-going: True
+rerun-incomplete: True
+printshellcmds: True
 
 set-resources:
     s1_mask_repeats:
@@ -67,4 +73,3 @@ set-resources:
         mem: "48GB"
         nodes: 1
         cpus_per_task: 2
-
