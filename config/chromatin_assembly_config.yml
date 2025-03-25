@@ -3,7 +3,7 @@
 
 # Note: Run script from within chromatin-assembly/ dir
 
-##### Input data and parameters #####
+##### Section 1: Input data and parameters #####
 # Species name
 ref_species: "yeast"
 
@@ -39,7 +39,7 @@ params:
   faCount:  "resources/faCount" 
   faToTwoBit: "resources/faToTwoBit" 
 
-##### Output names #####
+##### Section 2: Output names #####
 # Names of the output directory generated for each step
 output_dir:
   step0: "0_mergedReads"
@@ -56,7 +56,7 @@ output_dir:
   step7b: "7b_genomeCoverage"
   step8:  "8_dtriple"
 
-##### Program parameters #####
+##### Section 3: Program parameters #####
 # Program parameters for UMI extraction with FGBio and Picard (Step 3)
 #   FGBio_params: user-specified parameters for FGBio call
 s3_extract_UMI:
@@ -78,7 +78,7 @@ s4_read_alignment:
 s5_alignment_deduplication:
   Picard_params: "REMOVE_DUPLICATES=TRUE BARCODE_TAG=RX"
 
-##### Intermediate output #####
+##### Section 4: Intermediate output #####
 # Effective genome size, extracted from the output of Step 6b
 s6b_output:
   effective_genome_size: 1716675060
