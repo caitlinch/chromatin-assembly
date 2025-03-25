@@ -17,7 +17,7 @@ merge_reads:
 
 # Input data paths and details
 #   Input for analysis steps, either after merging reads or if using a single lane
-#     For a single lane - enter path for R1 and R2 files
+#     For a single lane - enter path for R1 and R2 files for that lane
 #     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
 #
 input:
