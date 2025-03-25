@@ -4,6 +4,8 @@
 # Note: Run script from within chromatin-assembly/ dir
 
 ##### Section 1: Input data and parameters #####
+repo_dir: "/scratch3/che318/chromatin-assembly/" # path to the chromatin-assembly directory
+
 # Species name
 ref_species: "yeast"
 
@@ -11,7 +13,7 @@ ref_species: "yeast"
 #   Merging reads is an optional step included in the pipeline, which I recommend running separately
 merge_reads: 
   perform_merge:     FALSE # TRUE to merge reads
-  read_dir:          "data/yeast/reads/"
+  read_dir:          "data/yeast/reads/" # file path relative to chromatin-assembly directory i.e., /full/path/to/data/yeast/reads/
   read_path_pattern: "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC" # Separate out the lane number from sample pattern - don't include "_L00" in string here
   read_lanes:        ["1"] # Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"]
 
@@ -33,7 +35,7 @@ input_control:
   control_pattern: "132620_HCJLVDSX2_GACGATCT-TCGTGCAT"  # Separate out the lane number id from the sample pattern - don't include "_L00" in string here
   control_lanes: ["1"] # Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"]
 
-# Programs and files needed for specific pipeline steps
+# Programs and files needed for specific pipeline steps (file path relative to chromatin-assembly directory i.e., /full/path/to/resources/faCount)
 params:
   adapters: "resources/adapters/adap_cont_rna.fa"
   faCount:  "resources/faCount" 

@@ -1,0 +1,24 @@
+mkdir results/yeast/1_repeatmasker/
+
+RepeatMasker -pa 1 -qq -dir results/yeast/1_repeatmasker/ -lib resources/adapters/adap_cont_rna.fa /scratch3/che318/data/yeast/genome/S288C_reference_sequence_R64-2-1_20150113.fsa
+
+ngskit4b index -i results/yeast/1_repeatmasker/yeast_masked_ref_genome.fasta -o results/yeast/1_repeatmasker/yeast_index_masked_ref_genome.fasta -r yeast -T 1 -F results/yeast/1_repeatmasker/index_logs.log
+
+
+NOTES
+https://github.com/Dfam-consortium/RepeatMasker/issues/217
+"The problem is that your RepeatMasker installation was configured to use nhmmer as the default search engine but you are trying to search using consensus library instead of a profile Hidden Markov Model library. You can use the "-engine" option to change the search engine to one that will work with consensus sequences ( e.g "-engine crossmatch" or "-engine ncbi" if you have installed phrap/crossmatch or rmblast respecitvely )."
+
+THIS WORKED - using the `-engine ncbi` option - but need FULL FILE PATHS
+RepeatMasker -pa 20 -qq -dir results/yeast/1_repeatmasker/ -lib /scratch3/che318/chromatin-assembly/resources/adapters/adap_cont_rna.fa /scratch3/che318/data/yeast/genome/S288C_reference_sequence_R64-2-1_20150113.fsa -en ncbi
+
+Try this command:
+
+module load python
+module load repeatmasker/4.1.2p1
+module load kit4b/200218
+
+mkdir -p /scratch3/che318/chromatin-assembly/results/yeast/1_repeatmasker/
+RepeatMasker -pa 20 -qq -dir /scratch3/che318/chromatin-assembly/results/yeast/1_repeatmasker -lib /scratch3/che318/chromatin-assembly/resources/adapters/adap_cont_rna.fa /scratch3/che318/data/yeast/genome/S288C_reference_sequence_R64-2-1_20150113.fsa -engine ncbi
+ngskit4b index -i /scratch3/che318/chromatin-assembly/results/yeast/1_repeatmasker/yeast_masked_ref_genome.fasta -o /scratch3/che318/chromatin-assembly/results/yeast/1_repeatmasker/yeast_index_masked_ref_genome.fasta -r 'yeast' -T 20 -F /scratch3/che318/chromatin-assembly/results/yeast/1_repeatmasker/index_logs.log
+

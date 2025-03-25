@@ -13,13 +13,16 @@ configfile: "config/chromatin_assembly_config.yml"
 
 # --- Global Variables --- #
 REF_SPECIES = config["ref_species"]
-OUTDIR      = "results/" + config["ref_species"] + "/"
+OUTDIR      = config["repo_dir"] + "results/" + config["ref_species"] + "/"
 SAMPLE      = config["input"]["sample"]
 
-READ_DIR    = config["merge_reads"]["read_dir"]
+READ_DIR    = config["repo_dir"] + config["merge_reads"]["read_dir"]
 READ_SAMPLE = config["merge_reads"]["read_path_pattern"]
 READ_LANES  = config["merge_reads"]["read_lanes"]
 
+ADAPTERS = config["repo_dir"] + config["params"]["adapters"]
+FACOUNT = config["repo_dir"] + config["params"]["faCount"]
+FATOTWOBIT = config["repo_dir"] + config["params"]["faToTwoBit"]
 
 
 # --- Complete pipeline run --- #
@@ -70,7 +73,7 @@ rule s1_mask_repeats:
         index  = OUTDIR + config["output_dir"]["step1"] + "/" + REF_SPECIES + "_index_masked_ref_genome.fasta"
     params:
         step1_dir   = OUTDIR + config["output_dir"]["step1"] + "/",
-        adapter     = config["params"]["adapters"],
+        adapter     = ADAPTERS,
         ref_species = REF_SPECIES, 
         log         = OUTDIR + config["output_dir"]["step1"] + "/index_logs.log"
     shell:
@@ -78,10 +81,11 @@ rule s1_mask_repeats:
         # touch {output.masked}
         # touch {params.log}
         # touch {output.index}
-        module load repeatmasker/4.1.0
+        mkdir -p {params.step1_dir}
+        module load repeatmasker/4.1.2p1
         module load kit4b/200218
-        RepeatMasker -pa {threads} -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome}
-        ngskit4b index -i {output.masked} -o {output.index} -r {params.ref_species} -T {threads} -F {params.log}
+        RepeatMasker -pa {threads} -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome} -engine ncbi
+        ngskit4b index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
         """
 
 ## Step 2: Perform quality control using FastQC (slurm_fastqc.sh)
@@ -196,7 +200,7 @@ rule s6a_two_bit_genome:
     output:
         twobit_genome = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_TwoBitGenome.2bit"
     params:
-        faToTwoBit = config["params"]["faToTwoBit"]
+        faToTwoBit = FATOTWOBIT
     shell:
         """
         # echo 'Step 6a' >> {output.twobit_genome}
@@ -210,7 +214,7 @@ rule s6b_effective_genome_size:
     output:
         eff_gen_size = OUTDIR + config["output_dir"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt"
     params:
-        faCount = config["params"]["faCount"]
+        faCount = FACOUNT
     shell:
         """
         # echo 'Step 6b' >> {output.eff_gen_size}
@@ -277,7 +281,7 @@ rule s7a_size_metrics:
         """
         # echo 'Step 7a' >> {output.size_metrics}
         module load picard/2.26.10
-        module load R
+        module load R/4.0.5
         CMD = "JAVAOPTS=-Xmx20g java -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
           I={input.gc_corrected} \
           O={output.size_metrics} \

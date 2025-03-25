@@ -6,7 +6,7 @@
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
 #SBATCH --job-name=CA_S1-S2
-#SBATCH --time=15-00:00:00
+#SBATCH --time=100:00:00
 #SBATCH --mem=80GB
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=20
