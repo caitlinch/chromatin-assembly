@@ -1,0 +1,27 @@
+Quickstart guide for the time-impaired:
+1. Download the caitlinch/chromatin-assembly GitHub repository and move it to where you want to run your 
+2. Open the file "config/chromatin_assembly_config.yml" and update file paths and parameters for your data
+3. Navigate in terminal to the "chromatin-assembly" directory
+4. (Optional) Perform a dry run of the full pipeline in the terminal (interactive mode) with command "snakemake -n -p -c1" or "sbatch jobscripts/pipeline_dry_run.sh"
+5. (Optional) Merge reads with "sbatch jobscripts/slurm_pipeline_S0.sh"
+6. Perform Step 1 (read masking) and Step 2 (QC) with command  "sbatch jobscripts/slurm_pipeline_S1-2.sh"
+7. Perform Step 3 (UMI extraction) and Step 4 (kalign) with command  "sbatch jobscripts/slurm_pipeline_S3-4.sh"
+8. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size) with command "sbatch jobscripts/slurm_pipeline_S5-6b.sh"
+9. Update the effective genome size value in the file "config/chromatin_assembly_config.yml", Section 4: Intermediate output
+10. Perform Step 6c (compute GC bias) and 6d (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S6c-6d.sh"
+11. Perform Step 7a (compute GC bias) and 7b (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
+12. (Optional) Perform Step 8 (peak analysis with DANPOS) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
+
+This pipeline was developed to be run on:
+- the Petrichor server (at CSIRO)
+- Using Slurm (either by submitting jobscripts as listed above, or by using the command line as detailed in the documentation)
+It has not been tested in other environments.
+
+Troubleshooting:
+- Try running a dry run with the command "snakemake -n -p -c1" - sometimes you might be missing a file or have an incorrect file path
+
+Potential issues:
+- Snakemake not found? Check job script includes the line "module load python"
+- Not enough resources supplied in job scripts? Update resources in SBATCH lines
+- Not enough resources supplied to Snakemake? Update resources in "profiles/slurm/config.yaml" file
+
