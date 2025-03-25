@@ -1,8 +1,7 @@
 default-resources:
-  - slurm_account="root"
-  - mem_mb=10
+  - slurm_account="od-233464"
 
-max-jobs-per-second: 5
+max-jobs-per-second: 1
 max-status-checks-per-second: 1
 jobs: 10
 keep-going: True
@@ -10,6 +9,10 @@ rerun-incomplete: True
 printshellcmds: True
 
 set-resources:
+  s0_merge_samples: runtime="01:00:00"
+  s0_merge_samples: mem="20GB"
+  s0_merge_samples: nodes=1
+  s0_merge_samples: cpus_per_task=8
   s1_mask_repeats: runtime="2-00:00:00"
   s1_mask_repeats: mem="80GB"
   s1_mask_repeats: nodes=1
