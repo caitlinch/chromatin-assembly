@@ -3,6 +3,7 @@ TODO
 (X) separate read merging and analysis steps
 (X) prepare for yeast data
 (X) update Slurm approach for Petrichor version of Snakemake (7.24.0)
+(X) make job scripts for SLURM
 ( ) test dry run with yeast data
 ( ) test run with yeast data
 ( ) prepare for mouse data
@@ -14,8 +15,3 @@ TODO
 ( ) test DANPOS rule (Step 8)
 ( ) complete doco
 
-
-Issue: I'm not associated with any OD2 codes
-
-O2D Code        End Date        Name of Project
-No active O2D codes found in our system please e-mail: schelp@csiro.au for support!
