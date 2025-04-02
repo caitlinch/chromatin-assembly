@@ -23,11 +23,12 @@ merge_reads:
 #     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
 #
 input:
-  sample:           "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # snippet of file path used to identify dataset
-  r1:               "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz"
-  r2:               "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz"
-  reference_genome: "/scratch3/che318/data/yeast/genome/S288C_reference_sequence_R64-2-1_20150113.fsa"
-  gff:              "/scratch3/che318/data/yeast/genome/saccharomyces_cerevisiae_R64-2-1_20150113.gff"
+  sample:                "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # snippet of file path used to identify dataset
+  r1:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz"
+  r2:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz"
+  reference_genome_id:   "S288C_reference_sequence_R64-2-1_20150113.fsa" # identifier for reference genome
+  reference_genome_path: "/scratch3/che318/data/yeast/genome/S288C_reference_sequence_R64-2-1_20150113.fsa"
+  gff:                   "/scratch3/che318/data/yeast/genome/saccharomyces_cerevisiae_R64-2-1_20150113.gff"
 
 # Input control for peak analysis (Step 8)
 input_control: 
