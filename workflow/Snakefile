@@ -29,8 +29,8 @@ FATOTWOBIT = config["repo_dir"] + config["params"]["faToTwoBit"]
 # Run all rules
 rule run_all:
     input:
-        s1_masked  = OUTDIR + config["output_dir"]["step1"] + "/" + REF_SPECIES + "_masked_ref_genome.fasta",
-        s1_index   = OUTDIR + config["output_dir"]["step1"] + "/" + REF_SPECIES + "_index_masked_ref_genome.fasta",
+        s1_masked  = OUTDIR + config["output_dir"]["step1"] + "/" + subpath(config["input"]["reference_genome"], basename=True) + ".masked",
+        s1_index   = OUTDIR + config["output_dir"]["step1"] + "/" + subpath(config["input"]["reference_genome"], basename=True) + ".masked.index",
         s2_r1      = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R1.fastq.gz",
         s2_r2      = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R2.fastq.gz",
         s3_r1      = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R1.fastq.gz",
@@ -69,10 +69,10 @@ rule s1_mask_repeats:
     input:
         ref_genome = config["input"]["reference_genome"]
     output:
-        masked = OUTDIR + config["output_dir"]["step1"] + "/" + REF_SPECIES + "_masked_ref_genome.fasta",
-        index  = OUTDIR + config["output_dir"]["step1"] + "/" + REF_SPECIES + "_index_masked_ref_genome.fasta"
+        masked = OUTDIR + config["output_dir"]["step1"] + "/" + subpath(config["input"]["reference_genome"], basename=True) + ".masked",
+        index  = OUTDIR + config["output_dir"]["step1"] + "/" + subpath(config["input"]["reference_genome"], basename=True) + ".masked.index"
     params:
-        step1_dir   = OUTDIR + config["output_dir"]["step1"] + "/",
+        outdir      = OUTDIR + config["output_dir"]["step1"] + "/",
         adapter     = ADAPTERS,
         ref_species = REF_SPECIES, 
         log         = OUTDIR + config["output_dir"]["step1"] + "/index_logs.log"
@@ -81,10 +81,13 @@ rule s1_mask_repeats:
         # touch {output.masked}
         # touch {params.log}
         # touch {output.index}
-        mkdir -p {params.step1_dir}
+
         module load repeatmasker/4.1.2p1
         module load kit4b/200218
-        RepeatMasker -pa {threads} -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome} -engine ncbi
+
+        mkdir -p {params.outdir}
+
+        RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} -engine ncbi
         ngskit4b index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
         """
 
@@ -102,7 +105,11 @@ rule s2_raw_read_QC:
         """
         # touch {output.r1}
         # touch {output.r2}
+
         module load fastqc/0.11.9 
+
+        mkdir -p {params.outdir}
+
         fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}
         """
 
@@ -116,6 +123,7 @@ rule s3_extract_UMI:
         r2 = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R2.fastq.gz"
     params:
         basename             = SAMPLE,
+        outdir               = OUTDIR + config["output_dir"]["step3"] + "/",
         unmapped_bam         = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_unmapped.bam",
         unmapped_bam_withUMI = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_unmapped_withUMI.bam",
         fgbio_params         = config["s3_extract_UMI"]["FGBio_params"]
@@ -123,8 +131,11 @@ rule s3_extract_UMI:
         """
         # touch {output.r1}
         # touch {output.r2}
+
         module load picard
         module load fgbio/1.3.0
+
+        mkdir -p {params.outdir}
         
         CMD1 = "JAVAOPTS=-Xmx2g java -jar $PICARD_HOME/picard.jar FastqToSam \
 	      F1= {input.r1} \
@@ -155,12 +166,17 @@ rule s4_read_alignment:
     output:
         alignment = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + "_alignment.sam"
     params:
+        outdir        = OUTDIR + config["output_dir"]["step4"] + "/",
         kalign_params = config["s4_read_alignment"]["kalign_params"],
         log_file      = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + ".log"
     shell:
         """
         # echo 'Step 4' >> {output.alignment}
+
         module load kit4b/200218
+
+        mkdir -p {params.outdir}
+
         CMD="ngskit4b kalign \
             {params.kalign_params} \
 	        --in={input.r1} \
@@ -179,12 +195,17 @@ rule s5_alignment_deduplication:
     output:
         dedup_alignment = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "alignment_dedup.bam"
     params:
+        outdir        = OUTDIR + config["output_dir"]["step5"] + "/",
         picard_params = config["s5_alignment_deduplication"]["Picard_params"],
         metrics_file = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_removeduplicates.metrics.txt"
     shell:
         """
         # echo 'Step 5' >> {output.dedup_alignment}
+
         module load picard/2.26.10
+
+        mkdir -p {params.outdir}
+
         CMD="JAVAOPTS=-Xmx100g java -jar $PICARD_HOME/picard.jar MarkDuplicates\
             I= {input.alignment} \
             O= {output.dedup_alignment} \
@@ -200,10 +221,14 @@ rule s6a_two_bit_genome:
     output:
         twobit_genome = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_TwoBitGenome.2bit"
     params:
+        outdir     = OUTDIR + config["output_dir"]["step6a"] + "/", 
         faToTwoBit = FATOTWOBIT
     shell:
         """
         # echo 'Step 6a' >> {output.twobit_genome}
+        
+        mkdir -p {params.outdir}
+
         ./{params.faToTwoBit} {input.masked_ref_genome} {output.twobit_genome}
         """
 
@@ -214,10 +239,14 @@ rule s6b_effective_genome_size:
     output:
         eff_gen_size = OUTDIR + config["output_dir"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt"
     params:
+        outdir  = OUTDIR + config["output_dir"]["step6b"] + "/", 
         faCount = FACOUNT
     shell:
         """
         # echo 'Step 6b' >> {output.eff_gen_size}
+
+        mkdir -p {params.outdir}
+
         ./{params.faCount} {input.masked_ref_genome} > {output.eff_gen_size}
         """
 
@@ -230,12 +259,17 @@ rule s6c_compute_GC_bias:
     output:
         freq_file = OUTDIR + config["output_dir"]["step6c"] + "/" + SAMPLE + "_computeGCbias.txt"
     params:
-        eff_gen_size = config["s6b_output"]["effective_genome_size"]
+        outdir          = OUTDIR + config["output_dir"]["step6c"] + "/", 
+        eff_gen_size    = config["s6b_output"]["effective_genome_size"]
     shell:
         """
         # echo 'Step 6c' >> {output.freq_file}
+
         module load python/3.9.4
         module load samtools/1.12
+
+        mkdir -p {params.outdir}
+
         CMD="computeGCBias \
             -b {input.dedup_alignment} \
             --effectiveGenomeSize {params.eff_gen_size} \
@@ -254,12 +288,17 @@ rule s6d_correct_GC_bias:
     output:
         gc_corrected = OUTDIR + config["output_dir"]["step6d"] + "/" + SAMPLE + "_alignment_dedup_gcCorrected.bam"
     params:
+        outdir       = OUTDIR + config["output_dir"]["step6d"] + "/", 
         eff_gen_size = config["s6b_output"]["effective_genome_size"]
     shell:
         """
         # echo 'Step 6d' >> {output.gc_corrected}
+
         module load python/3.9.4
         module load samtools/1.12
+
+        mkdir -p {params.outdir}
+
         CMD = "correctGCBias_kalign \
           -p {threads} \ 
           -b {input.dedup_alignment} \
@@ -276,12 +315,18 @@ rule s7a_size_metrics:
         gc_corrected = rules.s6d_correct_GC_bias.output.gc_corrected
     output:
         size_metrics = OUTDIR + config["output_dir"]["step7a"] + "/" + REF_SPECIES + "_" + SAMPLE + "_insert_size_metrics.txt",
-        histogram = OUTDIR + config["output_dir"]["step7a"] + "/"  + REF_SPECIES + "_" + SAMPLE + "_insert_size_histogram.pdf"
+        histogram    = OUTDIR + config["output_dir"]["step7a"] + "/"  + REF_SPECIES + "_" + SAMPLE + "_insert_size_histogram.pdf"
+    params:
+        outdir = OUTDIR + config["output_dir"]["step7a"] + "/"
     shell:
         """
         # echo 'Step 7a' >> {output.size_metrics}
+
         module load picard/2.26.10
         module load R/4.0.5
+
+        mkdir -p {params.outdir}
+
         CMD = "JAVAOPTS=-Xmx20g java -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
           I={input.gc_corrected} \
           O={output.size_metrics} \
@@ -295,10 +340,16 @@ rule s7b_read_count:
         gc_corrected = rules.s6d_correct_GC_bias.output.gc_corrected
     output:
         read_count = OUTDIR + config["output_dir"]["step7b"] + "/" + REF_SPECIES + "_" + SAMPLE + "_count.txt"
+    params:
+        outdir = OUTDIR + config["output_dir"]["step7b"] + "/"
     shell:
         """
         # echo 'Step 7b' >> {output.read_count}
+
         module load samtools/1.12
+
+        mkdir -p {params.outdir}
+
         CMD="samtools view -c {input.gc_corrected} -o {output.read_count}"
         eval "$CMD"
         """
@@ -310,9 +361,14 @@ rule s8_peak_analysis:
         gc_corrected = rules.s6d_correct_GC_bias.output.gc_corrected
     output:
         danpos_op = OUTDIR + config["output_dir"]["step8"] + "/" + REF_SPECIES + "_" + SAMPLE + "_DANPOS.txt"
+    params:
+        outdir = OUTDIR + config["output_dir"]["step8"] + "/"
     shell:
         """
         # module load danpos/3.1.1
+        #
+        # mkdir -p {params.outdir}
+        #
         # CMD="python danpos.py dtriple TEST_DIR:INPUT_DIR -o RESULTS_DIR"
         # eval "$CMD"
         echo 'Step 8 rule test' >> {output.danpos_op}
