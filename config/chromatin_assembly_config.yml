@@ -61,9 +61,9 @@ output_dir:
 
 ##### Section 3: Program parameters #####
 # Program parameters for UMI extraction with FGBio and Picard (Step 3)
-#   FGBio_params: user-specified parameters for FGBio call
+#   FGBio_params: user-specified parameters for FGBio call (old version: "--read-structure 8M143T 8M143T --molecular-index-tags ZA ZB --single-tag RX")
 s3_extract_UMI:
-  FGBio_params: "--read-structure 8M143T 8M143T --molecular-index-tags ZA ZB --single-tag RX"
+  FGBio_params: "-r 8M143T 8M143T -t ZA ZB -s RX"
 
 # Program parameters for aligning reads with kalign (Step 4)
 #   kalign_params: user-specified parameters for kalign call

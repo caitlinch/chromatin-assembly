@@ -149,12 +149,12 @@ rule s3_extract_UMI:
         eval $CMD1
         
         CMD2="java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam \
-	        --input {params.unmapped_bam} \
-	        --output {params.unmapped_bam_withUMI} \
+	        -i {params.unmapped_bam} \
+	        -o {params.unmapped_bam_withUMI} \
 	        {params.fgbio_params}"
         eval $CMD2
         
-        CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam \
+        CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq \
 	        I={params.unmapped_bam_withUMI} \
 	        F={output.r1} \
 	        F2={output.r2}" 
