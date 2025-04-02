@@ -16,9 +16,13 @@ REF_SPECIES = config["ref_species"]
 OUTDIR      = config["repo_dir"] + "results/" + config["ref_species"] + "/"
 SAMPLE      = config["input"]["sample"]
 
+REF_GENOME_ID = config["input"]["reference_genome_id"]
+
 READ_DIR    = config["repo_dir"] + config["merge_reads"]["read_dir"]
 READ_SAMPLE = config["merge_reads"]["read_path_pattern"]
 READ_LANES  = config["merge_reads"]["read_lanes"]
+
+KALIGN_ID = config["s4_read_alignment"]["kalign_id"]
 
 ADAPTERS = config["repo_dir"] + config["params"]["adapters"]
 FACOUNT = config["repo_dir"] + config["params"]["faCount"]
@@ -29,13 +33,13 @@ FATOTWOBIT = config["repo_dir"] + config["params"]["faToTwoBit"]
 # Run all rules
 rule run_all:
     input:
-        s1_masked  = OUTDIR + config["output_dir"]["step1"] + "/" + subpath(config["input"]["reference_genome"], basename=True) + ".masked",
-        s1_index   = OUTDIR + config["output_dir"]["step1"] + "/" + subpath(config["input"]["reference_genome"], basename=True) + ".masked.index",
-        s2_r1      = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R1.fastq.gz",
-        s2_r2      = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R2.fastq.gz",
+        s1_masked  = OUTDIR + config["output_dir"]["step1"] + "/" + REF_GENOME_ID + ".masked",
+        s1_index  = OUTDIR + config["output_dir"]["step1"] + "/" + REF_GENOME_ID + ".masked.index",
+        s2_r1      = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_fastqc_R1.fastq.html",
+        s2_r2      = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_fastqc_R2.fastq.html",
         s3_r1      = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R1.fastq.gz",
         s3_r2      = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R2.fastq.gz",
-        s4_algnmt  = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + "_alignment.sam",
+        s4_algnmt  = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + KALIGN_ID + "_alignment.sam",
         s5_dedup   = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "alignment_dedup.bam",
         s6a_2bit   = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_TwoBitGenome.2bit",
         s6b_gSize  = OUTDIR + config["output_dir"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt",
@@ -67,10 +71,10 @@ rule s0_merge_samples:
 # Original suffix array command:  ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked -r waterdragon
 rule s1_mask_repeats:
     input:
-        ref_genome = config["input"]["reference_genome"]
+        ref_genome = config["input"]["reference_genome_path"]
     output:
-        masked = OUTDIR + config["output_dir"]["step1"] + "/" + subpath(config["input"]["reference_genome"], basename=True) + ".masked",
-        index  = OUTDIR + config["output_dir"]["step1"] + "/" + subpath(config["input"]["reference_genome"], basename=True) + ".masked.index"
+        masked = OUTDIR + config["output_dir"]["step1"] + "/" + REF_GENOME_ID + ".masked",
+        index  = OUTDIR + config["output_dir"]["step1"] + "/" + REF_GENOME_ID + ".masked.index"
     params:
         outdir      = OUTDIR + config["output_dir"]["step1"] + "/",
         adapter     = ADAPTERS,
@@ -97,8 +101,8 @@ rule s2_raw_read_QC:
         r1 = config["input"]["r1"],
         r2 = config["input"]["r2"]
     output:
-        r1 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R1.fastq.gz",
-        r2 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_FastQC_R2.fastq.gz"
+        r1 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_fastqc_R1.fastq.html",
+        r2 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_fastqc_R2.fastq.html"
     params:
         outdir = OUTDIR + config["output_dir"]["step2"] + "/"
     shell:
@@ -116,8 +120,8 @@ rule s2_raw_read_QC:
 ## Step 3: UMI extraction with FGBio and Picard (slurm_extractUMI.sh)
 rule s3_extract_UMI:
     input:
-        r1 = rules.s2_raw_read_QC.output.r1,
-        r2 = rules.s2_raw_read_QC.output.r1
+        r1 = config["input"]["r1"],
+        r2 = config["input"]["r2"]
     output:
         r1 = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R1.fastq.gz",
         r2 = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R2.fastq.gz"
@@ -164,11 +168,11 @@ rule s4_read_alignment:
         r2    = rules.s3_extract_UMI.output.r2,
         index = rules.s1_mask_repeats.output.index
     output:
-        alignment = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + "_alignment.sam"
+        alignment = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + KALIGN_ID + "_alignment.sam"
     params:
         outdir        = OUTDIR + config["output_dir"]["step4"] + "/",
         kalign_params = config["s4_read_alignment"]["kalign_params"],
-        log_file      = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + config["s4_read_alignment"]["kalign_id"] + ".log"
+        log_file      = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + KALIGN_ID + ".log"
     shell:
         """
         # echo 'Step 4' >> {output.alignment}
