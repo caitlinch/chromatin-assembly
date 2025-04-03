@@ -1,4 +1,0 @@
-(base) che318@petrichor-login:/scratch3/che318/chromatin-assembly> RepeatMasker -pa 1 -qq -dir results/yeast/1_repeatmasker/ -lib resources/adapters/adap_cont_rna.fa /scratch3/che318/data/yeast/genome/S288C_reference_sequence_R64-2-1_20150113.fsa
-RepeatMasker version 4.1.2-p1
-Search Engine: HMMER [ 3.3.2 (Nov 2020) ]
-RepeatMasker::createLib(): Error invoking /apps/hmmer/3.3.2/bin/hmmpress on file /scratch3/che318/chromatin-assembly/RM_11663.TueMar252031042025/adap_cont_rna.fa.
