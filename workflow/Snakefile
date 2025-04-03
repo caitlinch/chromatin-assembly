@@ -91,7 +91,7 @@ rule s1_mask_repeats:
 
         mkdir -p {params.outdir}
 
-        RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} -engine ncbi
+        RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} -engine rmblast
         ngskit4b index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
         """
 
