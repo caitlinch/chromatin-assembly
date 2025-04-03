@@ -79,7 +79,7 @@ s4_read_alignment:
 # Program parameters for removing PCR and optical duplicates from alignment with Picard (Step 5)
 #   Picard_params: user-specified parameters for Picard call
 s5_alignment_deduplication:
-  Picard_params: "REMOVE_DUPLICATES=TRUE BARCODE_TAG=RX"
+  Picard_params: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
 
 ##### Section 4: Intermediate output #####
 # Effective genome size, extracted from the output of Step 6b

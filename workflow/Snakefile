@@ -200,7 +200,7 @@ rule s5_alignment_deduplication:
     params:
         outdir        = OUTDIR + config["output_dir"]["step5"] + "/",
         picard_params = config["s5_alignment_deduplication"]["Picard_params"],
-        metrics_file = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_removeduplicates.metrics.txt"
+        metrics_file  = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_removeduplicates.metrics.txt"
     shell:
         """
         # echo 'Step 5' >> {output.dedup_alignment}
@@ -209,10 +209,10 @@ rule s5_alignment_deduplication:
 
         mkdir -p {params.outdir}
 
-        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam MarkDuplicates\
-            I= {input.alignment} \
-            O= {output.dedup_alignment} \
-            M= {params.metrics_file} \
+        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates\
+            --INPUT {input.alignment} \
+            --OUTPUT {output.dedup_alignment} \
+            --METRICS_FILE {params.metrics_file} \
             {params.picard_params}"
         eval $CMD
         """
