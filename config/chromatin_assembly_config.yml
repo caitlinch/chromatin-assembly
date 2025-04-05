@@ -40,8 +40,6 @@ input_control:
 #   (file path relative to chromatin-assembly directory i.e., /full/path/to/resources/adapters/adap_cont_rna.fa)
 params:
   adapters: "resources/adapters/adap_cont_rna.fa"
-  faCount: "resources/faCount"
-  faToTwoBit: "resources/faToTwoBit"
 
 ##### Section 2: Output names #####
 # Names of the output directory generated for each step

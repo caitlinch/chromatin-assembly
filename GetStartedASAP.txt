@@ -1,21 +1,20 @@
 Quickstart guide for the time-impaired:
 1. Download the caitlinch/chromatin-assembly GitHub repository and move it to where you want to run your pipeline (e.g., /scratch3/che318/)
 2. Navigate in terminal to the "chromatin-assembly" directory
-3. Open the file "config/chromatin_assembly_config.yml" and update file paths and parameters for your data
-4. Create conda environment using command: conda create --name Step6_utils --file workflow/envs/Step6_utils.txt
-5. Open and export conda environment using: conda activate Step6_utils; conda env export > workflow/envs/Step6_utils.yaml
-6. (If required) Change permissions of faToTwoBit and faCount: chmod +wrx resources/faCount; chmod +wrx resources/faToTwoBit
-7. Update details in job scripts (jobscripts/ directory) with your own (i.e., email address, email notification settings, log directory, etc).
-8. Update account ID in slurm profiles (profiles/hpc_test/config.yaml, profiles/slurm/config.yaml) with your own
-9. (Optional) Perform a dry run of the full pipeline in the terminal (interactive mode) with command "snakemake -n -p -c1" or "sbatch jobscripts/pipeline_dry_run.sh"
-10. (Optional) Merge reads with "sbatch jobscripts/slurm_pipeline_S0.sh"
-11. Perform Step 1 (read masking) and Step 2 (QC) with command  "sbatch jobscripts/slurm_pipeline_S1-2.sh"
-12. Perform Step 3 (UMI extraction) and Step 4 (kalign) with command  "sbatch jobscripts/slurm_pipeline_S3-4.sh"
-13. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size) with command "sbatch jobscripts/slurm_pipeline_S5-6b.sh"
-14. Update the effective genome size value in the file "config/chromatin_assembly_config.yml", Section 4: Intermediate output
-15. Perform Step 6c (compute GC bias) and 6d (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S6c-6d.sh"
-16. Perform Step 7a (compute GC bias) and 7b (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
-17. (Optional) Perform Step 8 (peak analysis with DANPOS) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
+3. Create conda environment using command: conda create --name Step6_utils --file workflow/envs/Step6_utils.txt
+4. Open and export conda environment using: conda activate Step6_utils; conda env export > workflow/envs/Step6_utils.yaml
+5. Open the file "config/chromatin_assembly_config.yml" and update file paths and parameters for your data
+6. Update details in job scripts (jobscripts/ directory) with your own (i.e., email address, email notification settings, log directory, etc).
+7. Update account ID in slurm profiles (profiles/hpc_test/config.yaml, profiles/slurm/config.yaml) with your own
+8. (Optional) Perform a dry run of the full pipeline in the terminal (interactive mode) with command "snakemake -n -p -c1" or "sbatch jobscripts/pipeline_dry_run.sh"
+9. (Optional) Merge reads with "sbatch jobscripts/slurm_pipeline_S0.sh"
+10. Perform Step 1 (read masking) and Step 2 (QC) with command  "sbatch jobscripts/slurm_pipeline_S1-2.sh"
+11. Perform Step 3 (UMI extraction) and Step 4 (kalign) with command  "sbatch jobscripts/slurm_pipeline_S3-4.sh"
+12. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size) with command "sbatch jobscripts/slurm_pipeline_S5-6b.sh"
+13. Update the effective genome size value in the file "config/chromatin_assembly_config.yml", Section 4: Intermediate output
+14. Perform Step 6c (compute GC bias) and 6d (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S6c-6d.sh"
+15. Perform Step 7a (compute GC bias) and 7b (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
+16. (Optional) Perform Step 8 (peak analysis with DANPOS) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
 
 This pipeline was developed to be run on:
 - the Petrichor server (at CSIRO)

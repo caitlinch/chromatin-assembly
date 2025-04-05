@@ -25,8 +25,7 @@ READ_LANES  = config["merge_reads"]["read_lanes"]
 KALIGN_ID = config["s4_read_alignment"]["kalign_id"]
 
 ADAPTERS    = config["repo_dir"] + config["params"]["adapters"]
-FACOUNT     = config["repo_dir"] + config["params"]["faCount"]
-FATOTWOBIT  = config["repo_dir"] + config["params"]["faToTwoBit"]
+
 
 # --- Complete pipeline run --- #
 # Run all rules
@@ -223,15 +222,16 @@ rule s6a_two_bit_genome:
     output:
         twobit_genome = OUTDIR + config["output_dir"]["step6a"] + "/" + SSAMPLE + "alignment_dedup.2bit"
     params:
-        outdir     = OUTDIR + config["output_dir"]["step6a"] + "/",
-        faToTwoBit = FATOTWOBIT
+        outdir     = OUTDIR + config["output_dir"]["step6a"] + "/"
+    conda:
+        "envs/Step6_utils.yaml"
     shell:
         """
         # echo 'Step 6a' >> {output.twobit_genome}
         
         mkdir -p {params.outdir}
 
-        {params.faToTwoBit} {input.masked_ref_genome} {output.twobit_genome}
+        faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
         """
 
 ## Step 6b:  Calculate effective genome size with faCount
@@ -241,15 +241,16 @@ rule s6b_effective_genome_size:
     output:
         eff_gen_size = OUTDIR + config["output_dir"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt"
     params:
-        outdir  = OUTDIR + config["output_dir"]["step6b"] + "/",
-        faCount = FACOUNT
+        outdir  = OUTDIR + config["output_dir"]["step6b"] + "/"
+    conda:
+        "envs/Step6_utils.yaml"
     shell:
         """
         # echo 'Step 6b' >> {output.eff_gen_size}
 
         mkdir -p {params.outdir}
 
-        {params.faCount} {input.masked_ref_genome} > {output.eff_gen_size}
+        faCount {input.masked_ref_genome} > {output.eff_gen_size}
         """
 
 ## Step 6c: Compute GC bias with deeptools (slurm_computeGCBias.sh)
