@@ -9,7 +9,7 @@
 #       The listed resources were used for a dry (test) run and are insufficient for data analysis
 
 #SBATCH --job-name=chrm_assm
-#SBATCH --time=00:20:00 
+#SBATCH --time=100:00:00 
 #SBATCH --mem=10MB
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=2
