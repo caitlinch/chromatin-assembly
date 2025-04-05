@@ -7,7 +7,7 @@
 
 #SBATCH --job-name=CA_S1-S2
 #SBATCH --time=100:00:00
-#SBATCH --mem=80GB
+#SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=20
 #SBATCH --mail-user=caitlin.cherryh@csiro.au

@@ -9,7 +9,7 @@
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
 #SBATCH --job-name=CA_dryRun
-#SBATCH --time=00:01:00
+#SBATCH --time=00:10:00
 #SBATCH --mem=1MB
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
