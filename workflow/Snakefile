@@ -232,7 +232,7 @@ rule s6a_two_bit_genome:
         
         mkdir -p {params.outdir}
 
-        ./{params.faToTwoBit} {input.masked_ref_genome} {output.twobit_genome}
+        {params.faToTwoBit} {input.masked_ref_genome} {output.twobit_genome}
         """
 
 ## Step 6b:  Calculate effective genome size with faCount
@@ -250,7 +250,7 @@ rule s6b_effective_genome_size:
 
         mkdir -p {params.outdir}
 
-        ./{params.faCount} {input.masked_ref_genome} > {output.eff_gen_size}
+        {params.faCount} {input.masked_ref_genome} > {output.eff_gen_size}
         """
 
 ## Step 6c: Compute GC bias with deeptools (slurm_computeGCBias.sh)
