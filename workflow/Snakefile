@@ -24,10 +24,9 @@ READ_LANES  = config["merge_reads"]["read_lanes"]
 
 KALIGN_ID = config["s4_read_alignment"]["kalign_id"]
 
-ADAPTERS = config["repo_dir"] + config["params"]["adapters"]
-FACOUNT = config["repo_dir"] + config["params"]["faCount"]
-FATOTWOBIT = config["repo_dir"] + config["params"]["faToTwoBit"]
-
+ADAPTERS    = config["repo_dir"] + config["params"]["adapters"]
+FACOUNT     = config["repo_dir"] + config["params"]["faCount"]
+FATOTWOBIT  = config["repo_dir"] + config["params"]["faToTwoBit"]
 
 # --- Complete pipeline run --- #
 # Run all rules
@@ -222,9 +221,9 @@ rule s6a_two_bit_genome:
     input:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
-        twobit_genome = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_TwoBitGenome.2bit"
+        twobit_genome = OUTDIR + config["output_dir"]["step6a"] + "/" + SSAMPLE + "alignment_dedup.2bit"
     params:
-        outdir     = OUTDIR + config["output_dir"]["step6a"] + "/", 
+        outdir     = OUTDIR + config["output_dir"]["step6a"] + "/",
         faToTwoBit = FATOTWOBIT
     shell:
         """
@@ -242,7 +241,7 @@ rule s6b_effective_genome_size:
     output:
         eff_gen_size = OUTDIR + config["output_dir"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt"
     params:
-        outdir  = OUTDIR + config["output_dir"]["step6b"] + "/", 
+        outdir  = OUTDIR + config["output_dir"]["step6b"] + "/",
         faCount = FACOUNT
     shell:
         """
@@ -269,7 +268,7 @@ rule s6c_compute_GC_bias:
         # echo 'Step 6c' >> {output.freq_file}
 
         module load python/3.9.4
-        module load samtools/1.18
+        module load samtools/1.18.0
 
         mkdir -p {params.outdir}
 
@@ -298,7 +297,7 @@ rule s6d_correct_GC_bias:
         # echo 'Step 6d' >> {output.gc_corrected}
 
         module load python/3.9.4
-        module load samtools/1.18
+        module load samtools/1.18.0
 
         mkdir -p {params.outdir}
 
@@ -349,7 +348,7 @@ rule s7b_read_count:
         """
         # echo 'Step 7b' >> {output.read_count}
 
-        module load samtools/1.12
+        module load samtools/1.18.0
 
         mkdir -p {params.outdir}
 

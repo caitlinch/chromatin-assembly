@@ -1,8 +1,0 @@
-caitlinch/chromatin-assembly
-
-
-LASTZ - pairwise DNA sequence aligner 
-v1.04.22
-Accessed 20/06/2024
-Repository:https://github.com/lastz/lastz
-Executables: faCount, faToTwoBit

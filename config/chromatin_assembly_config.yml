@@ -36,11 +36,12 @@ input_control:
   control_pattern: "132620_HCJLVDSX2_GACGATCT-TCGTGCAT"  # Separate out the lane number id from the sample pattern - don't include "_L00" in string here
   control_lanes: ["1"] # Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"]
 
-# Programs and files needed for specific pipeline steps (file path relative to chromatin-assembly directory i.e., /full/path/to/resources/faCount)
+# Programs and files needed for specific pipeline steps 
+#   (file path relative to chromatin-assembly directory i.e., /full/path/to/resources/adapters/adap_cont_rna.fa)
 params:
   adapters: "resources/adapters/adap_cont_rna.fa"
-  faCount:  "resources/faCount" 
-  faToTwoBit: "resources/faToTwoBit" 
+  faCount: "resources/faCount"
+  faToTwoBit: "resources/faToTwoBit"
 
 ##### Section 2: Output names #####
 # Names of the output directory generated for each step
