@@ -83,5 +83,6 @@ s5_alignment_deduplication:
 
 ##### Section 4: Intermediate output #####
 # Effective genome size, extracted from the output of Step 6b
+#   The number of non-N bases in the genome i.e., {total len} - {total N}
 s6b_output:
-  effective_genome_size: 1716675060
+  effective_genome_size: 12003433
