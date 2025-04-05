@@ -194,7 +194,7 @@ rule s5_alignment_deduplication:
     input:
         alignment = rules.s4_read_alignment.output.alignment
     output:
-        dedup_alignment = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "alignment_dedup.bam"
+        dedup_alignment = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_alignment_dedup.bam"
     params:
         outdir        = OUTDIR + config["output_dir"]["step5"] + "/",
         picard_params = config["s5_alignment_deduplication"]["Picard_params"],
@@ -220,9 +220,10 @@ rule s6a_two_bit_genome:
     input:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
-        twobit_genome = OUTDIR + config["output_dir"]["step6a"] + "/" + SSAMPLE + "alignment_dedup.2bit"
+        twobit_genome = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_alignment_dedup.2bit"
     params:
-        outdir     = OUTDIR + config["output_dir"]["step6a"] + "/"
+        outdir     = OUTDIR + config["output_dir"]["step6a"] + "/",
+        info       = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_info.tab"
     conda:
         "envs/Step6_utils.yaml"
     shell:
@@ -232,6 +233,7 @@ rule s6a_two_bit_genome:
         mkdir -p {params.outdir}
 
         faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
+        twoBitInfo {output.twobit_genome} {params.info}
         """
 
 ## Step 6b:  Calculate effective genome size with faCount
@@ -263,7 +265,8 @@ rule s6c_compute_GC_bias:
         freq_file = OUTDIR + config["output_dir"]["step6c"] + "/" + SAMPLE + "_computeGCbias.txt"
     params:
         outdir          = OUTDIR + config["output_dir"]["step6c"] + "/", 
-        eff_gen_size    = config["s6b_output"]["effective_genome_size"]
+        eff_gen_size    = config["s6b_output"]["effective_genome_size"],
+        samtools_index  = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_alignment_dedup.bam.bai"
     shell:
         """
         # echo 'Step 6c' >> {output.freq_file}
@@ -273,12 +276,15 @@ rule s6c_compute_GC_bias:
 
         mkdir -p {params.outdir}
 
-        CMD="computeGCBias \
+        CMD1="samtools index {input.dedup_alignment}"
+        eval $CMD1
+
+        CMD2="computeGCBias \
             -b {input.dedup_alignment} \
             --effectiveGenomeSize {params.eff_gen_size} \
             -g {input.twobit_genome} \
             --GCbiasFrequenciesFile {output.freq_file}"
-        eval $CMD
+        eval $CMD2
         """
 
 ## Step 6d: Correct GC bias with deeptools (slurm_correctGCBias.sh)
@@ -303,12 +309,12 @@ rule s6d_correct_GC_bias:
         mkdir -p {params.outdir}
 
         CMD="correctGCBias_kalign \
-          -p {threads} \ 
           -b {input.dedup_alignment} \
           --effectiveGenomeSize {params.eff_gen_size} \ 
           -g {input.twobit_genome} \
           --GCbiasFrequenciesFile {input.freq_file} \
-          -o {output.gc_corrected}"
+          -o {output.gc_corrected} \
+          -p {threads}"
         eval $CMD
         """
 
