@@ -74,12 +74,13 @@ rule s1_mask_repeats:
         masked = OUTDIR + config["output_dir"]["step1"] + "/" + REF_GENOME_ID + ".masked",
         index  = OUTDIR + config["output_dir"]["step1"] + "/" + REF_GENOME_ID + ".masked.index"
     params:
-        outdir      = OUTDIR + config["output_dir"]["step1"] + "/",
-        adapter     = ADAPTERS,
-        ref_species = REF_SPECIES, 
-        log         = OUTDIR + config["output_dir"]["step1"] + "/index_logs.log",
+        outdir              = OUTDIR + config["output_dir"]["step1"] + "/",
+        adapter             = ADAPTERS,
+        ref_species         = REF_SPECIES, 
+        log                 = OUTDIR + config["output_dir"]["step1"] + "/index_logs.log",
+        repeatmasker_engine = config["s1_mask_repeats"]["repeatmasker_engine"],
         module_repeatmasker = config["modules"]["repeatmasker"],
-        module_kit4b = config["modules"]["kit4b"]
+        module_kit4b        = config["modules"]["kit4b"]
     shell:
         """
         # touch {output.masked}
@@ -91,7 +92,7 @@ rule s1_mask_repeats:
 
         mkdir -p {params.outdir}
 
-        RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} -engine rmblast
+        RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
         ngskit4b index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
         """
 
@@ -104,7 +105,7 @@ rule s2_raw_read_QC:
         r1 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_fastqc_R1.fastq.html",
         r2 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_fastqc_R2.fastq.html"
     params:
-        outdir = OUTDIR + config["output_dir"]["step2"] + "/",
+        outdir        = OUTDIR + config["output_dir"]["step2"] + "/",
         module_fastqc = config["modules"]["fastqc"]
     shell:
         """
@@ -132,8 +133,8 @@ rule s3_extract_UMI:
         unmapped_bam         = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_unmapped.bam",
         unmapped_bam_withUMI = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_unmapped_withUMI.bam",
         fgbio_params         = config["s3_extract_UMI"]["FGBio_params"],
-        module_picard = config["modules"]["picard"],
-        module_fgbio = config["modules"]["fgbio"]
+        module_picard        = config["modules"]["picard"],
+        module_fgbio         = config["modules"]["fgbio"]
     shell:
         """
         # touch {output.r1}
@@ -176,7 +177,7 @@ rule s4_read_alignment:
         outdir        = OUTDIR + config["output_dir"]["step4"] + "/",
         kalign_params = config["s4_read_alignment"]["kalign_params"],
         log_file      = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + KALIGN_ID + ".log",
-        module_kit4b = config["modules"]["kit4b"]
+        module_kit4b  = config["modules"]["kit4b"]
     shell:
         """
         # echo 'Step 4' >> {output.alignment}
@@ -229,8 +230,8 @@ rule s6a_two_bit_genome:
     output:
         twobit_genome = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_alignment_dedup.2bit"
     params:
-        outdir     = OUTDIR + config["output_dir"]["step6a"] + "/",
-        info       = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_info.tab"
+        outdir = OUTDIR + config["output_dir"]["step6a"] + "/",
+        info   = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_info.tab"
     conda:
         "envs/Step6_utils.yaml"
     shell:
@@ -274,7 +275,7 @@ rule s6c_compute_GC_bias:
         outdir          = OUTDIR + config["output_dir"]["step6c"] + "/", 
         eff_gen_size    = config["s6b_output"]["effective_genome_size"],
         samtools_index  = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_alignment_dedup.bam.bai",
-        module_python = config["modules"]["python"],
+        module_python   = config["modules"]["python"],
         module_samtools = config["modules"]["samtools"]
     shell:
         """
@@ -306,9 +307,9 @@ rule s6d_correct_GC_bias:
     output:
         gc_corrected = OUTDIR + config["output_dir"]["step6d"] + "/" + SAMPLE + "_alignment_dedup_gcCorrected.bam"
     params:
-        outdir       = OUTDIR + config["output_dir"]["step6d"] + "/", 
-        eff_gen_size = config["s6b_output"]["effective_genome_size"],
-        module_python = config["modules"]["python"],
+        outdir          = OUTDIR + config["output_dir"]["step6d"] + "/", 
+        eff_gen_size    = config["s6b_output"]["effective_genome_size"],
+        module_python   = config["modules"]["python"],
         module_samtools = config["modules"]["samtools"]
     shell:
         """
@@ -337,9 +338,9 @@ rule s7a_size_metrics:
         size_metrics = OUTDIR + config["output_dir"]["step7a"] + "/" + REF_SPECIES + "_" + SAMPLE + "_insert_size_metrics.txt",
         histogram    = OUTDIR + config["output_dir"]["step7a"] + "/"  + REF_SPECIES + "_" + SAMPLE + "_insert_size_histogram.pdf"
     params:
-        outdir = OUTDIR + config["output_dir"]["step7a"] + "/",
+        outdir        = OUTDIR + config["output_dir"]["step7a"] + "/",
         module_picard = config["modules"]["picard"],
-        module_R = config["modules"]["R"]
+        module_R      = config["modules"]["R"]
     shell:
         """
         # echo 'Step 7a' >> {output.size_metrics}
@@ -363,7 +364,7 @@ rule s7b_read_count:
     output:
         read_count = OUTDIR + config["output_dir"]["step7b"] + "/" + REF_SPECIES + "_" + SAMPLE + "_count.txt"
     params:
-        outdir = OUTDIR + config["output_dir"]["step7b"] + "/",
+        outdir          = OUTDIR + config["output_dir"]["step7b"] + "/",
         module_samtools = config["modules"]["samtools"]
     shell:
         """
@@ -385,7 +386,7 @@ rule s8_peak_analysis:
     output:
         danpos_op = OUTDIR + config["output_dir"]["step8"] + "/" + REF_SPECIES + "_" + SAMPLE + "_DANPOS.txt"
     params:
-        outdir = OUTDIR + config["output_dir"]["step8"] + "/",
+        outdir        = OUTDIR + config["output_dir"]["step8"] + "/",
         module_danpos = config["modules"]["danpos"]
     shell:
         """
