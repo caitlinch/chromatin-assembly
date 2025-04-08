@@ -1,4 +1,6 @@
 Quickstart guide for the time-impaired:
+
+GET STARTED BY FOLLOWING THESE STEPS:
 1. Download the caitlinch/chromatin-assembly GitHub repository and move it to where you want to run your pipeline (e.g., /scratch3/che318/)
 2. Navigate in terminal to the "chromatin-assembly" directory
 3. Create conda environment using command: conda create --name Step6_utils --file workflow/envs/Step6_utils.txt
@@ -13,14 +15,31 @@ Quickstart guide for the time-impaired:
 12. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size) with command "sbatch jobscripts/slurm_pipeline_S5-6b.sh"
 13. Update the effective genome size value in the file "config/chromatin_assembly_config.yml", Section 4: Intermediate output
 14. Perform Step 6c (compute GC bias) and 6d (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S6c-6d.sh"
-15. Perform Step 7a (compute GC bias) and 7b (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
+15. Perform Step 7a (calculate alignment statistics) and 7b (estimate mean nuclear genome covert) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
 16. (Optional) Perform Step 8 (peak analysis with DANPOS) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
 
+QUICK REFERENCE FOR RULE NAMES:
+s0_merge_samples
+s1_mask_repeats
+s2_raw_read_QC
+s3_extract_UMI
+s4_read_alignment
+s5_alignment_deduplication
+s6a_two_bit_genome
+s6b_effective_genome_size
+s6c_compute_GC_bias
+s6d_correct_GC_bias
+s7a_size_metrics
+s7b_read_count
+s8_peak_analysis
+
+PIPELINE DEVELOPMENT AND TESTING:
 This pipeline was developed to be run on:
 - the Petrichor server (at CSIRO)
 - Using Slurm (either by submitting jobscripts as listed above, or by using the command line as detailed in the documentation)
 It has not been tested in other environments.
 
+HAVING PROBLEMS? SOMETHING NOT WORKING?
 Troubleshooting:
 - Try running a dry run with the command "snakemake -n -p -c1" - sometimes you might be missing a file or have an incorrect file path
 
@@ -28,4 +47,3 @@ Potential issues:
 - Snakemake not found? Check job script includes the line "module load python"
 - Not enough resources supplied in job scripts? Update resources in SBATCH lines
 - Not enough resources supplied to Snakemake? Update resources in "profiles/slurm/config.yaml" file
-
