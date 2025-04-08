@@ -286,15 +286,9 @@ rule s6c_compute_GC_bias:
 
         mkdir -p {params.outdir}
 
-        CMD1="samtools index {input.dedup_alignment}"
-        eval $CMD1
-
-        CMD2="computeGCBias \
-            -b {input.dedup_alignment} \
-            --effectiveGenomeSize {params.eff_gen_size} \
-            -g {input.twobit_genome} \
-            --GCbiasFrequenciesFile {output.freq_file}"
-        eval $CMD2
+        samtools index {input.dedup_alignment}
+        
+        computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file}
         """
 
 ## Step 6d: Correct GC bias with deeptools (slurm_correctGCBias.sh)
@@ -320,14 +314,7 @@ rule s6d_correct_GC_bias:
 
         mkdir -p {params.outdir}
 
-        CMD="correctGCBias_kalign \
-          -b {input.dedup_alignment} \
-          --effectiveGenomeSize {params.eff_gen_size} \ 
-          -g {input.twobit_genome} \
-          --GCbiasFrequenciesFile {input.freq_file} \
-          -o {output.gc_corrected} \
-          -p {threads}"
-        eval $CMD
+        correctGCBias_kalign --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads}
         """
 
 ## Step 7a: Calculate alignment statistics with Picard (slurm_sizemetrics.sh)
