@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Usage: sbatch slurm_run_all_steps.sh
+
 # IMPORTANT: We recommend running the pipeline in individual steps. We have separated the pipeline
 #            into multiple job scripts to faciliate this (see chromatin-assembly/jobscripts files 
 #            containing "pipeline" in filename)

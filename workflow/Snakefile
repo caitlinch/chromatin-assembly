@@ -38,8 +38,8 @@ rule run_all:
         s3_r1      = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R1.fastq.gz",
         s3_r2      = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_withUMI_R2.fastq.gz",
         s4_algnmt  = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + KALIGN_ID + "_alignment.sam",
-        s5_dedup   = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "alignment_dedup.bam",
-        s6a_2bit   = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_TwoBitGenome.2bit",
+        s5_dedup   = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_alignment_dedup.bam",
+        s6a_2bit   = OUTDIR + config["output_dir"]["step6a"] + "/" + SAMPLE + "_alignment_dedup.2bit",
         s6b_gSize  = OUTDIR + config["output_dir"]["step6b"] + "/" + SAMPLE + "_effGenSize.txt",
         s6c_GCfreq = OUTDIR + config["output_dir"]["step6c"] + "/" + SAMPLE + "_computeGCbias.txt",
         s6d_GCbias = OUTDIR + config["output_dir"]["step6d"] + "/" + SAMPLE + "_alignment_dedup_gcCorrected.bam",
@@ -146,10 +146,10 @@ rule s3_extract_UMI:
         mkdir -p {params.outdir}
         
         CMD1="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam \
-	        F1={input.r1} \
-	        F2={input.r2} \
-	        O={params.unmapped_bam} \
-	        SM={params.basename}"
+	        -F1 {input.r1} \
+	        -F2 {input.r2} \
+	        -O {params.unmapped_bam} \
+	        -SM {params.basename}"
         eval $CMD1
         
         CMD2="java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam \
@@ -159,9 +159,9 @@ rule s3_extract_UMI:
         eval $CMD2
         
         CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq \
-	        I={params.unmapped_bam_withUMI} \
-	        F={output.r1} \
-	        F2={output.r2}" 
+	        -I {params.unmapped_bam_withUMI} \
+	        -F {output.r1} \
+	        -F2 {output.r2}" 
         eval $CMD3
         """
 
@@ -337,14 +337,14 @@ rule s7a_size_metrics:
 
         mkdir -p {params.outdir}
 
-        CMD = "java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
-          I={input.gc_corrected} \
-          O={output.size_metrics} \
-          H={output.histogram}"
+        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
+          -I {input.gc_corrected} \
+          -O {output.size_metrics} \
+          -H {output.histogram}"
         eval "$CMD"
         """
 
-## Step 7b: Estimate mean nuclear genome cover with Picard (slurm_read_count_GCcorrect.sh)
+## Step 7b: Estimate mean nuclear genome coverage (slurm_read_count_GCcorrect.sh)
 rule s7b_read_count:
     input:
         gc_corrected = rules.s6d_correct_GC_bias.output.gc_corrected

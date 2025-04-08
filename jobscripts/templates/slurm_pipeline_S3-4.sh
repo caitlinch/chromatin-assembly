@@ -23,6 +23,5 @@ module load python
 # Assuming that output from Steps 1-2 is present, run:
 #       Step 3 - UMI extraction with FGBio and Picard
 #       Step 4 - Align reads with kalign 
-# Otherwise, run Steps 1-4
 snakemake --slurm --profile profiles/slurm/ --until s4_read_alignment --omit s0_merge_samples
 
