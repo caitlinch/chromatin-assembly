@@ -5,7 +5,7 @@ TODO
 (X) update Slurm approach for Petrichor version of Snakemake (7.24.0)
 (X) make job scripts for SLURM
 (X) test dry run with yeast data
-( ) test run with yeast data – Complete: 1, 2, 3
+( ) test run with yeast data – Complete: 1, 2, 3, 4, 5
 ( ) prepare for mouse data
 ( ) test dry run with mouse data
 ( ) test run with mouse data
