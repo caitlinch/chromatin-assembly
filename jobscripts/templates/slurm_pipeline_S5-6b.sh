@@ -24,7 +24,6 @@ module load python
 #       Step 5 - Remove PCR and optical duplicates from alignment with Picard (slurm_depup.sh)
 #       Step 6a - Generate 2Bit genome with faToTwoBit
 #       Step 6b - Calculate effective genome size with faCount
-# Otherwise, run Steps 1-6b
 
 # Note: These three steps do not have interconnected dependencies (i.e., 6b is not dependent on 6a)
 #       so to run all three I specifically instruct Snakemake to run each step independently.
