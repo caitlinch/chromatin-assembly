@@ -4,13 +4,13 @@ TODO
 (X) prepare for yeast data
 (X) update Slurm approach for Petrichor version of Snakemake (7.24.0)
 (X) make job scripts for SLURM
+(X) check job script requirements - should be much lower than reqs needed for Snakemake steps?
 (X) test dry run with yeast data
-( ) test run with yeast data – Complete: 1, 2, 3, 4, 5
+( ) test run with yeast data – Complete: 1, 2, 3, 4, 5, 6a, 6b, 6c
 ( ) prepare for mouse data
 ( ) test dry run with mouse data
 ( ) test run with mouse data
 ( ) get DANPOS working in server (Step 8)
 ( ) check/fix DANPOS rule and test DANPOS rule (Step 8)
-( ) check job script requirements - should be much lower than reqs needed for Snakemake steps?
 ( ) complete doco
 
