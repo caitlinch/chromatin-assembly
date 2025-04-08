@@ -24,4 +24,5 @@ module load python
 #       Step 7a - Calculate alignment statistics with Picard 
 #       Step 7b - Estimate mean nuclear genome cover with Picard 
 # Otherwise, run Steps 1-7b
+snakemake --slurm --profile profiles/slurm/ --until s7a_size_metrics --omit s0_merge_samples
 snakemake --slurm --profile profiles/slurm/ --until s7b_read_count --omit s0_merge_samples
