@@ -7,15 +7,16 @@
 repo_dir: "/scratch3/che318/chromatin-assembly/" # path to the chromatin-assembly directory
 
 # Species name
-ref_species: "yeast"
+ref_species: "gecko"
 
 # Merging reads
 #   Merging reads is an optional step included in the pipeline, which I recommend running separately
 merge_reads: 
   perform_merge:     FALSE # TRUE to merge reads
-  read_dir:          "data/yeast/reads/" # file path relative to chromatin-assembly directory i.e., /full/path/to/data/yeast/reads/
-  read_path_pattern: "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC" # Separate out the lane number from sample pattern - don't include "_L00" in string here
-  read_lanes:        ["1"] # Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"]
+  read_dir:          "data/gecko/reads/" # file path relative to chromatin-assembly directory i.e., /full/path/to/data/yeast/reads/
+  sample_ids:        [ ] # merge 
+  read_path_pattern: "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC" # REMOVE Separate out the lane number from sample pattern - don't include "_L00" in string here
+  read_lanes:        ["1"] # REMOVE Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"]
 
 # Input data paths and details
 #   Input for analysis steps, either after merging reads or if using a single lane
@@ -23,14 +24,13 @@ merge_reads:
 #     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
 #
 input:
-  sample:                 "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"
   sample_ids:            ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
   output_sample_ids:     ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
-  r1:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz"
-  r2:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz"
-  reference_genome_id:   "S288C_reference_sequence_R64-2-1_20150113.fsa" # identifier for reference genome
-  reference_genome_path: "/scratch3/che318/data/yeast/genome/S288C_reference_sequence_R64-2-1_20150113.fsa"
-  gff:                   "/scratch3/che318/data/yeast/genome/saccharomyces_cerevisiae_R64-2-1_20150113.gff" # needed for DANPOS output, not needed in this script
+  reference_genome_id:   "gecko_genome" # identifier for reference genome
+  reference_genome_path: "data/gecko/genome/gecko_genome.fsa"
+  sample:                 "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # REMOVE - single sample version
+  r1:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz" # REMOVE - single sample version
+  r2:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz" # REMOVE - single sample version
 
 # Input control for peak analysis (Step 8)
 input_control: 
