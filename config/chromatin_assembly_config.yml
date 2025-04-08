@@ -23,12 +23,13 @@ merge_reads:
 #     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
 #
 input:
-  sample:                "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # snippet of file path used to identify dataset
+  sample_ids:            ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
+  output_sample_ids:     ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
   r1:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz"
   r2:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz"
   reference_genome_id:   "S288C_reference_sequence_R64-2-1_20150113.fsa" # identifier for reference genome
   reference_genome_path: "/scratch3/che318/data/yeast/genome/S288C_reference_sequence_R64-2-1_20150113.fsa"
-  gff:                   "/scratch3/che318/data/yeast/genome/saccharomyces_cerevisiae_R64-2-1_20150113.gff"
+  gff:                   "/scratch3/che318/data/yeast/genome/saccharomyces_cerevisiae_R64-2-1_20150113.gff" # needed for DANPOS output, not needed in this script
 
 # Input control for peak analysis (Step 8)
 input_control: 
@@ -85,3 +86,17 @@ s5_alignment_deduplication:
 #   The number of non-N bases in the genome i.e., {total len} - {total N}
 s6b_output:
   effective_genome_size: 12003433
+
+##### Section 4: Modules #####
+# Update module versions here, as required
+modules:
+  danpos: "danpos/3.1.1"
+  fastqc: "fastqc/0.11.9"
+  fgbio: "fgbio/2.0.2"
+  kit4b: "kit4b/200218"
+  picard: "picard/3.0.0"
+  python: "python/3.9.4"
+  R: "R/4.0.5"
+  repeatmasker: "repeatmasker/4.1.2p1"
+  samtools: "samtools/1.18.0"
+

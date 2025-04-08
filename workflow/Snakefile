@@ -77,15 +77,17 @@ rule s1_mask_repeats:
         outdir      = OUTDIR + config["output_dir"]["step1"] + "/",
         adapter     = ADAPTERS,
         ref_species = REF_SPECIES, 
-        log         = OUTDIR + config["output_dir"]["step1"] + "/index_logs.log"
+        log         = OUTDIR + config["output_dir"]["step1"] + "/index_logs.log",
+        module_repeatmasker = config["modules"]["repeatmasker"],
+        module_kit4b = config["modules"]["kit4b"]
     shell:
         """
         # touch {output.masked}
         # touch {params.log}
         # touch {output.index}
 
-        module load repeatmasker/4.1.2p1
-        module load kit4b/200218
+        module load {params.module_repeatmasker}
+        module load {params.module_kit4b}
 
         mkdir -p {params.outdir}
 
@@ -102,13 +104,14 @@ rule s2_raw_read_QC:
         r1 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_fastqc_R1.fastq.html",
         r2 = OUTDIR + config["output_dir"]["step2"] + "/" + SAMPLE + "_fastqc_R2.fastq.html"
     params:
-        outdir = OUTDIR + config["output_dir"]["step2"] + "/"
+        outdir = OUTDIR + config["output_dir"]["step2"] + "/",
+        module_fastqc = config["modules"]["fastqc"]
     shell:
         """
         # touch {output.r1}
         # touch {output.r2}
 
-        module load fastqc/0.11.9 
+        module load {params.module_fastqc}
 
         mkdir -p {params.outdir}
 
@@ -128,14 +131,16 @@ rule s3_extract_UMI:
         outdir               = OUTDIR + config["output_dir"]["step3"] + "/",
         unmapped_bam         = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_unmapped.bam",
         unmapped_bam_withUMI = OUTDIR + config["output_dir"]["step3"] + "/" + SAMPLE + "_unmapped_withUMI.bam",
-        fgbio_params         = config["s3_extract_UMI"]["FGBio_params"]
+        fgbio_params         = config["s3_extract_UMI"]["FGBio_params"],
+        module_picard = config["modules"]["picard"],
+        module_fgbio = config["modules"]["fgbio"]
     shell:
         """
         # touch {output.r1}
         # touch {output.r2}
 
-        module load picard/3.0.0
-        module load fgbio/2.0.2
+        module load {params.module_picard}
+        module load {params.module_fgbio}
 
         mkdir -p {params.outdir}
         
@@ -170,12 +175,13 @@ rule s4_read_alignment:
     params:
         outdir        = OUTDIR + config["output_dir"]["step4"] + "/",
         kalign_params = config["s4_read_alignment"]["kalign_params"],
-        log_file      = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + KALIGN_ID + ".log"
+        log_file      = OUTDIR + config["output_dir"]["step4"] + "/" + SAMPLE + "_kalign_" + KALIGN_ID + ".log",
+        module_kit4b = config["modules"]["kit4b"]
     shell:
         """
         # echo 'Step 4' >> {output.alignment}
 
-        module load kit4b/200218
+        module load {params.module_kit4b}
 
         mkdir -p {params.outdir}
 
@@ -198,12 +204,13 @@ rule s5_alignment_deduplication:
     params:
         outdir        = OUTDIR + config["output_dir"]["step5"] + "/",
         picard_params = config["s5_alignment_deduplication"]["Picard_params"],
-        metrics_file  = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_removeduplicates.metrics.txt"
+        metrics_file  = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_removeduplicates.metrics.txt",
+        module_picard = config["modules"]["picard"]
     shell:
         """
         # echo 'Step 5' >> {output.dedup_alignment}
 
-        module load picard/3.0.0
+        module load {params.module_picard}
 
         mkdir -p {params.outdir}
 
@@ -266,13 +273,15 @@ rule s6c_compute_GC_bias:
     params:
         outdir          = OUTDIR + config["output_dir"]["step6c"] + "/", 
         eff_gen_size    = config["s6b_output"]["effective_genome_size"],
-        samtools_index  = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_alignment_dedup.bam.bai"
+        samtools_index  = OUTDIR + config["output_dir"]["step5"] + "/" + SAMPLE + "_alignment_dedup.bam.bai",
+        module_python = config["modules"]["python"],
+        module_samtools = config["modules"]["samtools"]
     shell:
         """
         # echo 'Step 6c' >> {output.freq_file}
 
-        module load python/3.9.4
-        module load samtools/1.18.0
+        module load {params.module_python}
+        module load {params.module_samtools}
 
         mkdir -p {params.outdir}
 
@@ -298,13 +307,15 @@ rule s6d_correct_GC_bias:
         gc_corrected = OUTDIR + config["output_dir"]["step6d"] + "/" + SAMPLE + "_alignment_dedup_gcCorrected.bam"
     params:
         outdir       = OUTDIR + config["output_dir"]["step6d"] + "/", 
-        eff_gen_size = config["s6b_output"]["effective_genome_size"]
+        eff_gen_size = config["s6b_output"]["effective_genome_size"],
+        module_python = config["modules"]["python"],
+        module_samtools = config["modules"]["samtools"]
     shell:
         """
         # echo 'Step 6d' >> {output.gc_corrected}
 
-        module load python/3.9.4
-        module load samtools/1.18.0
+        module load {params.module_python}
+        module load {params.module_samtools}
 
         mkdir -p {params.outdir}
 
@@ -326,13 +337,15 @@ rule s7a_size_metrics:
         size_metrics = OUTDIR + config["output_dir"]["step7a"] + "/" + REF_SPECIES + "_" + SAMPLE + "_insert_size_metrics.txt",
         histogram    = OUTDIR + config["output_dir"]["step7a"] + "/"  + REF_SPECIES + "_" + SAMPLE + "_insert_size_histogram.pdf"
     params:
-        outdir = OUTDIR + config["output_dir"]["step7a"] + "/"
+        outdir = OUTDIR + config["output_dir"]["step7a"] + "/",
+        module_picard = config["modules"]["picard"],
+        module_R = config["modules"]["R"]
     shell:
         """
         # echo 'Step 7a' >> {output.size_metrics}
 
-        module load picard/2.26.10
-        module load R/4.0.5
+        module load {params.module_picard}
+        module load {params.module_R}
 
         mkdir -p {params.outdir}
 
@@ -350,12 +363,13 @@ rule s7b_read_count:
     output:
         read_count = OUTDIR + config["output_dir"]["step7b"] + "/" + REF_SPECIES + "_" + SAMPLE + "_count.txt"
     params:
-        outdir = OUTDIR + config["output_dir"]["step7b"] + "/"
+        outdir = OUTDIR + config["output_dir"]["step7b"] + "/",
+        module_samtools = config["modules"]["samtools"]
     shell:
         """
         # echo 'Step 7b' >> {output.read_count}
 
-        module load samtools/1.18.0
+        module load {params.module_samtools}
 
         mkdir -p {params.outdir}
 
@@ -371,10 +385,11 @@ rule s8_peak_analysis:
     output:
         danpos_op = OUTDIR + config["output_dir"]["step8"] + "/" + REF_SPECIES + "_" + SAMPLE + "_DANPOS.txt"
     params:
-        outdir = OUTDIR + config["output_dir"]["step8"] + "/"
+        outdir = OUTDIR + config["output_dir"]["step8"] + "/",
+        module_danpos = config["modules"]["danpos"]
     shell:
         """
-        # module load danpos/3.1.1
+        # module load {params.module_danpos}
         #
         # mkdir -p {params.outdir}
         #
