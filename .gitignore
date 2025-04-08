@@ -176,3 +176,4 @@ cython_debug/
 .snakemake/
 doco/.DS_Store
 **/.DS_Store
+.Rhistory
