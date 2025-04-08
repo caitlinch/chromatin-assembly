@@ -174,3 +174,4 @@ cython_debug/
 # Local files
 .DS_Store
 .snakemake/
+doco/.DS_Store
