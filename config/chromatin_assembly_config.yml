@@ -23,6 +23,7 @@ merge_reads:
 #     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
 #
 input:
+  sample:                 "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"
   sample_ids:            ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
   output_sample_ids:     ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
   r1:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz"
