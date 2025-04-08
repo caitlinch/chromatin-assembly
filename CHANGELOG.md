@@ -20,8 +20,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 First release. Both minor and major improvements still pending.
 
 ### Added
-- Snakemake pipeline to perform archival chromatin assembly from start to finish
-  - Pipeline currently runs successfully for one sample from Steps 1 to 5
+- Snakemake pipeline to perform archival chromatin assembly
+  - Pipeline currently runs successfully for one sample from Steps 1 to 7b
 - User documentation
 - Job script templates 
 - R script allowing users to update job script templates with their SLURM details
