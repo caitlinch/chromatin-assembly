@@ -6,7 +6,10 @@ GET STARTED BY FOLLOWING THESE STEPS:
 3. Create conda environment using command: conda create --name Step6_utils --file workflow/envs/Step6_utils.txt
 4. Open and export conda environment using: conda activate Step6_utils; conda env export > workflow/envs/Step6_utils.yaml
 5. Open the file "config/chromatin_assembly_config.yml" and update file paths and parameters for your data
-6. Update details in job scripts (jobscripts/ directory) with your own (i.e., email address, email notification settings, log directory, etc).
+6. Update SLURM details in the job scripts using the command: "module load R; Rscript resources/user_update_jobscripts.R mail-user={email@email.com} mail-type={when_mail} account={account}" 
+	- Replace each set of curly brackets with your preferred SLURM details
+	- For example: "module load R; Rscript resources/user_update_jobscripts.R mail-user=test@test.com mail-type=FAIL account=OD-123456"
+	- See UPDATING SLURM JOBSCRIPTS below for more details
 7. Update account ID in slurm profiles (profiles/hpc_test/config.yaml, profiles/slurm/config.yaml) with your own
 8. (Optional) Perform a dry run of the full pipeline in the terminal (interactive mode) with command "snakemake -n -p -c1" or "sbatch jobscripts/pipeline_dry_run.sh"
 9. (Optional) Merge reads with "sbatch jobscripts/slurm_pipeline_S0.sh"
@@ -17,6 +20,26 @@ GET STARTED BY FOLLOWING THESE STEPS:
 14. Perform Step 6c (compute GC bias) and 6d (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S6c-6d.sh"
 15. Perform Step 7a (calculate alignment statistics) and 7b (estimate mean nuclear genome covert) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
 16. (Optional) Perform Step 8 (peak analysis with DANPOS) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
+
+
+
+UPDATING SLURM JOBSCRIPTS
+To update SLURM details in the jobscript, enter the following command into the terminal: 
+	"module load R; Rscript resources/user_update_jobscripts.R mail-user={email@email.com} mail-type={when_mail} account={account}" 
+Arguments:
+{email@email.com} - your email e.g., mail-user=test@test.com
+{when_mail} - your email preferences e.g., mail-type=END or mail-type=FAIL,END,TIME_LIMIT
+{account} - account ID for SLURM accounting e.g., account=OD-123456
+
+Putting this together, a sample command would be:
+	"module load R; Rscript resources/user_update_jobscripts.R mail-user=test@test.com mail-type=FAIL,END,TIME_LIMIT account=OD-123456"
+
+If you do not wish to receive any emails from SLURM, set mail-user=FALSE and mail-type=FALSE:
+	"module load R; Rscript resources/user_update_jobscripts.R mail-user=FALSE mail-type=FALSE account=OD-123456"
+
+All jobscripts will be copied with your updated user preferences into the jobscripts/ directory.
+
+
 
 QUICK REFERENCE FOR RULE NAMES:
 s0_merge_samples
@@ -33,11 +56,15 @@ s7a_size_metrics
 s7b_read_count
 s8_peak_analysis
 
+
+
 PIPELINE DEVELOPMENT AND TESTING:
 This pipeline was developed to be run on:
 - the Petrichor server (at CSIRO)
 - Using Slurm (either by submitting jobscripts as listed above, or by using the command line as detailed in the documentation)
 It has not been tested in other environments.
+
+
 
 HAVING PROBLEMS? SOMETHING NOT WORKING?
 Troubleshooting:
