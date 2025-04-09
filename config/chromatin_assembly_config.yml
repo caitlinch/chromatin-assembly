@@ -1,22 +1,60 @@
 # Chromatin assembly pipeline
 # Configuration file
 
-# Note: Run script from within chromatin-assembly/ dir
+# NOTE: Run pipeline from within chromatin-assembly/ dir
+
+# NOTE: on read file names
+# This pipeline was tested on reads with the structure:
+#  {sample_id}_{some_text}_L00{num}_R{1|2}.fastq.gz
+# e.g., R114096_22W5TWLT3_TTCTGCGTCG-TTCGTACACC_L003_R1.fastq.gz
+# If you have data with a different file name structure, some
+# of the inbuilt assumptions will not work and you may have issues
+# running the pipeline.
 
 ##### Section 1: Input data and parameters #####
-repo_dir: "/scratch3/che318/chromatin-assembly/" # path to the chromatin-assembly directory
+# repo_dir: path to the chromatin-assembly directory (including trailing slash) e.g., /path/to/chromatin-assembly/
+repo_dir: "/scratch3/che318/chromatin-assembly/" 
 
-# Species name
+# ref_species: Species name
 ref_species: "gecko"
 
-# Merging reads
-#   Merging reads is an optional step included in the pipeline, which I recommend running separately
+# SAMPLE ID
+# Important: Keep indentation level consistent
+# These sample ids will be used for read merging (if performed) and all other pipeline steps
+sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499",
+            "R31500", "R31502", "R54899", "R55025", "R55032", "R55033",
+            "R84119", "R87557", "SMZ3538", "SMZ3540", "SMZ3541", "SMZ3557",
+            "SMZ3559", "SMZ3560", "SMZ3561"] 
+
+# SAMPLE NAMES
+# Currently unused
+# Human-readable names for each sample
+# Parameters:
+# use_names: FALSE to use sample IDs only, TRUE (currently not integrated to pipeline)
+# sample_names: dictionary containing name/id pairs
+use_names: FALSE
+sample_names: ["sample01": "R114096", "sample02":"R122595", "sample03":"R122596", 
+              "sample04":"R135806", "sample05":"R135860", "sample06":"R31499",
+              "sample07":"R31500", "sample08":"R31502", "sample09":"R54899", 
+              "sample10":"R55025", "sample11":"R55032", "sample12":"R55033",
+              "sample13":"R84119", "sample14":"R87557", "sample15":"SMZ3538",
+              "sample16":"SMZ3540", "sample17":"SMZ3541", "sample18":"SMZ3557",
+              "sample19":"SMZ3559", "sample20":"SMZ3560", "sample21":"SMZ3561"] 
+
+# MERGING READS
+# Merging reads is an optional step included in the pipeline, which I recommend running separately
+# Parameters:
+# perform_merge: TRUE to merge reads
+# merge_across_dirs: TRUE to merge across all directories (one R1/R2 per sample), FALSE to merge within directories (one R1/R2 per sample per dir)
+# read_dir: file path relative to chromatin-assembly directory i.e., for dir /full/path/to/chromatin-assembly/data/yeast/reads/ use data/yeast/reads/
+# specify_lanes: TRUE to merge only specified lanes, FALSE to merge all lanes
+# read_lanes: specific read lanes to merge, as dictionary i.e., ["1", "2", "3", "4", "5", "6", "7", "8"]
 merge_reads: 
-  perform_merge:     FALSE # TRUE to merge reads
-  read_dir:          "data/gecko/reads/" # file path relative to chromatin-assembly directory i.e., /full/path/to/data/yeast/reads/
-  sample_ids:        [ ] # merge 
-  read_path_pattern: "133165_H3NTTDSX3_GTGAAGTG-GAGCAATC" # REMOVE Separate out the lane number from sample pattern - don't include "_L00" in string here
-  read_lanes:        ["1"] # REMOVE Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"]
+  perform_merge: FALSE
+  merge_across_dirs: TRUE
+  read_dir: "data/gecko/reads/"
+  specify_lanes: FALSE
+  read_lanes: ["1"]
 
 # Input data paths and details
 #   Input for analysis steps, either after merging reads or if using a single lane
@@ -24,8 +62,8 @@ merge_reads:
 #     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
 #
 input:
-  sample_ids:            ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
-  output_sample_ids:     ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
+  old_ids:            ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
+  old_output_ids:     ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
   reference_genome_id:   "gecko_genome" # identifier for reference genome
   reference_genome_path: "data/gecko/genome/gecko_genome.fsa"
   sample:                 "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # REMOVE - single sample version
