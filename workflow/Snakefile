@@ -24,7 +24,7 @@ READ_LANES  = config["merge_reads"]["read_lanes"]
 
 KALIGN_ID = config["s4_read_alignment"]["kalign_id"]
 
-ADAPTERS    = config["repo_dir"] + config["params"]["adapters"]
+ADAPTERS = config["repo_dir"] + config["params"]["adapters"]
 
 
 # --- Complete pipeline run --- #
@@ -51,18 +51,19 @@ rule run_all:
 ## Step 0: Read collation (SLURM_MergeSamples.sh)
 rule s0_merge_samples:
     input:
-        r1s = expand("{read_dir}{sample}_L00{lane}_R1.fastq.gz", read_dir = READ_DIR, sample = READ_SAMPLE, lane = READ_LANES),
-        r2s = expand("{read_dir}{sample}_L00{lane}_R2.fastq.gz", read_dir = READ_DIR, sample = READ_SAMPLE, lane = READ_LANES)
+        config = "config/chromatin_assembly_config.yml"
     output:
-        r1_merged = OUTDIR + config["output_dir"]["step0"] + "/" + SAMPLE + "_merged_R1.fastq.gz",
-        r2_merged = OUTDIR + config["output_dir"]["step0"] + "/" + SAMPLE + "_merged_R2.fastq.gz"
+        log = config["repo_dir"] + "log/" +  config["output_dir"]["step0"] + "_" + REF_SPECIES + ".txt",
     params:
-        merge_reads = config["merge_reads"]["perform_merge"]
+        merge_reads = config["merge_reads"]["perform_merge"],
+        repo_dir    = config["repo_dir"],
+        module_R    = config["modules"]["R"]
     shell:
         """
+        module load {params.module_R}
+
         if {params.merge_reads} == TRUE:
-            cat {input.r1s} > {output.r1_merged}
-            cat {input.r2s} > {output.r2_merged}
+            Rscript workflow/R/s0_merge_reads.R repo_dir={params.repo_dir} config={input.config} out={output.log}
         """
 
 ## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
