@@ -74,3 +74,7 @@ Potential issues:
 - Snakemake not found? Check job script includes the line "module load python"
 - Not enough resources supplied in job scripts? Update resources in SBATCH lines
 - Not enough resources supplied to Snakemake? Update resources in "profiles/slurm/config.yaml" file
+- Read file path naming convention: 
+	- This pipeline was tested on reads with the structure: {sample_id}_{some_text}_L00{num}_R{1|2}.fastq.gz
+	- For example, R114096_22W5TWLT3_TTCTGCGTCG-TTCGTACACC_L003_R1.fastq.gz
+	- If you have data with a different file name structure, you may have issues running the pipeline.
