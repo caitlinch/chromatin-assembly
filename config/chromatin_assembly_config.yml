@@ -13,7 +13,8 @@
 
 ##### Section 1: Input data and parameters #####
 # repo_dir: path to the chromatin-assembly directory (including trailing slash) e.g., /path/to/chromatin-assembly/
-repo_dir: "/scratch3/che318/chromatin-assembly/" 
+# repo_dir: "/scratch3/che318/chromatin-assembly/" 
+repo_dir: "/Users/che318/Repos/chromatin-assembly/" 
 
 # ref_species: Species name
 ref_species: "gecko"
