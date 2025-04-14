@@ -55,7 +55,7 @@ sample_names: ["sample01": "R114096", "sample02":"R122595", "sample03":"R122596"
 merge_reads: 
   perform_merge: TRUE
   merge_across_dirs: TRUE
-  read_dir: "/scratch3/che318/chromatin-assembly/data/gecko/reads/"
+  read_dir: "/Users/che318/Repos/chromatin-assembly/data/gecko/reads/" # "/scratch3/che318/chromatin-assembly/data/gecko/reads/"
   specify_lanes: FALSE
   read_lanes: []
 
@@ -70,16 +70,15 @@ merge_reads:
 #                 e.g., /full/path/to/chromatin-assembly/data/{species}/reads/
 # reference_genome_id: human-readable identifier for reference genome
 # reference_genome_path: full path to reference genome e.g.,  /full/path/to/chromatin-assembly/data/yeast/reference_genome/ref_genome.fsa
-
 input:
-  input_dir:             "/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads/"
+  input_dir:             "/Users/che318/Repos/chromatin-assembly/results/gecko/0_mergedReads/" # "/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads/"
   reference_genome_id:   "gecko_genome" # identifier for reference genome
-  reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
-#  old_output_ids:        ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
-#  sample:                 "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # REMOVE - single sample version
-#  old_ids:               ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
-#  r1:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz" # REMOVE - single sample version
-#  r2:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz" # REMOVE - single sample version
+  reference_genome_path: "/Users/che318/Repos/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa" # "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
+#  old_output_ids:       ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
+#  sample:               "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # REMOVE - single sample version
+#  old_ids:              ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
+#  r1:                   "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz" # REMOVE - single sample version
+#  r2:                   "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz" # REMOVE - single sample version
 
 # Input control for peak analysis (Step 8)
 #
@@ -99,6 +98,11 @@ params:
 
 ##### Section 2: Output names #####
 # Names of the output directory generated for each step
+#   Snakemake is smart - it will not overwrite existing files
+#   If you want to rerun a step with a different set of input parameters, you can update the output directory
+#   for that step here, which will allow you to run that step with the new settings
+#   If you want to force Snakemake to rerun a rule, use the flag `-R {rulename}` or `--forcerun {rulename}`
+#       e.g., "snakemake -R somerule" will force Snakemake to re-run all jobs of that rule and everything downstream 
 output_dir:
   step0: "0_mergedReads"
   step1: "1_repeatmasker"
