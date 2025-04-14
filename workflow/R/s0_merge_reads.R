@@ -21,6 +21,7 @@
 #### PREPARE CONFIG FILE ####
 # Parse input argument - chromatin_assembly_config.yml directory
 # args = c("repo_dir=/Users/che318/Repos/chromatin-assembly/", "config=/Users/che318/Repos/chromatin-assembly/config/chromatin_assembly_config.yml", "out=/Users/che318/Repos/chromatin-assembly/log/s0_merge_samples_gecko.txt")
+# args = c("repo_dir=/scratch3/che318/chromatin-assembly/", "config=/scratch3/che318/chromatin-assembly/config/chromatin_assembly_config.yml", "out=/scratch3/che318/chromatin-assembly/log/s0_merge_samples_gecko.txt")
 args <- commandArgs(trailingOnly = TRUE)
 
 # check for the command args
@@ -42,9 +43,11 @@ arg_repo_dir <- strsplit(grep("repo_dir", args, value = T), "=")[[1]][2]
 arg_config_file <- strsplit(grep("config", args, value = T), "=")[[1]][2]
 arg_out_log <- strsplit(grep("out", args, value = T), "=")[[1]][2]
 
-print("Merging reads")
+print("Running s0_merge_reads.R")
+print(paste0("Repo dir: ", arg_repo_dir))
 print(paste0("Config file: ", arg_config_file))
-print("\n")
+print("")
+
 
 if (file.exists(arg_config_file) == FALSE){
   stop(
@@ -183,7 +186,7 @@ if (config[sample_name_start] == "sample_names:[]"){
   )
 }
 
-print(str(sample_name_df))
+
 
 #### ERROR CHECKING ###
 print("Checking input")
@@ -305,36 +308,37 @@ if (param_performMerge == TRUE){
   ## Identify read directories
   if (param_mergeAcrossDirs == TRUE){
     ## To merge reads ACROSS dirs
-    # One R1/R2 file per sample name 
-    #     i.e., if you have multiple dirs within reads/, and the same sample name
-    #           is present within these dirs, then those files will be combined
-    
+    ## One R1/R2 file per sample name 
+    ## i.e., if you have multiple dirs within reads/, and the same sample name
+    ## is present within these dirs, then those files will be combined
     # Use the read_dir
     dirs_to_iterate <- param_readDir_full
-    
   } else if (param_mergeAcrossDirs == FALSE){
     ## To merge reads WITHIN dirs
-    # One R1/R2 file per sample name per directory (for directories inside the reads/ directory)
-    
+    ## i.e., One R1/R2 file per sample name per directory (for directories inside the reads/ directory)
     # List directories within the read_dir
     internal_dirs <-  gsub("//", "/", list.dirs(param_readDir_full))
     dirs_to_iterate <- internal_dirs[internal_dirs != param_readDir_full]
   }
-  
   # Iterate over directories to collect reads by sample_id
   for (d in dirs_to_iterate){
-    # Output dir name
-    print(paste0("Merging reads in dir: ", d))
+    # Print dir name
+    print(paste0("Processing directory ", d))
+    
+    # Create output files for this directory
+    if (param_mergeAcrossDirs == TRUE){
+      d_out_dir <- param_Outdir
+      d_log_dir <- log_dir
+    } else if (param_mergeAcrossDirs == FALSE){
+      d_out_dir <- paste0( , basename(d), "/")
+      d_log_dir <- paste0(log_dir, basename(d), "/")
+    }
+    system(paste0("mkdir -p ", d_out_dir))
+    system(paste0("mkdir -p ", d_log_dir))
     
     # Merge reads across dirs
     d_all_files <- list.files(d, recursive = T)
     d_read_paths <- grep("fastq|fastq.gz", d_all_files, value = T)
-    
-    # Create output files for this directory
-    d_out_dir <- paste0(param_Outdir, basename(d), "/")
-    d_log_dir <- paste0(log_dir, basename(d), "/")
-    system(paste0("mkdir -p ", d_out_dir))
-    system(paste0("mkdir -p ", d_log_dir))
     
     # Iterate through each sample_id to extract reads
     for (s in sample_id){
@@ -368,13 +372,13 @@ if (param_performMerge == TRUE){
       # $ cat "$data_dir/${sample}_L00"*"_R1.fastq.gz" > "$output_dir/${sample}_R1_merged.fastq.gz"
       sys_r1_merge <- paste0(
         "cat ",
-        paste(paste0(d, "/", s_r1), collapse = " "),
+        paste(paste0(d, s_r1), collapse = " "),
         " > ",
         s_r1_op_path
       )
       sys_r2_merge <- paste0(
         "cat ",
-        paste(paste0(d, "/", s_r2), collapse = " "),
+        paste(paste0(d, s_r2), collapse = " "),
         " > ",
         s_r2_op_path
       )
@@ -382,11 +386,11 @@ if (param_performMerge == TRUE){
       system(sys_r2_merge)
       # Output record of what was copied into each file
       write(
-        paste0(d, "/", s_r1),
+        paste0(d, s_r1),
         file = s_r1_log
       )
       write(
-        paste0(d, "/", s_r2),
+        paste0(d, s_r2),
         file = s_r2_log
       )
     } # end: for (s in sample_id){
@@ -416,9 +420,10 @@ if (param_performMerge == TRUE){
     output_log,
     file = arg_out_log
   )
+  print("")
+  print(paste0("Output directory: ", param_Outdir))
   print(paste0("Output log: ", arg_out_log))
-  print("\n")
-  
+  print(paste0("Individual sample logs: ", log_dir))
 } # end: if (param_performMerge == TRUE){
 
 
