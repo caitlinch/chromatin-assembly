@@ -358,15 +358,15 @@ if (param_performMerge == TRUE){
       # Construct output file names
       if (param_useSampleName == TRUE){
         s_name <- sample_name_df$sample_name[which(sample_name_df$sample_id == s)]
-        s_r1_op_path <- paste0(d_out_dir, s_name, "_R1_merged.fastq.gz")
-        s_r2_op_path <- paste0(d_out_dir, s_name, "_R2_merged.fastq.gz")
-        s_r1_log <- paste0(d_log_dir, s_name, "_R1_merged.txt")
-        s_r2_log <- paste0(d_log_dir, s_name, "_R2_merged.txt")
+        s_r1_op_path <- paste0(d_out_dir, s_name, "_merged_R1.fastq.gz")
+        s_r2_op_path <- paste0(d_out_dir, s_name, "_merged_R2.fastq.gz")
+        s_r1_log <- paste0(d_log_dir, s_name, "_merged_R1.txt")
+        s_r2_log <- paste0(d_log_dir, s_name, "_merged_R2.txt")
       } else {
-        s_r1_op_path <- paste0(d_out_dir, s, "_R1_merged.fastq.gz")
-        s_r2_op_path <- paste0(d_out_dir, s, "_R2_merged.fastq.gz")
-        s_r1_log <- paste0(d_log_dir, s, "_R1_merged.txt")
-        s_r2_log <- paste0(d_log_dir, s, "_R2_merged.txt")
+        s_r1_op_path <- paste0(d_out_dir, s, "_merged_R1.fastq.gz")
+        s_r2_op_path <- paste0(d_out_dir, s, "_merged_R2.fastq.gz")
+        s_r1_log <- paste0(d_log_dir, s, "_merged_R1.txt")
+        s_r2_log <- paste0(d_log_dir, s, "_merged_R2.txt")
       }
       # Construct command lines
       # $ cat "$data_dir/${sample}_L00"*"_R1.fastq.gz" > "$output_dir/${sample}_R1_merged.fastq.gz"
@@ -407,8 +407,9 @@ if (param_performMerge == TRUE){
     paste0("species: ", param_Species),
     paste0("sample ids: ", paste(sample_id, collapse = ", ")),
     paste0("merge reads: ", param_performMerge),    
-    paste0("merge across directories: ", param_mergeAcrossDirs),    
-    paste0("output files use sample name: ", param_useSampleName),
+    paste0("merge across directories: ", param_mergeAcrossDirs),
+    paste0("File paths use sample ID: ", !param_useSampleName),
+    paste0("File paths use sample name: ", param_useSampleName),
     paste0("specify lanes: ", param_specifyLanes),
     paste0("selected_lanes: ", if (param_specifyLanes == TRUE){paste(param_readLanes, collapse = ", ")} else {NA}),
     paste0("read directory: ", param_readDir_full),
