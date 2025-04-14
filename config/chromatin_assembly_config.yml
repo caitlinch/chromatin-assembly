@@ -29,6 +29,7 @@ sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499",
 # SAMPLE NAMES
 # Currently unused
 # Human-readable names for each sample
+#
 # Parameters:
 # use_names: FALSE to use sample IDs only, TRUE (currently not integrated to pipeline)
 # sample_names: dictionary containing name/id pairs
@@ -43,6 +44,7 @@ sample_names: ["sample01": "R114096", "sample02":"R122595", "sample03":"R122596"
 
 # MERGING READS
 # Merging reads is an optional step included in the pipeline, which I recommend running separately
+#
 # Parameters:
 # perform_merge: TRUE to merge reads
 # merge_across_dirs: TRUE to merge across all directories (one R1/R2 per sample), FALSE to merge within directories (one R1/R2 per sample per dir)
@@ -61,11 +63,15 @@ merge_reads:
 #     For a single lane - enter path for R1 and R2 files for that lane
 #     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
 #
+# Parameters:
+# reference_genome_id: human-readable identifier for reference genome
+# reference_genome_path: full path to reference genome e.g.,  /full/path/to/chromatin-assembly/data/yeast/reference_genome/ref_genome.fsa
+
 input:
   old_ids:               ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
   old_output_ids:        ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
   reference_genome_id:   "gecko_genome" # identifier for reference genome
-  reference_genome_path: "data/gecko/genome/gecko_genome.fsa"
+  reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
   sample:                 "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # REMOVE - single sample version
   r1:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz" # REMOVE - single sample version
   r2:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz" # REMOVE - single sample version
