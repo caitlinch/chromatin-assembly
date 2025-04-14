@@ -302,16 +302,44 @@ if (param_performMerge == TRUE){
   sys_mkdir_log <- paste0("mkdir -p ", log_dir)
   system(sys_mkdir_log)
   
-  # Start processing the reads
+  ## Identify read directories
   if (param_mergeAcrossDirs == TRUE){
-    # To merge reads ACROSS dirs
+    ## To merge reads ACROSS dirs
+    # One R1/R2 file per sample name 
+    #     i.e., if you have multiple dirs within reads/, and the same sample name
+    #           is present within these dirs, then those files will be combined
     
-    all_files <- list.files(param_readDir_full, recursive = T)
-    read_paths <- grep("fastq|fastq.gz", all_files, value = T)
+    # Use the read_dir
+    dirs_to_iterate <- param_readDir_full
+    
+  } else if (param_mergeAcrossDirs == FALSE){
+    ## To merge reads WITHIN dirs
+    # One R1/R2 file per sample name per directory (for directories inside the reads/ directory)
+    
+    # List directories within the read_dir
+    internal_dirs <-  gsub("//", "/", list.dirs(param_readDir_full))
+    dirs_to_iterate <- internal_dirs[internal_dirs != param_readDir_full]
+  }
+  
+  # Iterate over directories to collect reads by sample_id
+  for (d in dirs_to_iterate){
+    # Output dir name
+    print(paste0("Merging reads in dir: ", d))
+    
+    # Merge reads across dirs
+    d_all_files <- list.files(d, recursive = T)
+    d_read_paths <- grep("fastq|fastq.gz", d_all_files, value = T)
+    
+    # Create output files for this directory
+    d_out_dir <- paste0(param_Outdir, basename(d), "/")
+    d_log_dir <- paste0(log_dir, basename(d), "/")
+    system(paste0("mkdir -p ", d_out_dir))
+    system(paste0("mkdir -p ", d_log_dir))
+    
     # Iterate through each sample_id to extract reads
     for (s in sample_id){
       # List all files with that sample id
-      s_all_reads <- read_paths[grep(s, basename(read_paths))]
+      s_all_reads <- d_read_paths[grep(s, basename(d_read_paths))]
       if (param_specifyLanes == TRUE){
         # If only keeping specific lanes, extract those now
         keep_lanes <- paste0("_L", sprintf("%03s", param_readLanes))
@@ -326,27 +354,27 @@ if (param_performMerge == TRUE){
       # Construct output file names
       if (param_useSampleName == TRUE){
         s_name <- sample_name_df$sample_name[which(sample_name_df$sample_id == s)]
-        s_r1_op_path <- paste0(param_Outdir, s_name, "_R1_merged.fastq.gz")
-        s_r2_op_path <- paste0(param_Outdir, s_name, "_R2_merged.fastq.gz")
-        s_r1_log <- paste0(log_dir, s_name, "_R1_merged.txt")
-        s_r2_log <- paste0(log_dir, s_name, "_R2_merged.txt")
+        s_r1_op_path <- paste0(d_out_dir, s_name, "_R1_merged.fastq.gz")
+        s_r2_op_path <- paste0(d_out_dir, s_name, "_R2_merged.fastq.gz")
+        s_r1_log <- paste0(d_log_dir, s_name, "_R1_merged.txt")
+        s_r2_log <- paste0(d_log_dir, s_name, "_R2_merged.txt")
       } else {
-        s_r1_op_path <- paste0(param_Outdir, s, "_R1_merged.fastq.gz")
-        s_r2_op_path <- paste0(param_Outdir, s, "_R2_merged.fastq.gz")
-        s_r1_log <- paste0(log_dir, s, "_R1_merged.txt")
-        s_r2_log <- paste0(log_dir, s, "_R2_merged.txt")
+        s_r1_op_path <- paste0(d_out_dir, s, "_R1_merged.fastq.gz")
+        s_r2_op_path <- paste0(d_out_dir, s, "_R2_merged.fastq.gz")
+        s_r1_log <- paste0(d_log_dir, s, "_R1_merged.txt")
+        s_r2_log <- paste0(d_log_dir, s, "_R2_merged.txt")
       }
       # Construct command lines
       # $ cat "$data_dir/${sample}_L00"*"_R1.fastq.gz" > "$output_dir/${sample}_R1_merged.fastq.gz"
       sys_r1_merge <- paste0(
         "cat ",
-        paste(paste0(param_readDir_full, s_r1), collapse = " "),
+        paste(paste0(d, "/", s_r1), collapse = " "),
         " > ",
         s_r1_op_path
       )
       sys_r2_merge <- paste0(
         "cat ",
-        paste(paste0(param_readDir_full, s_r2), collapse = " "),
+        paste(paste0(d, "/", s_r2), collapse = " "),
         " > ",
         s_r2_op_path
       )
@@ -354,90 +382,15 @@ if (param_performMerge == TRUE){
       system(sys_r2_merge)
       # Output record of what was copied into each file
       write(
-        paste0(param_readDir_full, s_r1),
+        paste0(d, "/", s_r1),
         file = s_r1_log
       )
       write(
-        paste0(param_readDir_full, s_r2),
+        paste0(d, "/", s_r2),
         file = s_r2_log
       )
     } # end: for (s in sample_id){
-  } else if (param_mergeAcrossDirs == FALSE){
-    ## To merge reads WITHIN dirs
-    
-    # List directories within the read_dir
-    internal_dirs <-  gsub("//", "/", list.dirs(param_readDir_full))
-    dirs_to_iterate <- internal_dirs[internal_dirs != param_readDir_full]
-    
-    # Iterate over directories:
-    for (d in dirs_to_iterate){
-      # Merge reads across dirs
-      d_all_files <- list.files(d)
-      d_read_paths <- grep("fastq|fastq.gz", d_all_files, value = T)
-      
-      # Create output files for this directory
-      d_out_dir <- paste0(param_Outdir, basename(d), "/")
-      d_log_dir <- paste0(log_dir, basename(d), "/")
-      system(paste0("mkdir -p ", d_out_dir))
-      system(paste0("mkdir -p ", d_log_dir))
-      
-      # Iterate through each sample_id to extract reads
-      for (s in sample_id){
-        # List all files with that sample id
-        s_all_reads <- d_read_paths[grep(s, basename(d_read_paths))]
-        if (param_specifyLanes == TRUE){
-          # If only keeping specific lanes, extract those now
-          keep_lanes <- paste0("_L", sprintf("%03s", param_readLanes))
-          s_lane_reads <- s_all_reads[grep(paste0(keep_lanes, collapse = "|"), basename(s_all_reads))]
-        } else {
-          # Keep all lanes
-          s_lane_reads <- s_all_reads
-        }
-        # Separate R1 and R2
-        s_r1 <- s_lane_reads[grep("_R1", basename(s_lane_reads))]
-        s_r2 <- s_lane_reads[grep("_R2", basename(s_lane_reads))]
-        # Construct output file names
-        if (param_useSampleName == TRUE){
-          s_name <- sample_name_df$sample_name[which(sample_name_df$sample_id == s)]
-          s_r1_op_path <- paste0(d_out_dir, s_name, "_R1_merged.fastq.gz")
-          s_r2_op_path <- paste0(d_out_dir, s_name, "_R2_merged.fastq.gz")
-          s_r1_log <- paste0(d_log_dir, s_name, "_R1_merged.txt")
-          s_r2_log <- paste0(d_log_dir, s_name, "_R2_merged.txt")
-        } else {
-          s_r1_op_path <- paste0(d_out_dir, s, "_R1_merged.fastq.gz")
-          s_r2_op_path <- paste0(d_out_dir, s, "_R2_merged.fastq.gz")
-          s_r1_log <- paste0(d_log_dir, s, "_R1_merged.txt")
-          s_r2_log <- paste0(d_log_dir, s, "_R2_merged.txt")
-        }
-        # Construct command lines
-        # $ cat "$data_dir/${sample}_L00"*"_R1.fastq.gz" > "$output_dir/${sample}_R1_merged.fastq.gz"
-        sys_r1_merge <- paste0(
-          "cat ",
-          paste(paste0(d, "/", s_r1), collapse = " "),
-          " > ",
-          s_r1_op_path
-        )
-        sys_r2_merge <- paste0(
-          "cat ",
-          paste(paste0(d, "/", s_r2), collapse = " "),
-          " > ",
-          s_r2_op_path
-        )
-        system(sys_r1_merge)
-        system(sys_r2_merge)
-        # Output record of what was copied into each file
-        write(
-          paste0(d, "/", s_r1),
-          file = s_r1_log
-        )
-        write(
-          paste0(d, "/", s_r2),
-          file = s_r2_log
-        )
-      } # end: for (s in sample_id){
-    } # end: for (d in dirs_to_iterate){
-    
-  } # end: if (param_mergeAcrossDirs == TRUE){
+  } # end: for (d in dirs_to_iterate){
   
   # Ensure output log dir exists:
   system(paste0("mkdir -p ", dirname(arg_out_log), "/"))
@@ -448,6 +401,7 @@ if (param_performMerge == TRUE){
     "pipeline: chromatin-assembly",
     "rule: s0_merge_samples",
     paste0("species: ", param_Species),
+    paste0("sample ids: ", paste(sample_id, collapse = ", ")),
     paste0("merge reads: ", param_performMerge),    
     paste0("merge across directories: ", param_mergeAcrossDirs),    
     paste0("output files use sample name: ", param_useSampleName),
@@ -463,8 +417,8 @@ if (param_performMerge == TRUE){
     file = arg_out_log
   )
   print(paste0("Output log: ", arg_out_log))
+  print("\n")
   
 } # end: if (param_performMerge == TRUE){
-
 
 
