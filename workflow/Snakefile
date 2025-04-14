@@ -18,7 +18,7 @@ SAMPLE      = config["input"]["sample"]
 
 REF_GENOME_ID = config["input"]["reference_genome_id"]
 
-READ_DIR    = config["repo_dir"] + config["merge_reads"]["read_dir"]
+READ_DIR    = config["merge_reads"]["read_dir"]
 READ_SAMPLE = config["merge_reads"]["read_path_pattern"]
 READ_LANES  = config["merge_reads"]["read_lanes"]
 
