@@ -59,28 +59,37 @@ merge_reads:
   read_lanes: []
 
 # Input data paths and details
-#   Input for analysis steps, either after merging reads or if using a single lane
-#     For a single lane - enter path for R1 and R2 files for that lane
-#     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
+#   Input for analysis steps. Works for merged reads or individual lanes.
 #
 # Parameters:
+# input_dir: input for analysis steps, either after merging reads or if using a single lane
+#               - For merged reads, enter path to merged reads directory:
+#                 e.g., /full/path/to/chromatin-assembly/results/{species}/0_mergedReads/
+#               - For unmerged reads, enter path to reads directory:
+#                 e.g., /full/path/to/chromatin-assembly/data/{species}/reads/
 # reference_genome_id: human-readable identifier for reference genome
 # reference_genome_path: full path to reference genome e.g.,  /full/path/to/chromatin-assembly/data/yeast/reference_genome/ref_genome.fsa
 
 input:
-  old_ids:               ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
-  old_output_ids:        ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
+  input_dir:             "/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads/"
   reference_genome_id:   "gecko_genome" # identifier for reference genome
   reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
-  sample:                 "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # REMOVE - single sample version
-  r1:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz" # REMOVE - single sample version
-  r2:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz" # REMOVE - single sample version
+#  old_output_ids:        ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
+#  sample:                 "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # REMOVE - single sample version
+#  old_ids:               ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
+#  r1:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R1.fastq.gz" # REMOVE - single sample version
+#  r2:                    "/scratch3/che318/data/yeast/exp/132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001_R2.fastq.gz" # REMOVE - single sample version
 
 # Input control for peak analysis (Step 8)
+#
+# Parameters:
+# control_directory: path to directory containing input control reads
+# control_pattern: sample IDs to use as control for peak analysis (Separate out the lane number id from the sample pattern - don't include "_L00" in string here)
+# control_lanes: DEPRECATED (Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"])
 input_control: 
   control_directory: "data/yeast/input_control/"
-  control_pattern: "132620_HCJLVDSX2_GACGATCT-TCGTGCAT"  # Separate out the lane number id from the sample pattern - don't include "_L00" in string here
-  control_lanes: ["1"] # Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"]
+  control_samples: ["132620_HCJLVDSX2_GACGATCT-TCGTGCAT"] 
+  control_lanes: ["1"]
 
 # Programs and files needed for specific pipeline steps 
 #   (file path relative to chromatin-assembly directory i.e., /full/path/to/resources/adapters/adap_cont_rna.fa)
