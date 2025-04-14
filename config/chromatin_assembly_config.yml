@@ -46,15 +46,15 @@ sample_names: ["sample01": "R114096", "sample02":"R122595", "sample03":"R122596"
 # Parameters:
 # perform_merge: TRUE to merge reads
 # merge_across_dirs: TRUE to merge across all directories (one R1/R2 per sample), FALSE to merge within directories (one R1/R2 per sample per dir)
-# read_dir: file path relative to chromatin-assembly directory i.e., for dir /full/path/to/chromatin-assembly/data/yeast/reads/ use data/yeast/reads/
+# read_dir: full path to directory e.g., /full/path/to/chromatin-assembly/data/yeast/reads/ 
 # specify_lanes: TRUE to merge only specified lanes, FALSE to merge all lanes
 # read_lanes: specific read lanes to merge, as dictionary i.e., ["1", "2", "3", "4", "5", "6", "7", "8"]
 merge_reads: 
-  perform_merge: FALSE
+  perform_merge: TRUE
   merge_across_dirs: TRUE
-  read_dir: "data/gecko/reads/"
+  read_dir: "/scratch3/che318/chromatin-assembly/data/gecko/reads/"
   specify_lanes: FALSE
-  read_lanes: ["1"]
+  read_lanes: []
 
 # Input data paths and details
 #   Input for analysis steps, either after merging reads or if using a single lane
@@ -62,8 +62,8 @@ merge_reads:
 #     For merged reads - enter path for R1 and R2 merged reads, which will be output to the `results/` directory
 #
 input:
-  old_ids:            ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
-  old_output_ids:     ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
+  old_ids:               ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO list of sample IDs/individuals
+  old_output_ids:        ["132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001"] # TODO don't need to provide (optional) - translate sample ID to this for output files
   reference_genome_id:   "gecko_genome" # identifier for reference genome
   reference_genome_path: "data/gecko/genome/gecko_genome.fsa"
   sample:                 "132654_HCJLVDSX2_TTGCGAAG-AACACGCT_L001" # REMOVE - single sample version
