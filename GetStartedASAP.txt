@@ -1,25 +1,34 @@
-Quickstart guide for the time-impaired:
+Quickstart guide for the time-impaired
+
+caitlinch/chromatin-assembly
+https://github.com/caitlinch/chromatin-assembly
+
+
 
 GET STARTED BY FOLLOWING THESE STEPS:
 1. Download the caitlinch/chromatin-assembly GitHub repository and move it to where you want to run your pipeline (e.g., /scratch3/che318/)
 2. Navigate in terminal to the "chromatin-assembly" directory
-3. Create conda environment using command: conda create --name Step6_utils --file workflow/envs/Step6_utils.txt
-4. Open and export conda environment using: conda activate Step6_utils; conda env export > workflow/envs/Step6_utils.yaml
-5. Open the file "config/chromatin_assembly_config.yml" and update file paths and parameters for your data
-6. Update SLURM details in the job scripts using the command: "module load R; Rscript resources/user_update_jobscripts.R mail-user={email@email.com} mail-type={when_mail} account={account}" 
+3. Create conda environment using command: "conda create --name Step6_utils --file workflow/envs/Step6_utils.txt"
+4. Open and export conda environment using: "conda activate Step6_utils; conda env export > workflow/envs/Step6_utils.yaml"
+5. Within the chromatin-assembly directory, create a directory called "data". Create a new directory within "data", named after your species (e.g., "data/gecko/"). Inside the species folder, create three folders: "input_control", "reads", and "reference_genome". Copy your data into the relevant files. It should look like this (where "species" is replaced with your species name):
+	- chromatin-assembly/data/species/reads/ – contains raw reads
+	- chromatin-assembly/data/species/input_control/ – contains input control for DANPOS3 (peak analysis)
+	- chromatin-assembly/data/species/reference_genome/ – contains reference genome in fasta file format
+6. Open the file "config/chromatin_assembly_config.yml" and update file paths and parameters for your data
+7. Update SLURM details in the job scripts using the command: "module load R; Rscript resources/user_update_jobscripts.R mail-user={email@email.com} mail-type={when_mail} account={account}"
 	- Replace each set of curly brackets with your preferred SLURM details
 	- For example: "module load R; Rscript resources/user_update_jobscripts.R mail-user=test@test.com mail-type=FAIL account=OD-123456"
 	- See UPDATING SLURM JOBSCRIPTS below for more details
-7. Update account ID in slurm profiles (profiles/hpc_test/config.yaml, profiles/slurm/config.yaml) with your own
-8. (Optional) Perform a dry run of the full pipeline in the terminal (interactive mode) with command "snakemake -n -p -c1" or "sbatch jobscripts/pipeline_dry_run.sh"
-9. (Optional) Merge reads with "sbatch jobscripts/slurm_pipeline_S0.sh"
-10. Perform Step 1 (read masking) and Step 2 (QC) with command  "sbatch jobscripts/slurm_pipeline_S1-2.sh"
-11. Perform Step 3 (UMI extraction) and Step 4 (kalign) with command  "sbatch jobscripts/slurm_pipeline_S3-4.sh"
-12. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size) with command "sbatch jobscripts/slurm_pipeline_S5-6b.sh"
-13. Update the effective genome size value in the file "config/chromatin_assembly_config.yml", Section 4: Intermediate output
-14. Perform Step 6c (compute GC bias) and 6d (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S6c-6d.sh"
-15. Perform Step 7a (calculate alignment statistics) and 7b (estimate mean nuclear genome covert) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
-16. (Optional) Perform Step 8 (peak analysis with DANPOS) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
+8. Update account ID in slurm profiles (chromatin-assembly/profiles/hpc_test/config.yaml, chromatin-assembly/profiles/slurm/config.yaml) with your own
+9. (Optional) Perform a dry run of the full pipeline in the terminal (interactive mode) with command "snakemake -n -p -c1" or "sbatch jobscripts/pipeline_dry_run.sh"
+10. (Optional) Merge reads with "sbatch jobscripts/slurm_pipeline_S0.sh"
+11. Perform Step 1 (read masking) and Step 2 (QC) with command  "sbatch jobscripts/slurm_pipeline_S1-2.sh"
+12. Perform Step 3 (UMI extraction) and Step 4 (kalign) with command  "sbatch jobscripts/slurm_pipeline_S3-4.sh"
+13. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size) with command "sbatch jobscripts/slurm_pipeline_S5-6b.sh"
+14. Update the effective genome size value in the file "config/chromatin_assembly_config.yml", Section 4: Intermediate output
+15. Perform Step 6c (compute GC bias) and 6d (correct GC bias) with command "sbatch jobscripts/slurm_pipeline_S6c-6d.sh"
+16. Perform Step 7a (calculate alignment statistics) and 7b (estimate mean nuclear genome covert) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
+17. (Optional) Perform Step 8 (peak analysis with DANPOS) with command "sbatch jobscripts/slurm_pipeline_S7a-7b.sh"
 
 
 
