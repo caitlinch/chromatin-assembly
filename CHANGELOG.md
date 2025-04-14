@@ -6,13 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
   
 ## [Unreleased] - yyyy-mm-dd
-
  
 ### Added
+- R script (`workflow/R/s0_merge_reads.R`) to merge reads into one R1 and one R2 file per sample name 
+- `README.md` now contains full quick-start guide with some troubleshooting tips
+- Example of user input data in `data/template/`
  
 ### Changed
+- Updated documentation
+    - Updated pipeline structure and repository structure in `doco/start_here.Rmd`
  
 ### Fixed
+- Added multi-sample input
+    - Restructured all rules to operate per sample (i.e., given a list of samples, the pipeline now applies each step for each sample)
  
  
 ## [0.1.0] - 2025-04-08
