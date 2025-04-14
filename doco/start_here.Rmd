@@ -11,26 +11,47 @@ TODO ask Erin to write introduction para
 ## Repository Structure
 The `caitlinch/chromatin-assembly` GitHub repository has the following structure:
 
-```{r, echo=FALSE, fig.alt="Structure of the chromatin-assembly GitHub repository", out.width = "40%"}
-knitr::include_graphics("figures/chromatin-assembly_dir_tree.png")
+```{r, echo=FALSE, fig.alt="Directory structure", out.width = "40%"}
+knitr::include_graphics("figures/directory_tree.png")
 ```
 
 
-The directories included are:
+The directory includes:
 
+- `CHANGELOG.md`: record of changes and modifications
 - `config/`
-  - Includes the `.yml` config file used to specify file paths, input parameters and HPC resources
+  - Includes the `chromatin_assembly_config.yml` file, which is used to specify file paths and input parameters
 - `data/`
-  - For storing input data
+  - Input data (one folder per species), with a separate folder for:
+    - `input_control/` -- reads used for peak analysis with DANPOS (Step 8)
+    - `reads/` -- raw reads (in `fastq.gz` format)
+    - `reference_genome/` -- reference genome for your species (in `.fasta` or `.fsa` format)
 - `doco/`
   - Includes documentation on pipeline use and modifying input parameters
+- `jobscripts/`
+  - For Slurm jobscripts.
+  - The `templates/` folder contains template jobscripts for running the pipeline. These templates must be updated with your desired Slurm parameters for email address, email delivery, and account ID. See `README.md` for details.
+- `log/`
+  - For output logs
+- `profiles/`
+  - Snakemake uses profiles to determine what computational resources to use for each step on each system
+    - `hpc_test/config.yaml` -- for server (Petrichor) testing/development or dry runs
+    - `local/config.yaml` -- for local (not server) testing/development or dry runs
+    - `slurm/config.yaml` -- for use with Slurm on Petrichor
+- `README.md` -- a quick-start guide on running the pipeline.
 - `resources/`
-  - Includes scripts and adapters used within the pipeline steps
+  - `adapters/adap_cont_rna.fa` -- adapters used with RepeatMasker (Step 1)
+  - `slurm_snakemake_conda.yaml` -- conda environment to be used with Snakemake v8 (not needed if running on Petrichor, which uses Snakemake v7 as of April 2025)
+  - `slurm_snakemake_modules.txt` -- record of modules used (on Petrichor) for developing and testing the pipeline.
+  - `user_update_jobscripts.R` -- a script to update the template jobscripts for use with your preferred SLURM details
 - `results/`
   - For storing output
 - `workflow/`
-  - Includes the Snakefile, located at `workflow/Snakefile`, which makes this whole pipeline go
-  - Includes the BASH scripts from which this Snakemake pipeline was developed
+  - `Snakefile` -- makes the whole pipeline go
+  - `envs/` -- conda environments used during pipeline runs
+  - `R/`
+    - `s0_merge_reads.R` -- the R script for merging reads
+  - `scripts/` -- the BASH scripts from which this Snakemake pipeline was developed
 
 ## Pipeline steps
 
@@ -53,7 +74,7 @@ Running the pipeline from start to finish will execute the following steps:
 
 The following graph shows the relationship between pipeline steps:
 
-```{r, echo=FALSE, fig.alt="Graph showing the order of and relationship between pipeline steps.", out.width = "60%"}
-knitr::include_graphics("figures/rulegraph.png")
+```{r, echo=FALSE, fig.alt="Graph showing pipeline steps.", out.width = "60%"}
+knitr::include_graphics("figures/rules_singleSample.png")
 ```
 
