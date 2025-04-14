@@ -87,3 +87,12 @@ Potential issues:
 	- This pipeline was tested on reads with the structure: {sample_id}_{some_text}_L00{num}_R{1|2}.fastq.gz
 	- For example, R114096_22W5TWLT3_TTCTGCGTCG-TTCGTACACC_L003_R1.fastq.gz
 	- If you have data with a different file name structure, you may have issues running the pipeline.
+	- Potential pitfall: your read filenames have an extra argument after the R1/R2 e.g., SampleName_S1_L001_R1_001.fastq.gz
+- Merged read file path names:
+	- This pipeline names merged reads with the structure: {sample_id}_merged_R{1|2}.fastq.gz
+	- For example, R114096_merged_R1.fastq.gz
+	- If you have merged reads with different naming structure, the pipeline will not work
+	- Potential pitfall: your merged reads have the file path naming structure: {sample_id}_R{1|2}_merged.fastq.gz
+
+
+
