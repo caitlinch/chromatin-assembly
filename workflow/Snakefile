@@ -61,7 +61,7 @@ rule s0_merge_samples:
         """
         module load {params.module_R}
 
-        if {params.merge_reads} == TRUE:
+        if {params.merge_reads} == True:
             Rscript {params.merge_script} repo_dir={params.repo_dir} config={input.config} out={output.log}
         """
 
