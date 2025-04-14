@@ -20,26 +20,33 @@
 
 #### PREPARE CONFIG FILE ####
 # Parse input argument - chromatin_assembly_config.yml directory
-# args = c("repo_dir=/Users/che318/Repos/chromatin-assembly/", "config=config/chromatin_assembly_config.yml", "out=/Users/che318/Repos/chromatin-assembly/log/s0_merge_samples_gecko.txt")
-args <- commandArgs(trailingOnly=TRUE)
-arg_repo_dir <- strsplit(grep("repo_dir", args, value = T), "=")[[1]][2]
-arg_config_file <- strsplit(grep("config", args, value = T), "=")[[1]][2]
-arg_out_log <- strsplit(grep("out", args, value = T), "=")[[1]][2]
+# args = c("repo_dir=/Users/che318/Repos/chromatin-assembly/", "config=/Users/che318/Repos/chromatin-assembly/config/chromatin_assembly_config.yml", "out=/Users/che318/Repos/chromatin-assembly/log/s0_merge_samples_gecko.txt")
+args <- commandArgs(trailingOnly = TRUE)
 
-if (length(args) != 3){
+# check for the command args
+if ( (length(grep("repo_dir", args)) == 0) |
+     (length(grep("config", args)) == 0) |
+     (length(grep("out", args)) == 0) ){
   stop(
     c(
       " \n",
       "Supply arguments to script:",
       " \n",
-      "Assuming the user is within the chromatin-assembly/ dir, use:",
-      " \n",
-      "$ Rscript workflow/R/s0_merge_reads.R repo_dir=/path/to/chromatin-assembly/ config=config/chromatin_assembly_config.yml out=/path/to/output.txt"
+      "$ Rscript workflow/R/s0_merge_reads.R repo_dir=/path/to/chromatin-assembly/ config=/path/to/chromatin-assembly/config/chromatin_assembly_config.yml out=/path/to/output.txt"
     ), 
     call.=FALSE
   )
 }
-if (file.exists(paste0(arg_repo_dir, arg_config_file)) == FALSE){
+
+arg_repo_dir <- strsplit(grep("repo_dir", args, value = T), "=")[[1]][2]
+arg_config_file <- strsplit(grep("config", args, value = T), "=")[[1]][2]
+arg_out_log <- strsplit(grep("out", args, value = T), "=")[[1]][2]
+
+print("Merging reads")
+print(paste0("Config file: ", arg_config_file))
+print("\n")
+
+if (file.exists(arg_config_file) == FALSE){
   stop(
     c(
       " \n",
@@ -47,14 +54,14 @@ if (file.exists(paste0(arg_repo_dir, arg_config_file)) == FALSE){
       " \n",
       "Check file: ",
       " \n",
-      paste0(arg_repo_dir, arg_config_file)
+      arg_config_file
     ), 
     call.=FALSE
   )
 }
 
 # Open config file
-config <- readLines(paste0(arg_repo_dir, arg_config_file))
+config <- readLines(arg_config_file)
 # Replace double quotes with single
 config <- gsub('\\"', "'", config)
 
@@ -64,6 +71,8 @@ empty_lines <- which(config == "")
 
 
 #### EXTRACT PARAMETERS FROM CONFIG FILE ####
+print("Extracting parameters")
+
 # Extract individual params
 param_Species <- gsub(" |'", "", strsplit(grep(
   "# ref_species:",
@@ -101,7 +110,7 @@ param_readDir <- gsub(" |'", "", strsplit(grep(
   value = T,
   invert = T
 ), ":")[[1]][2])
-param_readDir_full <- paste0(param_repoDir, param_readDir)
+param_readDir_full <- param_readDir # Full path input in config file
 param_specifyLanes <- as.logical(gsub(" |'", "", strsplit(grep(
   "# specify_lanes:",
   grep("specify_lanes:", config, value = T),
@@ -125,7 +134,7 @@ sample_id_start <- which(
   config == 
     grep("# sample_ids:", grep("sample_ids:", config, value = T), value = T, invert = T)
 )
-if (config[sample_id_start] == "sample_names: []"){
+if (gsub(" ", "", config[sample_id_start]) == "sample_ids:[]"){
   # No sample ids provided (empty dictionary)
   sample_id = NA
 } else {
@@ -150,7 +159,7 @@ sample_name_start <- which(
   config == 
     grep("# sample_names:", grep("sample_names:", config,  value = T), value = T, invert = T)
 )
-if (config[sample_name_start] == "sample_names: []"){
+if (config[sample_name_start] == "sample_names:[]"){
   # No sample names provided (empty dictionary)
   sample_name_df = NA
 } else {
@@ -174,9 +183,12 @@ if (config[sample_name_start] == "sample_names: []"){
   )
 }
 
+print(str(sample_name_df))
 
 #### ERROR CHECKING ###
-if (length(list.files(param_readDir_full)) == 0){
+print("Checking input")
+
+if (length(list.files(param_readDir_full, recursive = T)) == 0){
   stop(
     c(
       " \n",
@@ -216,19 +228,23 @@ if (length(sample_id) == 0){
   )
 }
 
-if (length(sample_id) == 1 & is.na(sample_id) == TRUE){
-  stop(
-    c(
-      " \n",
-      "No sample IDs provided",
-      " \n",
-      "Enter sample IDs into config file"
-    ), 
-    call.=FALSE
-  )
+if (length(sample_id) == 1){
+  # sample id length = 1
+  if (is.na(sample_id) == TRUE){
+    # sample id = NA
+    stop(
+      c(
+        " \n",
+        "No sample IDs provided",
+        " \n",
+        "Enter sample IDs into config file"
+      ), 
+      call.=FALSE
+    )
+  }
 }
 
-if (length(which(is.na(sample_id) == FALSE)) == length(sample_id)){
+if (length(which(is.na(sample_id) == TRUE)) == length(sample_id)){
   stop(
     c(
       " \n",
@@ -241,7 +257,7 @@ if (length(which(is.na(sample_id) == FALSE)) == length(sample_id)){
 }
 
 if (param_useSampleName == TRUE &
-    length(which(is.na(sample_id) == FALSE)) == length(sample_id)){
+    length(which(is.na(sample_id) == TRUE)) == length(sample_id)){
   stop(
     c(
       " \n",
@@ -253,24 +269,29 @@ if (param_useSampleName == TRUE &
   )
 }
 
-if (length(sample_name_df) == 1 & is.na(sample_name_df) == TRUE){
-  stop(
-    c(
-      " \n",
-      "No sample names provided",
-      " \n",
-      "Enter sample names into config file",
-      " \n",
-      "For example:",
-      " \n",
-      "sample_name: ['sample01': 'R111111', 'sample02': 'R222222']"
-    ), 
-    call.=FALSE
-  )
+if (class(sample_name_df) == "logical" & 
+    length(sample_name_df) == 1){
+  if (is.na(sample_name_df) == TRUE){
+    stop(
+      c(
+        " \n",
+        "No sample names provided",
+        " \n",
+        "Enter sample names into config file",
+        " \n",
+        "For example:",
+        " \n",
+        "sample_name: ['sample01': 'R111111', 'sample02': 'R222222']"
+      ), 
+      call.=FALSE
+    )
+  }
 }
 
 
 #### MERGE READS ####
+print("Merging reads")
+
 if (param_performMerge == TRUE){
   ## Create the output dirs
   sys_mkdir <- paste0("mkdir -p ", param_Outdir)
@@ -441,6 +462,7 @@ if (param_performMerge == TRUE){
     output_log,
     file = arg_out_log
   )
+  print(paste0("Output log: ", arg_out_log))
   
 } # end: if (param_performMerge == TRUE){
 
