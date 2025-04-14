@@ -7,6 +7,7 @@ TODO
 (X) check job script requirements - should be much lower than reqs needed for Snakemake steps?
 (X) test dry run with yeast data
 (X) test run with yeast data – Complete: 1, 2, 3, 4, 5, 6a, 6b, 6c, 6d, 7a, 7b
+( ) Multi-sample input
 ( ) prepare for mouse data
 ( ) test dry run with mouse data
 ( ) test run with mouse data
