@@ -65,8 +65,8 @@ merge_reads:
 #             Important - keep identation level consistent for all lines in dictionary
 #             If merged reads use sample names (use_names: TRUE), use the sample names here instead of the sample IDs.
 input:
-  input_dir:             "/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads/"
-  reference_genome_id:   "gecko_genome"
+  input_dir: "/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads/"
+  reference_genome_id: "gecko_genome"
   reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
   sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499",
               "R31500", "R31502", "R54899", "R55025", "R55032", "R55033",
@@ -77,12 +77,16 @@ input:
 #
 # Parameters:
 # control_directory: path to directory containing input control reads
-# control_pattern: sample IDs to use as control for peak analysis (Separate out the lane number id from the sample pattern - don't include "_L00" in string here)
+# control_name: human-readable name, used for naming DANPOS output directories and files
+# control_samples: sample IDs to use as control for peak analysis 
+#                  Provide as dictionary i.e., ["input_control_1", "input_control_2", "input_control_3"]
+#                  (Separate out the lane number id from the sample pattern - don't include "_L00" in string here)
 # control_lanes: DEPRECATED (Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"])
 input_control: 
   control_directory: "data/yeast/input_control/"
+  control_name: "132620"
   control_samples: ["132620_HCJLVDSX2_GACGATCT-TCGTGCAT"] 
-  control_lanes: ["1"]
+  control_lanes: ["1"] # DEPRECATED
 
 # Programs and files needed for specific pipeline steps 
 #   (file path relative to chromatin-assembly directory i.e., /full/path/to/resources/adapters/adap_cont_rna.fa)
