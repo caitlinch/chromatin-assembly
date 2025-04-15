@@ -360,45 +360,67 @@ display: none;
 <p>In some cases, the input choices for each of the steps might not work
 for your individual analysis.</p>
 <p>This file outlines the exact parameter choices used in each step.</p>
-<div id="modifying-parameters-for-individual-pipeline-steps" class="section level3">
-<h3>Modifying parameters for individual pipeline steps</h3>
+<div id="changing-rules-using-the-config-file" class="section level3">
+<h3>Changing rules using the config file</h3>
+<p>Within the <code>chromatin_assembly_config.yml</code> file, we
+include a flag to modify the input parameters for the following
+steps:</p>
+<ul>
+<li><code>s3_extract_UMI</code>: UMI extraction with FGBio and Picard
+(<strong>Step 3</strong>)</li>
+<li><code>s4_read_alignment</code>: Align reads with kalign
+(<strong>Step 4</strong>)</li>
+<li><code>s5_alignment_deduplication</code>: Remove PCR and optical
+duplicates from alignment with Picard (<strong>Step 5</strong>)</li>
+</ul>
+<p>The default parameters are:</p>
+<pre><code># Program parameters for repeat masking with RepeatMasker (Step 1)
+#     RepeatMasker params: user-specified engine
+s1_mask_repeats:
+  repeatmasker_engine: &quot;-engine rmblast&quot;
+
+# Program parameters for UMI extraction with FGBio and Picard (Step 3)
+#   FGBio_params: user-specified parameters for FGBio call 
+s3_extract_UMI:
+  FGBio_params: &quot;-r 8M143T 8M143T -t ZA ZB -s RX&quot;
+
+# Program parameters for aligning reads with kalign (Step 4)
+#   kalign_params: user-specified parameters for kalign call
+#       -c, --minchimeric: minimum chimeric length as a percentage of probe 
+#                         length (default is 0 to disable, otherwise 15..99)
+#       -l, --minacceptreadlen: after any end trimming only accept read for further
+#                               processing if read is at least this length 
+#                               (default is 50bp, range 15..2000)
+#       -d, --pairminlen:  accept paired end alignments with observed insert 
+#                          sizes of at least this (minimum 25, default = 100)
+#       -U, --pemode: paired end processing mode
+#                     0 - none (default), 
+#                     1 - paired end with recover orphan ends, 
+#                     2 - paired end no orphan recovery, 
+#                     3 - paired end with recover orphan ends treating orphan ends as SE, 
+#                     4 - paired end no orphan recovery treating orphan ends as SE
+#   kalign_id: user-specified string to be included in output filepath
+s4_read_alignment:
+  kalign_params: &quot;-c25 -l25 -d50 -U4&quot;
+  kalign_id: &quot;pe_c25_l25_d50_U4&quot;</code></pre>
+<p>The above variables can be changed to any allowed input arguments for
+the given software program.</p>
+</div>
+<div id="changing-rules-using-the-snakefile" class="section level3">
+<h3>Changing rules using the Snakefile</h3>
 <p>The majority of changes needed to modify the
 <code>chromatin-assembly</code> pipeline for a new analysis will be in
 the <code>config/chromatin_assembly_config.yml</code> file.</p>
 <p>However, some of the pipeline steps may need to be modified for your
-particular dataset.</p>
-<p>For example, in Step 4 Kalign is called with the following
-command:</p>
-<pre><code>ngskit4b kalign -c25 -l25 -d50 -U4 -i reads_R1.fastq -u reads_R2.fastq 
--I GCF_900067755.1_pvi1.1_genomic_RM_nhmm_adapt 
--o kalign_pe_c25_l25_d50_U4.sam -F kalign_pe_c25_l25_d50_U4.log</code></pre>
-<p>This command uses the following settings:</p>
-<ul>
-<li><code>-c25</code>
-<ul>
-<li>minimum chimeric length as a percentage of probe length</li>
-</ul></li>
-<li><code>-l25</code>
-<ul>
-<li>after any end trimming, only accept read for further processing if
-read is at least this length</li>
-</ul></li>
-<li><code>-d50</code>
-<ul>
-<li>accept paired end alignments with observed insert sizes of at least
-this size</li>
-</ul></li>
-<li><code>-U4</code>
-<ul>
-<li>paired end processing mode: 4 - paired end no orphan recovery
-treating orphan ends as SE</li>
-</ul></li>
-</ul>
-<p>These settings may not be appropriate for your dataset. You can
-update them by modifying the Snakemake rule.</p>
-</div>
-<div id="snakemake-rule-structure" class="section level3">
-<h3>Snakemake rule structure</h3>
+particular dataset. To do this, you will modify the Snakemake rule
+within the Snakefile.</p>
+<p>The Snakefile is located at
+<code>chromatin-assembly/workflow/Snakefile</code>. It defines the
+pipeline and describes the path that each input file takes throughout
+the process of data analysis. The Snakefile consists of a set of
+connected rules, each defining a single step in the pipeline.</p>
+<div id="snakemake-rule-structure" class="section level4">
+<h4>Snakemake rule structure</h4>
 <p>All Snakemake rules have the same structure.</p>
 <p>Here’s a toy example for a rule called <code>copy_file</code>, which
 copies a file from the <code>data/</code> directory to the
@@ -420,7 +442,8 @@ output (including calling other scripts or programs)</li>
 <p>Other components present within the rule may include:</p>
 <ul>
 <li><code>params</code> - other parameters needed for rule execution
-(e.g., adapters, controls, etc.)</li>
+(e.g., adapters, controls, arguments for software programs, intermediate
+output files)</li>
 <li><code>message</code> - outputs the specified message in the console
 when executing that rule</li>
 <li><code>threads</code> - the number of threads to use for that
@@ -429,17 +452,18 @@ rule</li>
 to use for that rule</li>
 <li><code>log</code> - specifies a log file to write information about
 the rule execution</li>
-<li><code>envmodules</code> - environment modules for HPC pipeline
-use</li>
+<li><code>envmodules</code> - specifying environment modules for the HPC
+to use</li>
 </ul>
 </div>
-<div id="updating-a-snakemake-rule" class="section level3">
-<h3>Updating a Snakemake rule</h3>
+<div id="updating-a-snakemake-rule" class="section level4">
+<h4>Updating a Snakemake rule</h4>
 <p>To update a Snakemake rule within the <code>chromatin-assembly</code>
-pipeline, edit the shell command.</p>
+pipeline, edit the shell command for that rule.</p>
 <p>Let’s take the example rule from above and say we want to add a
-message to the console after the rule is complete. We do this by editing
-the shell command:</p>
+message to the console after the rule is complete.</p>
+<p>We do this by editing the shell command to include an
+<code>echo</code> statement:</p>
 <pre><code>rule copy_file:
   input:
     &quot;data/{id}.txt&quot;
@@ -450,123 +474,320 @@ the shell command:</p>
 <p>When the rule is executed, it will now show the message
 <code>Copy complete</code> in the console.</p>
 </div>
+</div>
 <div id="list-of-commands-used-within-the-pipeline" class="section level2">
 <h2>List of commands used within the pipeline</h2>
-<p>TODO update shell commands when pipeline steps completed TODO change
-key variables to input in config file</p>
 <p>The shell commands for each of the <code>chromatin-assembly</code>
-pipeline steps are listed below. For each step, we list the variables
-that you may wish to update. To update a step for your analysis
-requirements, modify the shell command for that rule in the file
-<code>workflow/Snakefile</code>.</p>
+pipeline steps are listed below.</p>
+<p>For each step, we list the variables that you may wish to update.</p>
+<p>The variables are broken into two types:</p>
+<ul>
+<li><strong>User-specified variables</strong>
+<ul>
+<li>The user can modify this variable within the
+<code>config/chromatin_assembly_config.yml</code> file</li>
+</ul></li>
+<li><strong>Snakemake-generated variables</strong>
+<ul>
+<li>Modifying this variable requires updating the rule within the
+<code>workflow/Snakefile</code> file</li>
+</ul></li>
+</ul>
+<p>To update a step for your analysis requirements, modify the shell
+command for that rule in the file <code>workflow/Snakefile</code>.</p>
+<blockquote>
+<p>WARNING:</p>
+<p>If you modify the output file path for a rule, you must also update
+the corresponding output file path in the <code>rules_all</code>
+rule.</p>
+<p>Proceed with caution if updating input/output file names within
+rules.</p>
+</blockquote>
+<div id="step-0-s0_merge_samples" class="section level3">
+<h3>Step 0: <code>s0_merge_samples</code></h3>
+<p>Merge reads using the custom-written script
+<code>workflow/R/s0_merge_reads.R</code>:</p>
+<pre><code>Rscript workflow/R/s0_merge_reads.R repo_dir={params.repo_dir} config={input.config} out={output.log}</code></pre>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{params.repo_dir}</code> – full path to
+<code>chromatin-assembly/</code> directory</li>
+<li><code>{input.config}</code> – full path to
+<code>chromatin_assembly_config.yml</code></li>
+<li><code>{output.log}</code> – full path for output log, containing
+details of merge reading process</li>
+</ul>
+</div>
 <div id="step-1-s1_mask_repeats" class="section level3">
 <h3>Step 1: <code>s1_mask_repeats</code></h3>
 <p>Repeat masking and suffix array using RepeatMasker and kit4b</p>
-<pre><code>RepeatMasker -pa {params.cpus} -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome}
-ngskit4b index -i {output.masked} -o {output.index} -r {params.ref_species} -T {params.cpus} -F {params.log}</code></pre>
+<pre><code>RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
+ngskit4b index -i {output.masked} -o {output.index} -r &#39;{params.ref_species}&#39; -T {threads} -F {params.log}</code></pre>
+<p><strong>User-specified variables:</strong></p>
+<ul>
+<li><code>{threads}</code> – number of threads to use in each program,
+specified in the profile <code>config.yaml</code> file</li>
+<li><code>{input.ref_genome}</code> – path to reference genome</li>
+<li><code>{params.ref_species}</code> – reference species name</li>
+<li><code>{params.repeatmasker_engine}</code> – user-specified engine
+for RepeatMasker.
+<ul>
+<li>Recommended: <code>&quot;-engine rmblast&quot;</code></li>
+</ul></li>
+</ul>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{params.outdir}</code> – full path to output directory</li>
+<li><code>{params.adapter}</code> – full or relative path to adapters,
+located in the <code>resources/adapters/</code> dir</li>
+<li><code>{output.masked}</code> – full path to masked reference
+genome</li>
+<li><code>{output.index}</code> – full path to index version of masked
+reference genome</li>
+<li><code>{params.log}</code> – ngskit4b output log</li>
+</ul>
 </div>
 <div id="step-2-s2_raw_read_qc" class="section level3">
 <h3>Step 2: <code>s2_raw_read_QC</code></h3>
 <p>Raw read quality control with FastQC</p>
 <pre><code>fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}</code></pre>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.r1}</code> – R1 file for a given sample</li>
+<li><code>{input.r2}</code> – R2 file for a given sample</li>
+<li><code>{params.outdir}</code> – directory for FastQC output files for
+that sample</li>
+</ul>
 </div>
 <div id="step-3-s3_extract_umi" class="section level3">
 <h3>Step 3: <code>s3_extract_UMI</code></h3>
 <p>UMI extraction with FGBio and Picard</p>
-<pre><code></code></pre>
-<p>FGBio variables:</p>
+<pre><code>CMD1=&quot;java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam \
+     -F1 {input.r1} \
+     -F2 {input.r2} \
+     -O {params.unmapped_bam} \
+     -SM {params.basename}&quot;
+eval $CMD1
+        
+CMD2=&quot;java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam \
+     -i {params.unmapped_bam} \
+     -o {params.unmapped_bam_withUMI} \
+     {params.fgbio_params}&quot;
+eval $CMD2
+        
+CMD3=&quot;java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq \
+     -I {params.unmapped_bam_withUMI} \
+     -F {output.r1} \
+     -F2 {output.r2}&quot; 
+eval $CMD3</code></pre>
+<p><strong>User-specified variables:</strong></p>
 <ul>
-<li><code>--read-structure=8M143T 8M143T</code></li>
-<li><code>--molecular-index-tags=ZA ZB</code></li>
-<li><code>--single-tag=RX</code></li>
+<li><code>{params.fgbio_params}</code> – additional command line
+arguments for FGBio, specified in the profile <code>config.yaml</code>
+file
+<ul>
+<li>Recommended: <code>&quot;-r 8M143T 8M143T -t ZA ZB -s RX&quot;</code></li>
+</ul></li>
+</ul>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.r1}</code> – R1 file for a given sample</li>
+<li><code>{input.r2}</code> – R2 file for a given sample</li>
+<li><code>{params.basename}</code> – sample name</li>
+<li><code>{params.unmapped_bam}</code> – unmapped BAM file for a given
+sample (intermediate output)</li>
+<li><code>{params.unmapped_bam_withUMI}</code> – unmapped BAM file with
+UMI extracted for a given sample (intermediate output)</li>
+<li><code>{output.r1}</code> – output .fastq R1 file for a given sample,
+after UMI extraction</li>
+<li><code>{output.r2}</code> – output .fastq R2 file for a given sample,
+after UMI extraction</li>
 </ul>
 </div>
 <div id="step-4-s4_read_alignment" class="section level3">
 <h3>Step 4: <code>s4_read_alignment</code></h3>
 <p>Align reads with kalign</p>
-<pre><code></code></pre>
-<p>kalign variables:</p>
+<pre><code>ngskit4b kalign \
+    {params.kalign_params} \
+    -i {input.r1} \
+    -u {input.r2} \
+    -I {input.index} \
+    -o {output.alignment} \
+    -T {threads} \
+    -F {params.log_file}</code></pre>
+<p><strong>User-specified variables:</strong></p>
 <ul>
-<li><code>-c25</code>
+<li><code>{params.kalign_params}</code> – additional command line
+arguments for kalign, specified in the profile <code>config.yaml</code>
+file.
 <ul>
-<li>minimum chimeric length as a percentage of probe length</li>
+<li>Recommended: <code>&quot;-c25 -l25 -d50 -U4&quot;</code></li>
 </ul></li>
-<li><code>-l25</code>
-<ul>
-<li>after any end trimming, only accept read for further processing if
-read is at least this length</li>
-</ul></li>
-<li><code>-d50</code>
-<ul>
-<li>accept paired end alignments with observed insert sizes of at least
-this size</li>
-</ul></li>
-<li><code>-U4</code>
-<ul>
-<li>paired end processing mode: 4 - paired end no orphan recovery
-treating orphan ends as SE</li>
-</ul></li>
+<li><code>{threads}</code> – number of threads to use in each program,
+specified in the profile <code>config.yaml</code> file</li>
 </ul>
-<p>In addition:</p>
+<p><strong>Snakemake-generated variables:</strong></p>
 <ul>
-<li>Update the output file paths to reflect the changed input
-parameters</li>
+<li><code>{input.r1}</code> – R1 file for a given sample (Step 3
+output)</li>
+<li><code>{input.r2}</code> – R2 file for a given sample (Step 3
+output)</li>
+<li><code>{input.index}</code> – full path to index version of masked
+reference genome (Step 1 output)</li>
+<li><code>{output.alignment}</code> – alignment file for a given sample,
+aligned reads from kalign</li>
+<li><code>{params.log_file}</code> – kalign output log file for a given
+sample</li>
 </ul>
 </div>
 <div id="step-5-s5_alignment_deduplication" class="section level3">
 <h3>Step 5: <code>s5_alignment_deduplication</code></h3>
 <p>Remove PCR and optical duplicates from alignment with Picard</p>
-<pre><code></code></pre>
-<p>Picard variables:</p>
+<pre><code>CMD=&quot;java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates\
+  --INPUT {input.alignment} \
+  --OUTPUT {output.dedup_alignment} \
+  --METRICS_FILE {params.metrics_file} \
+  {params.picard_params}&quot;
+eval $CMD</code></pre>
+<p><strong>User-specified variables:</strong></p>
 <ul>
-<li><code>REMOVE_DUPLICATES=TRUE</code></li>
-<li><code>BARCODE_TAG=RX</code></li>
+<li><code>{params.picard_params}</code> – additional command line
+arguments for Picard, specified in the profile <code>config.yaml</code>
+file.
+<ul>
+<li>Recommended:
+<code>&quot;--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX&quot;</code></li>
+</ul></li>
+</ul>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.alignment}</code> – alignment file for a given sample,
+aligned reads from kalign (Step 4 output)</li>
+<li><code>{output.dedup_alignment}</code> – alignment file for a given
+sample, deduplicated by Picard</li>
+<li><code>{params.metrics_file}</code> – file containing metrics for a
+given sample, output by Picard</li>
 </ul>
 </div>
 <div id="step-6a-s6a_two_bit_genome" class="section level3">
 <h3>Step 6a: <code>s6a_two_bit_genome</code></h3>
 <p>Generate 2Bit genome with faToTwoBit</p>
-<pre><code></code></pre>
+<pre><code>faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
+twoBitInfo {output.twobit_genome} {params.info}</code></pre>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.masked_ref_genome}</code> – full path to index version
+of masked reference genome (Step 1 output)</li>
+<li><code>{output.twobit_genome}</code> – two bit version of masked
+reference genome</li>
+<li><code>{params.info}</code> – info file, generated by twoBitInfo</li>
+</ul>
 </div>
 <div id="step-6b-s6b_effective_genome_size" class="section level3">
 <h3>Step 6b: <code>s6b_effective_genome_size</code></h3>
 <p>Calculate effective genome size with faCount</p>
-<pre><code></code></pre>
+<pre><code>faCount {input.masked_ref_genome} &gt; {output.eff_gen_size}</code></pre>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.masked_ref_genome}</code> – full path to index version
+of masked reference genome (Step 1 output)</li>
+<li><code>{output.eff_gen_size}</code> – output from faCount</li>
+</ul>
 </div>
 <div id="step-6c-s6c_compute_gc_bias" class="section level3">
 <h3>Step 6c: <code>s6c_compute_GC_bias</code></h3>
 <p>Compute GC bias with deeptools</p>
-<pre><code></code></pre>
-<p>deeptools variables:</p>
+<pre><code>computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file}</code></pre>
+<p><strong>User-specified variables:</strong></p>
 <ul>
-<li><code>--GCbiasFrequenciesFile</code></li>
-<li><code>--effectiveGenomeSize 1716675060</code></li>
+<li><code>{params.eff_gen_size}</code> – effective genome size,
+calculated from output of Step 6b and entered into
+<code>config/chromatin_assembly_config.yml</code> file</li>
+</ul>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.dedup_alignment}</code> – alignment file for a given
+sample, deduplicated by Picard (Step 5 output)</li>
+<li><code>{input.twobit_genome}</code> – two bit version of masked
+reference genome (Step 1 output)</li>
+<li><code>{output.freq_file}</code> – frequency file generated by
+computeGCBias</li>
 </ul>
 </div>
 <div id="step-6d-s6d_correct_gc_bias" class="section level3">
 <h3>Step 6d: <code>s6d_correct_GC_bias</code></h3>
 <p>Correct GC bias with deeptools</p>
-<pre><code>CMD=&quot;correctGCBias_kalign -p ${SLURM_CPUS_PER_TASK} -b ${BAM_DIR}/${SLURM_ARRAY_TASK_ID}_*_dedup.bam --effectiveGenomeSize 1716675060 -g ${BIT_DIR}/GCF_900067755.1_pvi1.1_genomic_RM_nhmm_adapt.2bit --GCbiasFrequenciesFile ${GC_COMPUTE_DIR}/${SLURM_ARRAY_TASK_ID}_*.txt -o ${GC_CORRECT_DIR}/${BASENAME}_gc_corrected.bam&quot;</code></pre>
-<p>deeptools variables:</p>
+<pre><code>correctGCBias_kalign --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads}</code></pre>
+<p><strong>User-specified variables:</strong></p>
 <ul>
-<li><code>--GCbiasFrequenciesFile</code></li>
-<li><code>--effectiveGenomeSize 1716675060</code></li>
+<li><code>{params.eff_gen_size}</code> – effective genome size,
+calculated from output of Step 6b and entered into
+<code>config/chromatin_assembly_config.yml</code> file</li>
+<li><code>{threads}</code> – number of threads to use in each program,
+specified in the profile <code>config.yaml</code> file</li>
+</ul>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.dedup_alignment}</code> – alignment file for a given
+sample, deduplicated by Picard (Step 5 output)</li>
+<li><code>{input.twobit_genome}</code> – two bit version of masked
+reference genome (Step 1 output)</li>
+<li><code>{input.freq_file}</code> – frequency file generated by
+computeGCBias (Step 6c output))</li>
+<li><code>{output.gc_corrected}</code> – output .bam file, alignment for
+a given sample corrected for GC bias</li>
 </ul>
 </div>
 <div id="step-7a-s7a_size_metrics" class="section level3">
 <h3>Step 7a: <code>s7a_size_metrics</code></h3>
 <p>Calculate alignment statistics with Picard</p>
-<pre><code></code></pre>
+<pre><code>CMD=&quot;java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
+  -I {input.gc_corrected} \
+  -O {output.size_metrics} \
+  -H {output.histogram}&quot;
+eval &quot;$CMD&quot;</code></pre>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.gc_corrected}</code> – .bam file, alignment for a given
+sample corrected for GC bias (Step 6d output)</li>
+<li><code>{output.size_metrics}</code> – text file, output by
+Picard</li>
+<li><code>{output.histogram}</code> – histogram, output by Picard</li>
+</ul>
 </div>
 <div id="step-7b-s7b_read_count" class="section level3">
 <h3>Step 7b: <code>s7b_read_count</code></h3>
-<p>Estimate mean nuclear genome cover with Picard</p>
-<pre><code></code></pre>
+<p>Estimate mean nuclear genome coverage</p>
+<pre><code>CMD=&quot;samtools view -c {input.gc_corrected} -o {output.read_count}&quot;
+eval &quot;$CMD&quot;</code></pre>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.gc_corrected}</code> – .bam file, alignment for a given
+sample corrected for GC bias (Step 6d output)</li>
+<li><code>{output.read_count}</code> – text file, output by
+Samtools</li>
+</ul>
 </div>
 <div id="step-8-s8_peak_analysis" class="section level3">
 <h3>Step 8: <code>s8_peak_analysis</code></h3>
 <p>Peak analysis using DANPOS3</p>
-<pre><code></code></pre>
+<pre><code>CMD=&quot;python danpos.py dtriple {input.exp_dir}:{input.control_dir} -o {output.danpos_dir}&quot;
+eval &quot;$CMD&quot;</code></pre>
+<p><strong>Snakemake-generated variables:</strong></p>
+<ul>
+<li><code>{input.exp_dir}</code> – For experimental data.
+<ul>
+<li>Directory containing .bam file, alignment for a given sample
+corrected for GC bias (Step 6d output)</li>
+</ul></li>
+<li><code>{input.control_dir}</code> – For control data.
+<ul>
+<li>Directory containing input control files, with samples IDs specified
+in <code>chromatin_assembly_config.yml</code></li>
+</ul></li>
+<li><code>{output.danpos_dir}</code> – output directory, to contain
+results from DANPOS</li>
+</ul>
 </div>
 </div>
 

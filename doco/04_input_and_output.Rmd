@@ -1,0 +1,144 @@
+---
+title: "Input and output"
+author: "Caitlin Cherryh"
+date: "2025-04-15"
+output: html_document
+---
+
+# Input
+
+Running the `chromatin-assembly` pipeline requires at minimum, a set of reads 
+and a reference genome. For convenience, we provide directories to store these
+input files within the `data/` directory.
+
+## i. Reads
+Reads can (but do not have to be) placed in the `data/reads/` directory of the
+`chromatin-assembly` repository.
+
+### Selecting reads
+TODO DOCO complete section on choice of reads
+
+### Read filenames
+The Snakemake pipeline assumes that the file path for the reads fits the 
+pattern: 
+```
+data/reads/{sample_id}_{some_string}_L00{lane_number}_R{read_number}.fastq.gz
+```
+
+Where:
+
+- `data/reads/` is the directory containing the reads
+- `{sample_id}` is a string that can be used to identify the sample
+- `{some_string}` is a string including some information about the flow cell
+- `{lane_number}` is a single digit lane number from 1-9
+- `{read_number}` is either `1` or `2`
+
+An example file path for the sample "133165" is:
+```
+data/reads/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R1.fastq.gz
+```
+
+Sample IDs can be any part of the file name. However, the sample ID does impact 
+how the read files are processed and collated. For the file path above, valid sample IDs
+would be:
+
+- `133165`
+- `133165_H3NTTDSX3`
+- `133165_H3NTTDSX3_GTGAAGTG-GAGCAATC`
+- `133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001` (would process each lane as a separate sample)
+
+### Read merging
+
+Choice of sample ID impacts how the pipeline will treat your sample.
+
+Choosing sample IDs carefully allows you to either combine or keep separate reads from
+different methods (e.g., from multiple flow cells).
+
+Say you have a sample ID `R31500` which was run on multiple flow cells. You have 
+two lanes from each flow cell. The reads for the sample are spread across two directories, 
+`AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/` and `AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/`.
+
+The file paths would look like this:
+
+```
+data/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L001_R1.fastq.gz
+data/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L001_R2.fastq.gz
+data/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L002_R1.fastq.gz
+data/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L002_R2.fastq.gz
+data/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L001_R1.fastq.gz
+data/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L001_R2.fastq.gz
+data/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L002_R1.fastq.gz
+data/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L002_R2.fastq.gz
+```
+
+For sample ID `R31500`:
+
+- All reads containing the ID `R31500`will be merged, resulting in two files:
+  - `R31500_merged_R1.fastq.gz`
+  - `R31500_merged_R2.fastq.gz`
+- The pipeline will run once with the `R31500` merged reads
+
+For sample IDs `R31500_22W5TWLT3` and `R31500_22W5V5LT3`
+
+- Reads will be merged per flowcell, resulting in four files:
+  - `R31500_22W5TWLT3_merged_R1.fastq.gz`
+  - `R31500_22W5TWLT3_merged_R2.fastq.gz`
+  - `R31500_22W5V5LT3_merged_R1.fastq.gz`
+  - `R31500_22W5V5LT3_merged_R2.fastq.gz`
+- The pipeline will be run twice:
+  - Once with `R31500_22W5TWLT3` merged reads
+  - Once with `R31500_22W5V5LT3` merged reads
+
+
+## ii. Reference genome
+The reference genome can (but does not have to be) placed in the 
+`data/reference_genome/` directory of the `chromatin-assembly` repository.
+
+TODO DOCO complete section on choice of reference genome, including necessary file format
+
+## iii. DANPOS input control
+The input control can (but do not have to be) placed in the 
+`data/input_control/` directory of the `chromatin-assembly` repository.
+
+TODO DOCO complete section on choice of input control for DANPOS
+
+## iv. Config file
+The path to the config file is `config/chromatin_assembly_config.yml`. You should
+update the config file to match your input data.
+
+This file consists of five sections:
+
+- **Section 1: Input data and parameters**
+  - File paths for input data
+  - Information about the study species
+  - Sample IDs
+  - Preferences for read merging
+- **Section 2: Output names**
+  - Names of the output directory generated for each step
+- **Section 3: Program parameters**
+  - Command line arguments to be used with RepeatMasker, kalign, or Picard
+- **Section 4: Intermediate output**
+  - Specify the effective genome size (calculated from the output of Step 6b)
+- **Section 5: Modules**
+  - Names of HPC environment modules used in the Snakemake pipeline
+  - Version numbers for modules can be updated here, as the HPC environment modules are updated
+
+## iv. Profiles
+Snakemake uses profiles to determine what computational resources to use for each step on each system.
+
+We provide three profiles:
+
+- `hpc_test/config.yaml` -- for server (Petrichor) testing/development or dry runs
+- `local/config.yaml` -- for local (not server) testing/development or dry runs
+- `slurm/config.yaml` -- for pipeline runs with Slurm on Petrichor
+
+Before running the pipeline, update the account ID for Slurm within the following profiles:
+
+- `chromatin-assembly/profiles/hpc_test/config.yaml`
+- `chromatin-assembly/profiles/slurm/config.yaml`
+
+# Output
+
+The pipeline outputs into the `results/` directory, with output for each step in
+a separate directory.
+

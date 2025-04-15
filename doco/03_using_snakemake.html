@@ -13,7 +13,7 @@
 
 <meta name="date" content="2025-04-15" />
 
-<title>Table of Contents</title>
+<title>Using Snakemake</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,28 +350,151 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Table of Contents</h1>
+<h1 class="title toc-ignore">Using Snakemake</h1>
 <h4 class="author">Caitlin Cherryh</h4>
 <h4 class="date">2025-04-15</h4>
 
 </div>
 
 
-<p>The <strong>chromatin-assembly</strong> pipeline has a quick start
-guide (<code>README.md</code>), which should be sufficient to get you
-going.</p>
-<p>Detailed documentation is available in the <code>doco/</code>
-directory.</p>
-<div id="documentation" class="section level2">
-<h2>Documentation</h2>
-<p><a href="01_start_here.Rmd">The chromatin-assembly pipeline</a></p>
-<p><a href="02_using_snakemake.Rmd">Using Snakemake</a></p>
-<p><a href="03_input_and_output.Rmd">Input and Output</a></p>
-<p><a href="04_running_the_pipeline.Rmd">Running the pipeline</a></p>
-<p><a href="05_advanced_use.Rmd">Changing analysis parameters</a></p>
-<p><a href="06_snakemake_v8_HPC.Rmd">HPC use for Snakemake Version
-8+</a></p>
-<p><a href="07_citing_the_pipeline.Rmd">Citing the pipeline</a></p>
+<p>Key points to remember:</p>
+<ul>
+<li>All file paths in this document assume the working directory is the
+<code>chromatin-assembly/</code> folder</li>
+</ul>
+<div id="useful-command-lines" class="section level2">
+<h2>Useful command lines</h2>
+<p>Load modules needed by Snakemake on Petrichor:</p>
+<pre><code>module load python
+module load graphviz</code></pre>
+<p>Simplest dry run:</p>
+<pre><code>snakemake -n -p -c1</code></pre>
+<p>To merge reads on Petrichor with Slurm:</p>
+<pre><code>snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples --omit s1_mask_repeats,s2_raw_read_QC,s3_extract_UMI</code></pre>
+<p>Full run of pipeline on Petrichor with Slurm, skipping read
+merging:</p>
+<pre><code>snakemake --slurm --profile profiles/slurm/ --omit s0_merge_samples</code></pre>
+<p>Full run of pipeline on Petrichor with Slurm:</p>
+<pre><code>snakemake --slurm --profile profiles/slurm/</code></pre>
+</div>
+<div id="controlling-pipeline-execution" class="section level2">
+<h2>Controlling pipeline execution</h2>
+<p>Instead of running the entire pipeline with 1 core, you can control
+which steps are executed and what computational resources are
+allowed.</p>
+<p>To run the entire pipeline with <code>N</code> cores:</p>
+<pre><code>snakemake -cN</code></pre>
+<p>To run the pipeline until it reaches a certain rule, use
+<code>snakemake --until {target}</code> (where <code>{target}</code> is
+the rule name). For example, to execute Steps 1-3:</p>
+<pre><code>snakemake --until s3_extract_UMI  -cN</code></pre>
+<p>To omit steps from the pipeline (i.e., run the pipeline without
+executing a specific rule or any downstream rules) use
+<code>snakemake --omit {target}</code>.</p>
+<p>Any step can be omitted. Execution of the pipeline will stop when
+downstream rules become dependent on completion of the target rule.</p>
+<p>For example, to omit Step 8 (peak analysis in DANPOS3):</p>
+<pre><code>snakemake --omit s8_peak_analysis -cN</code></pre>
+<p>The <code>--until</code> and <code>--omit</code> flags can be
+combined.</p>
+<p>For example if you want to execute Steps 2-3 (raw read quality
+control and extract UMIs) without executing Step 1 (mask repeats):</p>
+<pre><code>snakemake --until s3_extract_UMI --omit s1_mark_repeats -cN</code></pre>
+<p>You can also execute a single rule of the pipeline by using the
+desired output file path with
+<code>snakemake -p {output_file_path}</code>.</p>
+</div>
+<div id="running-the-pipeline-on-a-hpc" class="section level2">
+<h2>Running the pipeline on a HPC</h2>
+<p>The current version of Snakemake on Petrichor is v7.24.0.</p>
+<p>To get started running the pipeline on Petrichor, see the quick start
+guide in <code>README.md</code>.</p>
+<p>We provide job scripts for your convenience. Each job script performs
+1-3 pipeline steps. We grouped pipeline steps into job scripts based on
+the computational resources and time required to complete each step.</p>
+<p>The following sections of documentation detail how to run Snakemake
+on a HPC. These points have already been incorporated into the included
+job scripts. Unless you are using a different HPC system or running the
+pipeline in interactive mode (not using Slurm), you probably will not
+need the following information.</p>
+<div id="environment-modules" class="section level4">
+<h4>Environment modules</h4>
+<p>Running Snakemake on Petrichor requires the python module:</p>
+<pre><code>module load python</code></pre>
+<p>Outputting graphs (to visualise the pipeline execution) requires the
+graphviz module:</p>
+<pre><code>module load graphviz</code></pre>
+</div>
+<div id="running-pipeline-on-the-hpc" class="section level4">
+<h4>Running pipeline on the HPC</h4>
+<p>To run the pipeline on the HPC, you need to include the
+<code>--slurm</code> flag and the path to the Slurm profile.</p>
+<p>For example:</p>
+<pre><code>snakemake --slurm --profile profiles/slurm/ </code></pre>
+<p>When using a Slurm profile, do not specify the number of cores in the
+Snakemake call. Snakemake determines computational resources for each
+step from the provided profile.</p>
+<p>Additional parameters can be added as described above.</p>
+<p>For example, to execute Steps 2-3 without executing Step 1:</p>
+<pre><code>snakemake --slurm --profile profiles/slurm/ --until s3_extract_UMI --omit s1_mark_repeats</code></pre>
+</div>
+<div id="specifying-resources" class="section level4">
+<h4>Specifying resources</h4>
+<p>To specify account and partition in the command line:</p>
+<pre><code>snakemake --slurm --default-resources slurm_account=&lt;your SLURM account&gt; slurm_partition=&lt;your SLURM partition&gt;</code></pre>
+<p>Account and partition details can also be specified using a
+configuration profile.</p>
+<pre><code>snakemake --slurm --profile profiles/slurm/</code></pre>
+<p>For more details and examples of slurm config profiles, see the <a href="https://github.com/Snakemake-Profiles/slurm">Snakemake-Profiles/slurm</a>
+GitHub repository</p>
+<p>Some notes on <a href="https://docs.s3it.uzh.ch/how-to_articles/how_to_run_snakemake/#resources">Running
+Snakemake on a cluster</a>:</p>
+<ul>
+<li>Resources can be referenced within a rule’s <code>shell</code> and
+<code>run</code> sections e.g., <code>{resources.mem_mb}</code>,
+<code>{resources.threads}</code>
+<ul>
+<li>This is useful for applications that accept memory or thread
+parameters in the command line</li>
+<li>For example, in rule <code>s2_raw_read_QC</code>:
+<code>fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}</code></li>
+</ul></li>
+<li>Snakefiles and configuration profiles can specify both
+<code>threads</code> and <code>cpus_per_task</code>
+<ul>
+<li><code>cpus_per_task</code> is specific to Slurm.</li>
+<li><code>threads</code> is independent of environment and always
+available, even when not explicitly set for a rule.</li>
+<li><code>threads</code> can be determined based on how well the task
+can be parallelised</li>
+<li>Snakemake uses <code>threads</code> to determine how many jobs to
+execute when running a pipeline locally</li>
+</ul></li>
+</ul>
+<p><strong>Note</strong>: Snakemake and Slurm have different names for
+resources (refer to <a href="https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#advanced-resource-specifications">Advanced
+Resource Specifications</a> )</p>
+</div>
+</div>
+<div id="running-the-pipeline-locally" class="section level2">
+<h2>Running the pipeline locally</h2>
+<ol style="list-style-type: decimal">
+<li>Clone the <code>chromatin-assembly</code> repository into the
+location you wish to run the pipeline in, then navigate into the
+<code>chromatin-assembly</code> folder.</li>
+<li>Copy your input data into the <code>data/</code> folder.</li>
+<li>Update the file paths and variables within the
+<code>config/chromatin-assembly-config.yml</code> file.</li>
+<li>Update the allowed resources for the run in the
+<code>profiles/local/config.yaml</code> file. For the local run (which
+is usually a dry or test run), all rules have the same resources.</li>
+<li><em>If using conda environments:</em> Activate the conda
+environment: <code>conda activate snakemake</code></li>
+<li>Perform a dry run with one core (<code>-c1</code>):
+<code>snakemake -n -p -c1</code></li>
+<li>Run the snakemake pipeline with the local profile:</li>
+</ol>
+<pre><code>snakemake --profile profiles/local/  </code></pre>
 </div>
 
 

@@ -1,5 +1,5 @@
 ---
-title: "Running the pipeline"
+title: "Introduction to Snakemake"
 author: "Caitlin Cherryh"
 date: "2025-04-15"
 output: html_document
@@ -7,6 +7,7 @@ output: html_document
 
 Some key points to remember:
 
+- Detailed instructions on running the pipeline are available in the `README.md` file
 - All file paths in this document assume the working directory is the `chromatin-assembly/` folder
 
 

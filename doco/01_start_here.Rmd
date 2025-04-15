@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ## Background
-TODO ask Erin to write introduction para
+TODO DOCO add introductory paragraph
 
 ## Repository Structure
 The `caitlinch/chromatin-assembly` GitHub repository has the following structure:
@@ -37,7 +37,7 @@ The directory includes:
   - Snakemake uses profiles to determine what computational resources to use for each step on each system
     - `hpc_test/config.yaml` -- for server (Petrichor) testing/development or dry runs
     - `local/config.yaml` -- for local (not server) testing/development or dry runs
-    - `slurm/config.yaml` -- for use with Slurm on Petrichor
+    - `slurm/config.yaml` -- for pipeline runs with Slurm on Petrichor
 - `README.md` -- a quick-start guide on running the pipeline.
 - `resources/`
   - `adapters/adap_cont_rna.fa` -- adapters used with RepeatMasker (Step 1)
@@ -57,20 +57,18 @@ The directory includes:
 
 Running the pipeline from start to finish will execute the following steps:
 
-- Step 1: Repeat masking and suffix array using RepeatMasker and kit4b
-- Step 2: Raw read quality control with FastQC
-- Step 3: UMI extraction with FGBio and Picard
-- Step 4: Align reads with kalign
-- Step 5: Remove PCR and optical duplicates from alignment with Picard
-- Step 6a: Generate 2Bit genome with faToTwoBit
-- Step 6b: Calculate effective genome size with faCount
-- Step 6c: Compute GC bias with deeptools
-- Step 6d: Correct GC bias with deeptools
-- Step 7a: Calculate alignment statistics with Picard
-- Step 7b: Estimate mean nuclear genome cover with Picard
-- Step 8: Peak analysis using DANPOS3
-
-## Pipeline execution
+- **Step 1**: Repeat masking and suffix array using RepeatMasker and kit4b
+- **Step 2**: Raw read quality control with FastQC
+- **Step 3**: UMI extraction with FGBio and Picard
+- **Step 4**: Align reads with kalign
+- **Step 5**: Remove PCR and optical duplicates from alignment with Picard
+- **Step 6a**: Generate two bit genome with faToTwoBit
+- **Step 6b**: Calculate effective genome size with faCount
+- **Step 6c**: Compute GC bias with deeptools
+- **Step 6d**: Correct GC bias with deeptools
+- **Step 7a**: Calculate alignment statistics with Picard
+- **Step 7b**: Estimate mean nuclear genome cover with Picard
+- **Step 8**: Peak analysis using DANPOS
 
 The following graph shows the relationship between pipeline steps:
 
