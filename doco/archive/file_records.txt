@@ -1,4 +1,0 @@
-"ID_num", "summary", "new_path", "original_path"
-"001", "water dragon genome", "/scratch3/che318/chromatin-assembly/genomes/water_dragon", "/datasets/work/efsp-faire/work/sti089/genomes/water_dragon/"	
-"002", "adapters", "/scratch3/che318/chromatin-assembly/config/adapters/", "/datasets/work/efsp-faire/work/sti089/adapters/"
-		
