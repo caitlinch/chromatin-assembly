@@ -8,7 +8,7 @@
 #  {sample_id}_{some_text}_L00{num}_R{1|2}.fastq.gz
 # e.g., R114096_22W5TWLT3_TTCTGCGTCG-TTCGTACACC_L003_R1.fastq.gz
 # If you have data with a different file name structure, some
-# of the inbuilt assumptions will not work and you may have issues
+# of the inbuilt assumptions may not work and you may have issues
 # running the pipeline.
 
 ##### Section 1: Input data and parameters #####

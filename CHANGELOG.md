@@ -13,8 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Example of user input data in `data/template/`
  
 ### Changed
-- Updated documentation
-    - Updated pipeline structure and repository structure in `doco/start_here.Rmd`
+- Updated all documentation 
  
 ### Fixed
 - Added multi-sample input
