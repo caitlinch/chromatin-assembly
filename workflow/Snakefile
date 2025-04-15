@@ -380,9 +380,11 @@ rule s8_peak_analysis:
         control_dir   = OUTDIR + STEP8_NAME + "/{sample}/" + INPUT_CONTROL_NAME + "/",
         danpos_dir    = OUTDIR + STEP8_NAME + "/{sample}/dtriple/",
         control_id    = INPUT_CONTROL_SAMPLES,
-        module_danpos = config["modules"]["danpos"]
+        module_danpos = config["modules"]["danpos"],
+        module_python = config["modules"]["python"]
     shell:
         """
+        # module load {params.module_python}
         # module load {params.module_danpos}
         # mkdir -p {params.step8_dir}
         # mkdir -p {params.sample_dir}
@@ -394,7 +396,9 @@ rule s8_peak_analysis:
         # # Experiment input (exp/test) = alignment_dedup_gcCorrected (output from Step 6d)
         # # Input control (control) = samples specified in chromatin_assembly_config.yml
         #
-        # # Call DANPOS
+        # # Call DANPOS 
+        # # $DANPOS_HOME = /apps/danpos/3.1.1/
+        # # danpos.py location = /apps/danpos/3.1.1/bin/danpos.py
         # CMD="python danpos.py dtriple {params.exp_dir}:{params.control_dir} -o {params.danpos_dir}"
         # eval "$CMD"
 
