@@ -1,14 +1,15 @@
 ---
-title: "References"
+title: "Citing the pipeline"
 author: "Caitlin Cherryh"
-date: "2025-02-18"
+date: "2025-04-15"
 output: html_document
 ---
 
-## Citing this pipeline
 TODO add authors 
 TODO publish release when pipeline complete and tested
 TODO reference specific release 
+
+If you use this pipeline, please cite it:
 
 Cherryh, C., Stiller, J., Hahn, E. E. 2025. Chromatin assembly pipeline. GitHub 
 repository. https://github.com/caitlinch/chromatin-assembly

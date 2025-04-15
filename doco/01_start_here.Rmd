@@ -1,7 +1,7 @@
 ---
 title: "The `chromatin-assembly` pipeline"
 author: "Caitlin Cherryh"
-date: "2025-02-18"
+date: "2025-04-15"
 output: html_document
 ---
 

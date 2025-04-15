@@ -1,7 +1,7 @@
 ---
-title: "Quickstart guide"
+title: "Using Snakemake"
 author: "Caitlin Cherryh"
-date: "2025-03-14"
+date: "2025-04-15"
 output: html_document
 ---
 

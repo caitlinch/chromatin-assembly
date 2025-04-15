@@ -11,9 +11,9 @@
 
 <meta name="author" content="Caitlin Cherryh" />
 
-<meta name="date" content="2025-02-18" />
+<meta name="date" content="2025-04-15" />
 
-<title>Changing analysis parameters</title>
+<title>Input and output</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -350,194 +350,151 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Changing analysis parameters</h1>
+<h1 class="title toc-ignore">Input and output</h1>
 <h4 class="author">Caitlin Cherryh</h4>
-<h4 class="date">2025-02-18</h4>
+<h4 class="date">2025-04-15</h4>
 
 </div>
 
 
-<p>In some cases, the input choices for each of the steps might not work
-for your individual analysis.</p>
-<p>This file outlines the exact parameter choices used in each step.</p>
-<div id="modifying-parameters-for-individual-pipeline-steps" class="section level3">
-<h3>Modifying parameters for individual pipeline steps</h3>
-<p>The majority of changes needed to modify the
-<code>chromatin-assembly</code> pipeline for a new analysis will be in
-the <code>config/chromatin_assembly_config.yml</code> file.</p>
-<p>However, some of the pipeline steps may need to be modified for your
-particular dataset.</p>
-<p>For example, in Step 4 Kalign is called with the following
-command:</p>
-<pre><code>ngskit4b kalign -c25 -l25 -d50 -U4 -i reads_R1.fastq -u reads_R2.fastq 
--I GCF_900067755.1_pvi1.1_genomic_RM_nhmm_adapt 
--o kalign_pe_c25_l25_d50_U4.sam -F kalign_pe_c25_l25_d50_U4.log</code></pre>
-<p>This command uses the following settings:</p>
-<ul>
-<li><code>-c25</code>:</li>
-<li><code>-l25</code>:</li>
-<li><code>-d50</code>:</li>
-<li><code>-U4</code>:</li>
-</ul>
-<p>These settings may not be appropriate for your dataset. You can
-update them by modifying the Snakemake rule.</p>
+<div id="input" class="section level1">
+<h1>Input</h1>
+<p>Running the <code>chromatin-assembly</code> pipeline requires at
+minimum, a set of reads and a reference genome. For convenience, we
+provide directories to store these input files within the
+<code>data/</code> directory.</p>
+<div id="i.-reads" class="section level2">
+<h2>i. Reads</h2>
+<p>Reads can (but do not have to be) placed in the
+<code>data/reads/</code> directory of the
+<code>chromatin-assembly</code> repository.</p>
+<div id="selecting-reads" class="section level3">
+<h3>Selecting reads</h3>
+<p>TODO get Erin to write paragraph</p>
 </div>
-<div id="snakemake-rule-structure" class="section level3">
-<h3>Snakemake rule structure</h3>
-<p>All Snakemake rules have the same structure.</p>
-<p>Here’s a toy example for a rule called <code>copy_file</code>, which
-copies a file from the <code>data/</code> directory to the
-<code>results/</code> directory.</p>
-<pre><code>rule copy_file:
-  input:
-    &quot;data/{id}.txt&quot;
-  output:
-    &quot;results/{id}.txt&quot;
-  shell:
-    &quot;cat {input} &gt; {output}&quot;</code></pre>
-<p>The rule consists of the following components:</p>
+<div id="read-filenames" class="section level3">
+<h3>Read filenames</h3>
+<p>The Snakemake pipeline assumes that the file path for the reads fits
+the pattern
+<code>data/reads/{name}{lane_number}_R{read_number}.fastq.gz</code>,
+where:</p>
 <ul>
-<li><code>input</code> - input files</li>
-<li><code>output</code> - output files</li>
-<li><code>shell</code> - the shell command to generate input from the
-output (including calling other scripts or programs)</li>
+<li><code>data/reads/</code> is the directory containing the reads</li>
+<li><code>{name}</code> is a string present in all read file names and
+ends with the string <code>&quot;_L00&quot;</code></li>
+<li><code>{lane_number}</code> is a single digit lane number from
+1-9</li>
+<li><code>{read_number}</code> is a single digit from 1-2</li>
 </ul>
-<p>Other components present within the rule may include:</p>
+<p>In other words, all reads have identical file paths varying only in
+the lane number and read number.</p>
+<div id="example-filenames" class="section level4">
+<h4>Example filenames</h4>
+<p>Choice of the <code>{name}</code> wildcard is important. The
+<code>{name}</code> should contain the whole file name (excluding the
+file path) and end with the string <code>&quot;_L00&quot;</code>.</p>
+<p>Given the <code>{name}</code> string
+<code>&quot;133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L00&quot;</code>, a valid example
+of reads would be the following set of files which share an identical
+<code>{name}</code> string but have different <code>{lane_number}</code>
+and <code>{read_number}</code> values:</p>
 <ul>
-<li><code>params</code> - other parameters needed for rule execution
-(e.g., adapters, controls, etc.)</li>
-<li><code>message</code> - outputs the specified message in the console
-when executing that rule</li>
-<li><code>threads</code> - the number of threads to use for that
+<li><code>133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R1.fastq.gz</code></li>
+<li><code>133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R2.fastq.gz</code></li>
+<li><code>133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L002_R1.fastq.gz</code></li>
+<li><code>133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L002_R2.fastq.gz</code></li>
+</ul>
+<p>An invalid example of reads (as the <code>{name}</code> wildcard does
+not contain the whole file name):</p>
+<ul>
+<li><code>copy_133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R1.fastq.gz</code></li>
+<li><code>copy_133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R2.fastq.gz</code></li>
+<li><code>copy_133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L002_R1.fastq.gz</code></li>
+<li><code>copy_133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L002_R2.fastq.gz</code></li>
+</ul>
+<p>Another invalid example of reads (as the four files cannot be
+selected using a single <code>{name}</code> wildcard):</p>
+<ul>
+<li><code>133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R1.fastq.gz</code></li>
+<li><code>133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R2.fastq.gz</code></li>
+<li><code>133165_H3NTTDSX3_L002_R1.fastq.gz</code></li>
+<li><code>133165_H3NTTDSX3_L002_R2.fastq.gz</code></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="ii.-reference-genome" class="section level2">
+<h2>ii. Reference genome</h2>
+<p>The reference genome can (but do not have to be) placed in the
+<code>data/reference_genome/</code> directory of the
+<code>chromatin-assembly</code> repository.</p>
+<p>TODO get Erin to write paragraph</p>
+</div>
+<div id="iii.-danpos-input-control" class="section level2">
+<h2>iii. DANPOS input control</h2>
+<p>The input control can (but do not have to be) placed in the
+<code>data/input_control/</code> directory of the
+<code>chromatin-assembly</code> repository.</p>
+<p>TODO get Erin to write paragraph</p>
+</div>
+<div id="iv.-config-file" class="section level2">
+<h2>iv. Config file</h2>
+<p>The path to the config file is
+<code>config/chromatin_assembly_config.yml</code>. You should update the
+config file to match your input data and based on your HPC
+resources.</p>
+<p>This file consists of three main sections: <code>input</code> (input
+parameters and paths to input data); <code>params</code> (for adapters
+and scripts used within the pipeline); and Steps (to specify resources
+needed for each step).</p>
+<ul>
+<li><code>input</code>
+<ul>
+<li><code>ref_species</code> - name of species (e.g.,
+<code>&quot;central_dragon&quot;</code>)</li>
+<li><code>read_dir</code> - directory containing reads</li>
+<li><code>read_lanes</code> - the lanes (single digit from 1-9) of the
+reads you wish to include in this analysis</li>
+<li><code>read_path_pattern</code> - the string contained in all read
+file names, ending with <code>&quot;_L00&quot;</code></li>
+<li><code>input_control_files1</code> - DANPOS input control files</li>
+<li><code>input_control_files2</code> - DANPOS input control files</li>
+</ul></li>
+<li><code>params</code>
+<ul>
+<li><code>adapters</code> - path to the adapters for your data</li>
+<li><code>faCount</code> - path to the faCount program (included in the
+<code>chromatin-assembly</code> repository)</li>
+<li><code>faToTwoBit</code> - path to the faToTwoBit program (included
+in the <code>chromatin-assembly</code> repository)</li>
+</ul></li>
+<li>Steps (from <code>step1</code> to <code>step8</code>)
+<ul>
+<li>Each step has a separate section with the following parameters,
+which are fed into SLURM when running the pipeline on a HPC:
+<ul>
+<li><code>name</code> - name of each step (used for creating output
+directories)</li>
+<li><code>time</code> - allowed time for the given rule</li>
+<li><code>mem</code> - allowed memory for the given rule</li>
+<li><code>nodes</code> - number of nodes to allow for the given
 rule</li>
-<li><code>resources</code> - the computational resources (e.g., memory)
-to use for that rule</li>
-<li><code>log</code> - specifies a log file to write information about
-the rule execution</li>
-<li><code>envmodules</code> - environment modules for HPC pipeline
-use</li>
+<li><code>cpus</code> - the number of CPUs to allow for the given
+rule</li>
+</ul></li>
+</ul></li>
 </ul>
+<p>TODO update config file doco - the structure has changed</p>
 </div>
-<div id="updating-a-snakemake-rule" class="section level3">
-<h3>Updating a Snakemake rule</h3>
-<p>To update a Snakemake rule within the <code>chromatin-assembly</code>
-pipeline, edit the shell command.</p>
-<p>Let’s take the example rule from above and say we want to add a
-message to the console after the rule is complete. We do this by editing
-the shell command:</p>
-<pre><code>rule copy_file:
-  input:
-    &quot;data/{id}.txt&quot;
-  output:
-    &quot;results/{id}.txt&quot;
-  shell:
-    &quot;cat {input} &gt; {output} | echo &#39;Copy complete&#39; &quot;</code></pre>
-<p>When the rule is executed, it will now show the message
-<code>Copy complete</code> in the console.</p>
 </div>
-<div id="list-of-commands-used-within-the-pipeline" class="section level2">
-<h2>List of commands used within the pipeline</h2>
-<p>TODO update shell commands when pipeline steps completed TODO change
-key variables to input in config file</p>
-<p>The shell commands for each of the <code>chromatin-assembly</code>
-pipeline steps are listed below. For each step, we list the variables
-that you may wish to update. To update a step for your analysis
-requirements, modify the shell command for that rule in the file
-<code>workflow/Snakefile</code>.</p>
-<div id="step-1-s1_mask_repeats" class="section level3">
-<h3>Step 1: <code>s1_mask_repeats</code></h3>
-<p>Repeat masking and suffix array using RepeatMasker and kit4b</p>
-<pre><code>RepeatMasker -pa {params.cpus} -qq -dir {params.step1_dir} -lib {params.adapter} {input.ref_genome}
-ngskit4b index -i {output.masked} -o {output.index} -r {params.ref_species} -T {params.cpus} -F {params.log}</code></pre>
-</div>
-<div id="step-2-s2_raw_read_qc" class="section level3">
-<h3>Step 2: <code>s2_raw_read_QC</code></h3>
-<p>Raw read quality control with FastQC</p>
-<pre><code>fastqc -t 2 {input.r1} {input.r2} -o {params.outdir}</code></pre>
-</div>
-<div id="step-3-s3_extract_umi" class="section level3">
-<h3>Step 3: <code>s3_extract_UMI</code></h3>
-<p>UMI extraction with FGBio and Picard</p>
-<pre><code></code></pre>
-<p>FGBio variables:</p>
+<div id="output" class="section level1">
+<h1>Output</h1>
+<p>Three main outputs:</p>
 <ul>
-<li><code>--read-structure=8M143T 8M143T</code></li>
-<li><code>--molecular-index-tags=ZA ZB</code></li>
-<li><code>--single-tag=RX</code></li>
+<li>7a Size metrics</li>
+<li>7b summary statistics</li>
+<li>8 DANPOS (peak analysis)</li>
 </ul>
-</div>
-<div id="step-4-s4_read_alignment" class="section level3">
-<h3>Step 4: <code>s4_read_alignment</code></h3>
-<p>Align reads with kalign</p>
-<pre><code></code></pre>
-<p>kalign variables:</p>
-<ul>
-<li><code>-c25</code></li>
-<li><code>-l25</code></li>
-<li><code>-d50</code></li>
-<li><code>-U4</code></li>
-</ul>
-<p>In addition:</p>
-<ul>
-<li>Update the output file paths to reflect the changed input
-parameters</li>
-</ul>
-</div>
-<div id="step-5-s5_alignment_deduplication" class="section level3">
-<h3>Step 5: <code>s5_alignment_deduplication</code></h3>
-<p>Remove PCR and optical duplicates from alignment with Picard</p>
-<pre><code></code></pre>
-<p>Picard variables:</p>
-<ul>
-<li><code>REMOVE_DUPLICATES=TRUE</code></li>
-<li><code>BARCODE_TAG=RX</code></li>
-</ul>
-</div>
-<div id="step-6a-s6a_two_bit_genome" class="section level3">
-<h3>Step 6a: <code>s6a_two_bit_genome</code></h3>
-<p>Generate 2Bit genome with faToTwoBit</p>
-<pre><code></code></pre>
-</div>
-<div id="step-6b-s6b_effective_genome_size" class="section level3">
-<h3>Step 6b: <code>s6b_effective_genome_size</code></h3>
-<p>Calculate effective genome size with faCount</p>
-<pre><code></code></pre>
-</div>
-<div id="step-6c-s6c_compute_gc_bias" class="section level3">
-<h3>Step 6c: <code>s6c_compute_GC_bias</code></h3>
-<p>Compute GC bias with deeptools</p>
-<pre><code></code></pre>
-<p>deeptools variables:</p>
-<ul>
-<li><code>--GCbiasFrequenciesFile</code></li>
-<li><code>--effectiveGenomeSize 1716675060</code></li>
-</ul>
-</div>
-<div id="step-6d-s6d_correct_gc_bias" class="section level3">
-<h3>Step 6d: <code>s6d_correct_GC_bias</code></h3>
-<p>Correct GC bias with deeptools</p>
-<pre><code>CMD=&quot;correctGCBias_kalign -p ${SLURM_CPUS_PER_TASK} -b ${BAM_DIR}/${SLURM_ARRAY_TASK_ID}_*_dedup.bam --effectiveGenomeSize 1716675060 -g ${BIT_DIR}/GCF_900067755.1_pvi1.1_genomic_RM_nhmm_adapt.2bit --GCbiasFrequenciesFile ${GC_COMPUTE_DIR}/${SLURM_ARRAY_TASK_ID}_*.txt -o ${GC_CORRECT_DIR}/${BASENAME}_gc_corrected.bam&quot;</code></pre>
-<p>deeptools variables:</p>
-<ul>
-<li><code>--GCbiasFrequenciesFile</code></li>
-<li><code>--effectiveGenomeSize 1716675060</code></li>
-</ul>
-</div>
-<div id="step-7a-s7a_size_metrics" class="section level3">
-<h3>Step 7a: <code>s7a_size_metrics</code></h3>
-<p>Calculate alignment statistics with Picard</p>
-<pre><code></code></pre>
-</div>
-<div id="step-7b-s7b_read_count" class="section level3">
-<h3>Step 7b: <code>s7b_read_count</code></h3>
-<p>Estimate mean nuclear genome cover with Picard</p>
-<pre><code></code></pre>
-</div>
-<div id="step-8-s8_peak_analysis" class="section level3">
-<h3>Step 8: <code>s8_peak_analysis</code></h3>
-<p>Peak analysis using DANPOS3</p>
-<pre><code></code></pre>
-</div>
 </div>
 
 
