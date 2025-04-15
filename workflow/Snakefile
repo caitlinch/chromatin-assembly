@@ -391,14 +391,14 @@ rule s8_peak_analysis:
         # mkdir -p {params.exp_dir}
         # mkdir -p {params.control_dir}
         # mkdir -p {params.danpos_dir}
-        #    
-        # # TODO Copy files across into their specific dirs
-        # # Experiment input (exp/test) = alignment_dedup_gcCorrected (output from Step 6d)
-        # # Input control (control) = samples specified in chromatin_assembly_config.yml
+        # 
+        # cp {input.gc_corrected} {params.exp_dir}
+        # # TODO copy input control (control) = samples specified in chromatin_assembly_config.yml
         #
-        # # Call DANPOS 
+        # # danpos.py --help
         # # $DANPOS_HOME = /apps/danpos/3.1.1/
-        # # danpos.py location = /apps/danpos/3.1.1/bin/danpos.py
+        # # /apps/danpos/3.1.1/bin/danpos.py
+        #
         # CMD="python danpos.py dtriple {params.exp_dir}:{params.control_dir} -o {params.danpos_dir}"
         # eval "$CMD"
 
@@ -409,5 +409,4 @@ rule s8_peak_analysis:
         touch {output.dpeak_op}
         touch {output.dregion_op}
         """
-
 
