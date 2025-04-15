@@ -376,13 +376,14 @@ if (param_performMerge == TRUE){
         " > ",
         s_r1_op_path
       )
+      system(sys_r1_merge)
+      # $ cat "$data_dir/${sample}_L00"*"_R2.fastq.gz" > "$output_dir/${sample}_R2_merged.fastq.gz"
       sys_r2_merge <- paste0(
         "cat ",
         paste(paste0(d, s_r2), collapse = " "),
         " > ",
         s_r2_op_path
       )
-      system(sys_r1_merge)
       system(sys_r2_merge)
       # Output record of what was copied into each file
       write(
