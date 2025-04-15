@@ -48,7 +48,6 @@ STEP7b_NAME = config["output_dir"]["step7b"]
 STEP8_NAME = config["output_dir"]["step8"]
 
 
-
 # --- Complete pipeline run --- #
 ## Run all rules
 # To generate files for s0_merge_samples:
@@ -409,19 +408,32 @@ rule s8_peak_analysis:
     input:
         gc_corrected = OUTDIR + STEP6d_NAME + "/" + "{sample}_alignment_dedup_gcCorrected.bam"
     output:
-        danpos_op = OUTDIR + STEP8_NAME + "/" + REF_SPECIES + "_{sample}_DANPOS.txt"
+        danpos_dir = OUTDIR + STEP8_NAME + "/{sample}/DANPOS/"
     params:
-        outdir        = OUTDIR + STEP8_NAME + "/",
+        step8_dir     = OUTDIR + STEP8_NAME,
+        sample_dir    = = OUTDIR + STEP8_NAME + "/{sample}/",
+        exp_dir = OUTDIR + STEP8_NAME + "/{sample}/exp/",
+        control_dir = OUTDIR + STEP8_NAME + "/{sample}/control/",
+        control_id    = config["input_control"]["control_samples"],
         module_danpos = config["modules"]["danpos"]
     shell:
         """
         # module load {params.module_danpos}
         #
-        # mkdir -p {params.outdir}
+        # # Create necessary directories
+        # mkdir -p {params.step8_dir}
+        # mkdir -p {params.sample_dir}
+        # mkdir -p {params.exp_dir}
+        # mkdir -p {params.control_dir}
+        # mkdir -p {output.danpos_dir}
+        #    
+        # # TODO Copy files across into their specific dirs
+        # # Experiment input (exp/test) = alignment_dedup_gcCorrected (output from Step 6d)
+        # # Input control (control) = samples specified in chromatin_assembly_config.yml
         #
-        # CMD="python danpos.py dtriple TEST_DIR:INPUT_DIR -o RESULTS_DIR"
+        # # Call DANPOS
+        # CMD="python danpos.py dtriple {input.exp_dir}:{input.control_dir} -o {output.danpos_dir}"
         # eval "$CMD"
-        echo 'Step 8 rule test' >> {output.danpos_op}
+        mkdir -p {output.danpos_dir}
         """
-
 
