@@ -9,7 +9,7 @@ rerun-incomplete: True
 printshellcmds: True
 
 set-resources:
-  s0_merge_samples: runtime="01:00:00"
+  s0_merge_samples: runtime="05:00:00"
   s0_merge_samples: mem="20GB"
   s0_merge_samples: nodes=1
   s0_merge_samples: cpus_per_task=8
