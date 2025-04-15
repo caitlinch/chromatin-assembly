@@ -118,18 +118,12 @@ rule s1_mask_repeats:
         module_kit4b        = config["modules"]["kit4b"]
     shell:
         """
+        module load {params.module_repeatmasker}
+        module load {params.module_kit4b}
         mkdir -p {params.outdir}
-        touch {output.masked}
-        touch {params.log}
-        touch {output.index}
 
-        # module load {params.module_repeatmasker}
-        # module load {params.module_kit4b}
-
-        # mkdir -p {params.outdir}
-
-        # RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
-        # ngskit4b index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
+        RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
+        ngskit4b index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
         """
 
 ## Step 2: Perform quality control using FastQC (slurm_fastqc.sh)
@@ -145,15 +139,10 @@ rule s2_raw_read_QC:
         module_fastqc = config["modules"]["fastqc"]
     shell:
         """
+        module load {params.module_fastqc}
         mkdir -p {params.outdir}
-        touch {output.r1}
-        touch {output.r2}
 
-        # module load {params.module_fastqc}
-
-        # mkdir -p {params.outdir}
-
-        # fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}
+        fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}
         """
 
 ## Step 3: UMI extraction with FGBio and Picard (slurm_extractUMI.sh)
@@ -174,33 +163,28 @@ rule s3_extract_UMI:
         module_fgbio         = config["modules"]["fgbio"]
     shell:
         """
+        module load {params.module_picard}
+        module load {params.module_fgbio}
         mkdir -p {params.outdir}
-        touch {output.r1}
-        touch {output.r2}
 
-        # module load {params.module_picard}
-        # module load {params.module_fgbio}
-
-        # mkdir -p {params.outdir}
+        CMD1="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam \
+	        -F1 {input.r1} \
+	        -F2 {input.r2} \
+	        -O {params.unmapped_bam} \
+	        -SM {params.basename}"
+        eval $CMD1
         
-        # CMD1="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam \
-	    #     -F1 {input.r1} \
-	    #     -F2 {input.r2} \
-	    #     -O {params.unmapped_bam} \
-	    #     -SM {params.basename}"
-        # eval $CMD1
+        CMD2="java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam \
+	        -i {params.unmapped_bam} \
+	        -o {params.unmapped_bam_withUMI} \
+	        {params.fgbio_params}"
+        eval $CMD2
         
-        # CMD2="java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam \
-	    #     -i {params.unmapped_bam} \
-	    #     -o {params.unmapped_bam_withUMI} \
-	    #     {params.fgbio_params}"
-        # eval $CMD2
-        
-        # CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq \
-	    #     -I {params.unmapped_bam_withUMI} \
-	    #     -F {output.r1} \
-	    #     -F2 {output.r2}" 
-        # eval $CMD3
+        CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq \
+	        -I {params.unmapped_bam_withUMI} \
+	        -F {output.r1} \
+	        -F2 {output.r2}" 
+        eval $CMD3
         """
 
 ## Step 4: Align reads with kalign (slurm_kalign_umi.sh)
@@ -218,21 +202,17 @@ rule s4_read_alignment:
         module_kit4b  = config["modules"]["kit4b"]
     shell:
         """
+        module load {params.module_kit4b}
         mkdir -p {params.outdir}
-        echo 'Step 4' >> {output.alignment}
 
-        # module load {params.module_kit4b}
-
-        # mkdir -p {params.outdir}
-
-        # ngskit4b kalign \
-        #     {params.kalign_params} \
-	    #     -i {input.r1} \
-	    #     -u {input.r2} \
-	    #     -I {input.index} \
-	    #     -o {output.alignment} \
-	    #     -T {threads} \
-	    #     -F {params.log_file}
+        ngskit4b kalign \
+            {params.kalign_params} \
+	        -i {input.r1} \
+	        -u {input.r2} \
+	        -I {input.index} \
+	        -o {output.alignment} \
+	        -T {threads} \
+	        -F {params.log_file}
         """
 
 ## Step 5: Remove PCR and optical duplicates from alignment with Picard (slurm_depup.sh)
@@ -248,19 +228,15 @@ rule s5_alignment_deduplication:
         module_picard = config["modules"]["picard"]
     shell:
         """
+        module load {params.module_picard}
         mkdir -p {params.outdir}
-        echo 'Step 5' >> {output.dedup_alignment}
 
-        # module load {params.module_picard}
-
-        # mkdir -p {params.outdir}
-
-        # CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates\
-        #     --INPUT {input.alignment} \
-        #     --OUTPUT {output.dedup_alignment} \
-        #     --METRICS_FILE {params.metrics_file} \
-        #     {params.picard_params}"
-        # eval $CMD
+        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates\
+            --INPUT {input.alignment} \
+            --OUTPUT {output.dedup_alignment} \
+            --METRICS_FILE {params.metrics_file} \
+            {params.picard_params}"
+        eval $CMD
         """
 
 ## Step 6a: Generate 2Bit genome with faToTwoBit
@@ -277,12 +253,9 @@ rule s6a_two_bit_genome:
     shell:
         """
         mkdir -p {params.outdir}
-        echo 'Step 6a' >> {output.twobit_genome}
-        
-        # mkdir -p {params.outdir}
 
-        # faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
-        # twoBitInfo {output.twobit_genome} {params.info}
+        faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
+        twoBitInfo {output.twobit_genome} {params.info}
         """
 
 ## Step 6b:  Calculate effective genome size with faCount
@@ -298,11 +271,8 @@ rule s6b_effective_genome_size:
     shell:
         """
         mkdir -p {params.outdir}
-        echo 'Step 6b' >> {output.eff_gen_size}
 
-        # mkdir -p {params.outdir}
-
-        # faCount {input.masked_ref_genome} > {output.eff_gen_size}
+        faCount {input.masked_ref_genome} > {output.eff_gen_size}
         """
 
 ## Step 6c: Compute GC bias with deeptools (slurm_computeGCBias.sh)
@@ -321,17 +291,12 @@ rule s6c_compute_GC_bias:
         module_samtools = config["modules"]["samtools"]
     shell:
         """
+        module load {params.module_python}
+        module load {params.module_samtools}
         mkdir -p {params.outdir}
-        echo 'Step 6c' >> {output.freq_file}
 
-        # module load {params.module_python}
-        # module load {params.module_samtools}
-
-        # mkdir -p {params.outdir}
-
-        # samtools index {input.dedup_alignment}
-        
-        # computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file}
+        samtools index {input.dedup_alignment}
+        computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file}
         """
 
 ## Step 6d: Correct GC bias with deeptools (slurm_correctGCBias.sh)
@@ -350,15 +315,11 @@ rule s6d_correct_GC_bias:
         module_samtools = config["modules"]["samtools"]
     shell:
         """
+        module load {params.module_python}
+        module load {params.module_samtools}
         mkdir -p {params.outdir}
-        echo 'Step 6d' >> {output.gc_corrected}
 
-        # module load {params.module_python}
-        # module load {params.module_samtools}
-
-        # mkdir -p {params.outdir}
-
-        # correctGCBias_kalign --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads}
+        correctGCBias_kalign --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads}
         """
 
 ## Step 7a: Calculate alignment statistics with Picard (slurm_sizemetrics.sh)
@@ -374,19 +335,15 @@ rule s7a_size_metrics:
         module_R      = config["modules"]["R"]
     shell:
         """
+        module load {params.module_picard}
+        module load {params.module_R}
         mkdir -p {params.outdir}
-        echo 'Step 7a' >> {output.size_metrics}
 
-        # module load {params.module_picard}
-        # module load {params.module_R}
-
-        # mkdir -p {params.outdir}
-
-        # CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
-        #   -I {input.gc_corrected} \
-        #   -O {output.size_metrics} \
-        #   -H {output.histogram}"
-        # eval "$CMD"
+        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
+          -I {input.gc_corrected} \
+          -O {output.size_metrics} \
+          -H {output.histogram}"
+        eval "$CMD"
         """
 
 ## Step 7b: Estimate mean nuclear genome coverage (slurm_read_count_GCcorrect.sh)
@@ -400,15 +357,11 @@ rule s7b_read_count:
         module_samtools = config["modules"]["samtools"]
     shell:
         """
+        module load {params.module_samtools}
         mkdir -p {params.outdir}
-        echo 'Step 7b' >> {output.read_count}
 
-        # module load {params.module_samtools}
-
-        # mkdir -p {params.outdir}
-
-        # CMD="samtools view -c {input.gc_corrected} -o {output.read_count}"
-        # eval "$CMD"
+        CMD="samtools view -c {input.gc_corrected} -o {output.read_count}"
+        eval "$CMD"
         """
 
 ## Step 8: Peak analysis using DANPOS3
@@ -431,8 +384,6 @@ rule s8_peak_analysis:
     shell:
         """
         # module load {params.module_danpos}
-        #
-        # # Create necessary directories
         # mkdir -p {params.step8_dir}
         # mkdir -p {params.sample_dir}
         # mkdir -p {params.exp_dir}
