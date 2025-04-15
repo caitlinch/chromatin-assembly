@@ -153,7 +153,9 @@ It has not been tested in other environments.
 	- For example, `R114096_merged_R1.fastq.gz`
 	- If you have merged reads with different naming structure, the pipeline will not work
 	- Potential pitfall: your merged reads have the file path naming structure: `{sample_id}_R{1|2}_merged.fastq.gz`
-
-
+- **Added new input files after executing all/part of the pipeline?**
+  - Snakemake does not automatically rerun jobs when new input files are added
+  - To get a list of the output files that are affected: `snakemake --list-input-changes`
+  - To force a rerun of the new input files: `snakemake -n --forcerun $(snakemake --list-input-changes)`
 
 
