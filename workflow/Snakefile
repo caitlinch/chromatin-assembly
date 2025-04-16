@@ -361,26 +361,19 @@ rule s8_peak_analysis:
         """
         # module load {params.module_python}
         # module load {params.module_danpos}
-        # mkdir -p {params.step8_dir}
-        # mkdir -p {params.sample_dir}
+        # mkdir -p {params.danpos_dir}
         # mkdir -p {params.exp_dir}
         # mkdir -p {params.control_dir}
-        # mkdir -p {params.danpos_dir}
         # 
         # cp {input.gc_corrected} {params.exp_dir}
         # # TODO copy input control (control) = samples specified in chromatin_assembly_config.yml
-        # 
-        #
-        # # danpos.py --help
-        # # $DANPOS_HOME = /apps/danpos/3.1.1/
-        # # /apps/danpos/3.1.1/bin/danpos.py
         #
         # CMD="python danpos.py dtriple {params.exp_dir}:{params.control_dir} -o {params.danpos_dir}"
         # eval "$CMD"
 
-        mkdir -p {params.step8_dir}
-        mkdir -p {params.sample_dir}
         mkdir -p {params.danpos_dir}
+        mkdir -p {params.exp_dir}
+        mkdir -p {params.control_dir}
         touch {output.dpos_op}
         touch {output.dpeak_op}
         touch {output.dregion_op}
