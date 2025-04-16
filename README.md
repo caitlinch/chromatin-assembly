@@ -72,6 +72,7 @@ TODO DOCO Put citation here
 This pipeline comes with a script (`resources/user_update_jobscripts.R`) to generate Slurm job scripts with your user details.
 
 To run this script:
+
 ```
 module load R
 Rscript resources/user_update_jobscripts.R mail-user={email@email.com} mail-type={when_mail} account={account}
@@ -101,7 +102,10 @@ Rscript resources/user_update_jobscripts.R mail-user=FALSE mail-type=FALSE accou
 
 ----
 
-## Pipeline steps
+## Quick reference
+
+#### Pipeline steps
+
 - `s0_merge_samples`: Read collation (**Step 0**)
 - `s1_mask_repeats`: Repeat masking and suffix array creation (**Step 1**)
 - `s2_raw_read_QC`: Perform quality control using FastQC (**Step 2**)
@@ -115,6 +119,107 @@ Rscript resources/user_update_jobscripts.R mail-user=FALSE mail-type=FALSE accou
 - `s7a_size_metrics`: Calculate alignment statistics with Picard (**Step 7a**)
 - `s7b_read_count`: Estimate mean nuclear genome coverage (**Step 7b**)
 - `s8_peak_analysis`: Peak analysis using DANPOS3 (**Step 8**)
+
+#### Snakemake command lines
+
+*See the Snakemake documentation for v7.24.0 (Petrichor version as of 16/04/2025) here:* 
+[Command line interface](https://snakemake.readthedocs.io/en/v7.24.0/executing/cli.html)
+
+*See the latest version of the Snakemake documentation here:*
+[Command line interface](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
+
+Note: These commands must be run with the `chromatin-assembly/` directory as the working directory
+
+**Load the python module, which is required by Snakemake:**
+
+```
+module load python
+```
+
+**Perform a dry run:**
+
+A dry run is a fast way to check the pipeline. Snakemake parses the pipeline and 
+determines what would happen if the pipeline was to be run. Then, Snakemake 
+outputs a snapshot of what would be executed and what files would be created.
+
+There are different command line options depending on your desired output.
+
+To output a table listing the steps to be executed:
+
+```
+snakemake -c1 -n --quiet
+```
+
+To output table listing steps to be executed, plus each rule that would be 
+executed and a list of all output files:
+
+```
+snakemake -c1 -n
+```
+
+To output table of steps to be executed, plus each rule that would be executed 
+(including shell command for each rule) and a list of all output files:
+
+```
+snakemake -c1 -n -p
+```
+
+**Print a summary table showing status of all files created by the workflow:**
+
+```
+snakemake --summary
+```
+
+**List all output files for which the rule body (run or shell) have changed in the Snakefile:**
+
+```
+snakemake --list-code-changes
+```
+
+**Output a graph of the relationships/dependencies between rules:**
+
+```
+module load graphviz
+snakemake --forceall --rulegraph | dot -Tpdf > rulegraph.pdf
+```
+
+**Output a graph showing the path each input sample takes through the pipeline:**
+
+Note: this is most useful for around 1-5 samples. Each additional sample adds ~9
+nodes to the graph, so the graph becomes visually cluttered quickly.
+
+```
+module load graphviz
+snakemake --forceall --dag | dot -Tpdf > dag.pdf
+```
+
+**Run pipeline on Petrichor with Slurm:**
+
+To run all steps:
+
+```
+snakemake --slurm  --slurm --profile profiles/slurm/
+```
+
+To run the pipeline until it reaches the specified rules or files:
+
+- Replace `{target}` with the desired rule
+
+```
+snakemake --slurm  --slurm --profile profiles/slurm/ --until {target}
+```
+
+To run the pipeline until it reaches the specified rules/files, while preventing 
+execution of particular rules:
+
+- Replace `{run_target}` with the desired rule
+- Replace `{omit_target}` with the rule you wish to skip
+- You can omit multiple rules by separating rule names with a comma e.g., 
+`--omit s1_mask_repeats,s2_raw_read_QC`
+
+```
+snakemake --slurm  --slurm --profile profiles/slurm/ --until {run_target} --omit {omit_target}
+```
 
 ---
 
@@ -132,7 +237,8 @@ It has not been tested in other environments.
 
 ### Troubleshooting:
 
-- Try running a dry run with the command `snakemake -n -p -c1` - sometimes you might be missing a file or have an incorrect file path
+- Try running a dry run with the command `snakemake -n -p -c1` - sometimes you 
+might be missing a file or have an incorrect file path
 
 ### Potential issues:
 
@@ -157,5 +263,3 @@ It has not been tested in other environments.
   - Snakemake does not automatically rerun jobs when new input files are added
   - To get a list of the output files that are affected: `snakemake --list-input-changes`
   - To force a rerun of the new input files: `snakemake -n --forcerun $(snakemake --list-input-changes)`
-
-
