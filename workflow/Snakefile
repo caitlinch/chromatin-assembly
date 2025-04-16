@@ -87,6 +87,7 @@ rule s0_merge_samples:
     output:
         r1 = expand("{outdir}{step_name}/{sample}_merged_R1.fastq.gz", outdir=OUTDIR, step_name=STEP0_NAME, sample=SAMPLE_IDS),
         r2 = expand("{outdir}{step_name}/{sample}_merged_R2.fastq.gz", outdir=OUTDIR, step_name=STEP0_NAME, sample=SAMPLE_IDS)
+    log: "log/s0_merge_samples.log"
     params:
         merge_reads  = config["merge_reads"]["perform_merge"],
         merge_script = config["repo_dir"] + "workflow/R/s0_merge_reads.R",
@@ -108,6 +109,7 @@ rule s1_mask_repeats:
     output:
         masked = OUTDIR + STEP1_NAME + "/" + REF_GENOME_ID + ".masked",
         index  = OUTDIR + STEP1_NAME + "/" + REF_GENOME_ID + ".masked.index"
+    log: "log/s1_mask_repeats.log"
     params:
         outdir              = OUTDIR + STEP1_NAME + "/",
         adapter             = ADAPTERS,
@@ -134,6 +136,7 @@ rule s2_raw_read_QC:
     output:
         r1 = OUTDIR + STEP2_NAME + "/" + "{sample}_merged_R1_fastqc.html",
         r2 = OUTDIR + STEP2_NAME + "/" + "{sample}_merged_R2_fastqc.html"
+    log: "log/s2_raw_read_QC.{sample}.log"
     params:
         outdir        = OUTDIR + STEP2_NAME + "/",
         module_fastqc = config["modules"]["fastqc"]
@@ -153,6 +156,7 @@ rule s3_extract_UMI:
     output:
         r1 = OUTDIR + STEP3_NAME + "/" + "{sample}_merged_withUMI_R1.fastq.gz",
         r2 = OUTDIR + STEP3_NAME + "/" + "{sample}_merged_withUMI_R2.fastq.gz"
+    log: "log/s3_extract_UMI.{sample}.log"
     params:
         basename             = "{sample}",
         outdir               = OUTDIR + STEP3_NAME + "/",
@@ -195,6 +199,7 @@ rule s4_read_alignment:
         index = rules.s1_mask_repeats.output.index
     output:
         alignment = OUTDIR + STEP4_NAME + "/" + "{sample}_kalign_" + KALIGN_ID + "_alignment.sam"
+    log: "log/s4_read_alignment.{sample}.log"
     params:
         outdir        = OUTDIR + STEP4_NAME + "/",
         kalign_params = config["s4_read_alignment"]["kalign_params"],
@@ -221,6 +226,7 @@ rule s5_alignment_deduplication:
         alignment = OUTDIR + STEP4_NAME + "/" + "{sample}_kalign_" + KALIGN_ID + "_alignment.sam"
     output:
         dedup_alignment = OUTDIR + STEP5_NAME + "/" + "{sample}_alignment_dedup.bam"
+    log: "log/s5_alignment_deduplication.{sample}.log"
     params:
         outdir        = OUTDIR + STEP5_NAME + "/",
         picard_params = config["s5_alignment_deduplication"]["Picard_params"],
@@ -245,6 +251,7 @@ rule s6a_two_bit_genome:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
         twobit_genome = OUTDIR + STEP6a_NAME + "/" + REF_GENOME_ID + "_alignment_dedup.2bit"
+    log: "log/s6a_two_bit_genome.log"
     params:
         outdir = OUTDIR + STEP6a_NAME + "/",
         info   = OUTDIR + STEP6a_NAME + "/" + REF_GENOME_ID + "_info.tab"
@@ -264,6 +271,7 @@ rule s6b_effective_genome_size:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
         eff_gen_size = OUTDIR + STEP6b_NAME + "/" + REF_GENOME_ID + "_effGenSize.txt"
+    log: "log/s6b_effective_genome_size.log"
     params:
         outdir  = OUTDIR + STEP6b_NAME + "/"
     conda:
@@ -283,6 +291,7 @@ rule s6c_compute_GC_bias:
         eff_gen_size    = rules.s6b_effective_genome_size.output.eff_gen_size
     output:
         freq_file = OUTDIR + STEP6c_NAME + "/" + "{sample}_computeGCbias.txt"
+    log: "log/s6c_compute_GC_bias.{sample}.log"
     params:
         outdir          = OUTDIR + STEP6c_NAME + "/", 
         eff_gen_size    = config["s6b_output"]["effective_genome_size"],
@@ -308,6 +317,7 @@ rule s6d_correct_GC_bias:
         freq_file       = OUTDIR + STEP6c_NAME + "/" + "{sample}_computeGCbias.txt"
     output:
         gc_corrected = OUTDIR + STEP6d_NAME + "/" + "{sample}_alignment_dedup_gcCorrected.bam"
+    log: "log/s6d_correct_GC_bias.{sample}.log"
     params:
         outdir          = OUTDIR + STEP6d_NAME + "/", 
         eff_gen_size    = config["s6b_output"]["effective_genome_size"],
@@ -329,6 +339,7 @@ rule s7a_size_metrics:
     output:
         size_metrics = OUTDIR + STEP7a_NAME + "/" + REF_SPECIES + "_{sample}_insert_size_metrics.txt",
         histogram    = OUTDIR + STEP7a_NAME + "/"  + REF_SPECIES + "_{sample}_insert_size_histogram.pdf"
+    log: "log/s7a_size_metrics.{sample}.log"
     params:
         outdir        = OUTDIR + STEP7a_NAME + "/",
         module_picard = config["modules"]["picard"],
@@ -352,6 +363,7 @@ rule s7b_read_count:
         gc_corrected = OUTDIR + STEP6d_NAME + "/" + "{sample}_alignment_dedup_gcCorrected.bam"
     output:
         read_count = OUTDIR + STEP7b_NAME + "/" + REF_SPECIES + "_{sample}_count.txt"
+    log: "log/s7b_read_count.{sample}.log"
     params:
         outdir          = OUTDIR + STEP7b_NAME + "/",
         module_samtools = config["modules"]["samtools"]
@@ -373,6 +385,7 @@ rule s8_peak_analysis:
         dpos_op    = OUTDIR + STEP8_NAME + "/{sample}/dtriple/{sample}-" + INPUT_CONTROL_NAME + ".positions.integrative.xls",
         dpeak_op   = OUTDIR + STEP8_NAME + "/{sample}/dtriple/{sample}-" + INPUT_CONTROL_NAME + ".peaks.integrative.xls",
         dregion_op = OUTDIR + STEP8_NAME + "/{sample}/dtriple/{sample}-" + INPUT_CONTROL_NAME + ".regions.integrative.xls"
+    log: "log/s8_peak_analysis.{sample}.log"
     params:
         step8_dir     = OUTDIR + STEP8_NAME,
         sample_dir    = OUTDIR + STEP8_NAME + "/{sample}/",
@@ -394,6 +407,7 @@ rule s8_peak_analysis:
         # 
         # cp {input.gc_corrected} {params.exp_dir}
         # # TODO copy input control (control) = samples specified in chromatin_assembly_config.yml
+        # 
         #
         # # danpos.py --help
         # # $DANPOS_HOME = /apps/danpos/3.1.1/
