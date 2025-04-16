@@ -101,7 +101,7 @@ rule s2_raw_read_QC:
         r2 = f"results/{config['ref_species']}/{config['output_dir']['step2']}/{{sample}}_merged_R2_fastqc.html"
     log: "log/s2_raw_read_QC.{sample}.log"
     params:
-        outdir        = f"results/{config['ref_species']}/{config['output_dir']['step2']}/",
+        outdir        = lambda w, output: os.path.split(output.r1)[0],
         module_fastqc = config['modules']['fastqc']
     shell:
         """
@@ -121,7 +121,7 @@ rule s3_extract_UMI:
     log: "log/s3_extract_UMI.{sample}.log"
     params:
         basename             = "{sample}",
-        outdir               = f"results/{config['ref_species']}/{config['output_dir']['step3']}/",
+        outdir               = lambda w, output: os.path.split(output.r1)[0],
         unmapped_bam         = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_unmapped.bam",
         unmapped_bam_withUMI = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_unmapped_withUMI.bam",
         fgbio_params         = config['s3_extract_UMI']['FGBio_params'],
@@ -163,7 +163,7 @@ rule s4_read_alignment:
         alignment = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.sam"
     log: "log/s4_read_alignment.{sample}.log"
     params:
-        outdir        = f"results/{config['ref_species']}/{config['output_dir']['step4']}/",
+        outdir        = lambda w, output: os.path.split(output.alignment)[0],
         log_file      = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.log",
         kalign_params = config['s4_read_alignment']['kalign_params'],
         module_kit4b  = config['modules']['kit4b']
@@ -190,7 +190,7 @@ rule s5_alignment_deduplication:
         dedup_alignment = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam"
     log: "log/s5_alignment_deduplication.{sample}.log"
     params:
-        outdir        = f"results/{config['ref_species']}/{config['output_dir']['step5']}/",
+        outdir        = lambda w, output: os.path.split(output.dedup_alignment)[0],
         metrics_file  = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_removeduplicates.metrics.txt",
         picard_params = config['s5_alignment_deduplication']['Picard_params'],
         module_picard = config['modules']['picard']
@@ -215,7 +215,7 @@ rule s6a_two_bit_genome:
         twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_alignment_dedup.2bit"
     log: "log/s6a_two_bit_genome.log"
     params:
-        outdir = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/",
+        outdir = lambda w, output: os.path.split(output.twobit_genome)[0],
         info   = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab"
     conda:
         "envs/Step6_utils.yaml"
@@ -235,7 +235,7 @@ rule s6b_effective_genome_size:
         eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['input']['reference_genome_id']}_effGenSize.txt"
     log: "log/s6b_effective_genome_size.log"
     params:
-        outdir  = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/"
+        outdir  = lambda w, output: os.path.split(output.eff_gen_size)[0]
     conda:
         "envs/Step6_utils.yaml"
     shell:
@@ -255,8 +255,8 @@ rule s6c_compute_GC_bias:
         freq_file = f"results/{config['ref_species']}/{config['output_dir']['step6c']}/{{sample}}_computeGCbias.txt"
     log: "log/s6c_compute_GC_bias.{sample}.log"
     params:
-        outdir          = f"results/{config['ref_species']}/{config['output_dir']['step6c']}/", 
-        samtools_index  = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam",
+        outdir          = lambda w, output: os.path.split(output.freq_file)[0], 
+        samtools_index  = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam.bai",
         eff_gen_size    = config['s6b_output']['effective_genome_size'],
         module_python   = config['modules']['python'],
         module_samtools = config['modules']['samtools']
@@ -281,7 +281,7 @@ rule s6d_correct_GC_bias:
         gc_corrected = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam"
     log: "log/s6d_correct_GC_bias.{sample}.log"
     params:
-        outdir          = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/", 
+        outdir          = lambda w, output: os.path.split(output.gc_corrected)[0], 
         eff_gen_size    = config['s6b_output']['effective_genome_size'],
         module_python   = config['modules']['python'],
         module_samtools = config['modules']['samtools']
@@ -303,7 +303,7 @@ rule s7a_size_metrics:
         histogram    = f"results/{config['ref_species']}/{config['output_dir']['step7a']}/{config['ref_species']}_{{sample}}_insert_size_histogram.pdf"
     log: "log/s7a_size_metrics.{sample}.log"
     params:
-        outdir        = f"results/{config['ref_species']}/{config['output_dir']['step7a']}/", 
+        outdir        = lambda w, output: os.path.split(output.size_metrics)[0], 
         module_picard = config['modules']['picard'],
         module_R      = config['modules']['R']
     shell:
@@ -327,7 +327,7 @@ rule s7b_read_count:
         read_count = f"results/{config['ref_species']}/{config['output_dir']['step7b']}/{config['ref_species']}_{{sample}}_count.txt"
     log: "log/s7b_read_count.{sample}.log"
     params:
-        outdir          = f"results/{config['ref_species']}/{config['output_dir']['step7b']}/", 
+        outdir          = lambda w, output: os.path.split(output.read_count)[0], 
         module_samtools = config['modules']['samtools']
     shell:
         """
@@ -349,10 +349,10 @@ rule s8_peak_analysis:
         dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/dtriple/{{sample}}-{config['input_control']['control_name']}.regions.integrative.xls"
     log: "log/s8_peak_analysis.{sample}.log"
     params:
-        step8_dir     = f"results/{config['ref_species']}/{config['output_dir']['step8']}/",
-        sample_dir    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/", 
-        danpos_dir    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/dtriple/",
-        exp_dir       = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{{sample}}", 
+        step8_dir     = lambda w, output: os.path.split(os.path.split(os.path.split(output.dpos_op)[0])[0])[0],
+        sample_dir    = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
+        danpos_dir    = lambda w, output: os.path.split(output.dpos_op)[0], 
+        exp_dir       = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{{sample}}/",
         control_dir   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{config['input_control']['control_name']}/",
         control_id    = INPUT_CONTROL_SAMPLES,
         module_danpos = config['modules']['danpos'],
