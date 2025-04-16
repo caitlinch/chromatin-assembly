@@ -151,12 +151,11 @@ that rule in the file `workflow/Snakefile`.
 
 Merge reads using the custom-written script `workflow/R/s0_merge_reads.R`:
 ```
-Rscript workflow/R/s0_merge_reads.R repo_dir={params.repo_dir} config={input.config} out={output.log}
+Rscript workflow/R/s0_merge_reads.R config={input.config} out={output.log}
 ```
 
 **Snakemake-generated variables:**
 
-- `{params.repo_dir}` -- full path to `chromatin-assembly/` directory
 - `{input.config}` -- full path to `chromatin_assembly_config.yml`
 - `{output.log}` -- full path for output log, containing details of merge reading process
 

@@ -20,33 +20,29 @@
 
 #### PREPARE CONFIG FILE ####
 # Parse input argument - chromatin_assembly_config.yml directory
-# args = c("repo_dir=/Users/che318/Repos/chromatin-assembly/", "config=/Users/che318/Repos/chromatin-assembly/config/chromatin_assembly_config.yml", "out=/Users/che318/Repos/chromatin-assembly/log/s0_merge_samples_gecko.txt")
-# args = c("repo_dir=/scratch3/che318/chromatin-assembly/", "config=/scratch3/che318/chromatin-assembly/config/chromatin_assembly_config.yml", "out=/scratch3/che318/chromatin-assembly/log/s0_merge_samples_gecko.txt")
+# args = c("config=/Users/che318/Repos/chromatin-assembly/config/chromatin_assembly_config.yml", "out=/Users/che318/Repos/chromatin-assembly/log/s0_merge_samples_gecko.txt")
+# args = c("config=/scratch3/che318/chromatin-assembly/config/chromatin_assembly_config.yml", "out=/scratch3/che318/chromatin-assembly/log/s0_merge_samples_gecko.txt")
 args <- commandArgs(trailingOnly = TRUE)
 
 # check for the command args
-if ( (length(grep("repo_dir", args)) == 0) |
-     (length(grep("config", args)) == 0) |
+if ( (length(grep("config", args)) == 0) |
      (length(grep("out", args)) == 0) ){
   stop(
     c(
       " \n",
       "Supply arguments to script:",
       " \n",
-      "$ Rscript workflow/R/s0_merge_reads.R repo_dir=/path/to/chromatin-assembly/ config=/path/to/chromatin-assembly/config/chromatin_assembly_config.yml out=/path/to/output.txt"
+      "$ Rscript workflow/R/s0_merge_reads.R config=/path/to/chromatin-assembly/config/chromatin_assembly_config.yml out=/path/to/output.txt"
     ), 
     call.=FALSE
   )
 }
 
-arg_repo_dir <- strsplit(grep("repo_dir", args, value = T), "=")[[1]][2]
 arg_config_file <- strsplit(grep("config", args, value = T), "=")[[1]][2]
 arg_out_log <- strsplit(grep("out", args, value = T), "=")[[1]][2]
 
 print("Running s0_merge_reads.R")
-print(paste0("Repo dir: ", arg_repo_dir))
 print(paste0("Config file: ", arg_config_file))
-print("")
 
 
 if (file.exists(arg_config_file) == FALSE){
@@ -187,6 +183,9 @@ if (config[sample_name_start] == "sample_names:[]"){
 }
 
 
+print(paste0("Repo dir: ", param_repoDir))
+print("")
+
 
 #### ERROR CHECKING ###
 print("Checking input")
@@ -284,7 +283,7 @@ if (class(sample_name_df) == "logical" &
         " \n",
         "For example:",
         " \n",
-        "sample_name: ['sample01': 'R111111', 'sample02': 'R222222']"
+        "sample_name: ['sample01':'R111111', 'sample02':'R222222']"
       ), 
       call.=FALSE
     )
