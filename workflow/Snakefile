@@ -346,13 +346,11 @@ rule s8_peak_analysis:
         gc_corrected_index  = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam.bai",
         control_id          = INPUT_CONTROL_SAMPLES,
         module_danpos       = config['modules']['danpos'],
-        module_python       = config['modules']['python'],
-        module_samtools     = config['modules']['samtools']
+        module_python       = config['modules']['python']    
     shell:
         """
         # module load {params.module_python}
         # module load {params.module_danpos}
-        # module load {params.module_samtools}
         # mkdir -p {params.danpos_dir}
         # mkdir -p {params.exp_dir}
         # mkdir -p {params.control_dir}
