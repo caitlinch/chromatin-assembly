@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 file per sample name 
 - `README.md` now contains full quick-start guide with some troubleshooting tips
 - Example of user input data in `data/template/`
+- Pipeline version for use on other HPC systems
+  - Uses conda environments only (no environment modules)
+  - Available at `workflow/conda_only_version/Snakefile`
+  - Specific config file at `workflow/conda_only_version/chromatin_assembly_config.yml`
+  - Conda environments at `workflow/conda_only_version/envs/`
+  - Documentation at `doco/08_use_on_alternative_HPCs.Rmd`
  
 ### Changed
 - Multi-sample input now available
