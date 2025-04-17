@@ -85,6 +85,7 @@ rule s1_mask_repeats:
         module load {params.module_repeatmasker}
         module load {params.module_kit4b}
         mkdir -p {params.outdir}
+
         RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
         ngskit4b index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
         """
@@ -105,6 +106,7 @@ rule s2_raw_read_QC:
         """
         module load {params.module_fastqc}
         mkdir -p {params.outdir}
+
         fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}
         """
 
@@ -130,21 +132,14 @@ rule s3_extract_UMI:
         module load {params.module_picard}
         module load {params.module_fgbio}
         mkdir -p {params.outdir}
-        CMD1="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam \
-	        -F1 {input.r1} \
-	        -F2 {input.r2} \
-	        -O {params.unmapped_bam} \
-	        -SM {params.basename}"
+
+        CMD1="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam -F1 {input.r1} -F2 {input.r2} -O {params.unmapped_bam} -SM {params.basename}"
         eval $CMD1
-        CMD2="java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam \
-	        -i {params.unmapped_bam} \
-	        -o {params.unmapped_bam_withUMI} \
-	        {params.fgbio_params}"
+
+        CMD2="java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam -i {params.unmapped_bam} -o {params.unmapped_bam_withUMI} {params.fgbio_params}"
         eval $CMD2
-        CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq \
-	        -I {params.unmapped_bam_withUMI} \
-	        -F {output.r1} \
-	        -F2 {output.r2}" 
+
+        CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq -I {params.unmapped_bam_withUMI} -F {output.r1} -F2 {output.r2}" 
         eval $CMD3
         """
 
@@ -166,14 +161,8 @@ rule s4_read_alignment:
         """
         module load {params.module_kit4b}
         mkdir -p {params.outdir}
-        ngskit4b kalign \
-            {params.kalign_params} \
-	        -i {input.r1} \
-	        -u {input.r2} \
-	        -I {input.index} \
-	        -o {output.alignment} \
-	        -T {threads} \
-	        -F {params.log_file}
+
+        ngskit4b kalign {params.kalign_params} -i {input.r1} -u {input.r2} -I {input.index} -o {output.alignment} -T {threads} -F {params.log_file}
         """
 
 ## Step 5: Remove PCR and optical duplicates from alignment with Picard (slurm_depup.sh)
@@ -185,18 +174,15 @@ rule s5_alignment_deduplication:
     log: "log/s5_alignment_deduplication.{sample}.log"
     params:
         outdir        = lambda w, output: os.path.split(output.dedup_alignment)[0],
-        metrics_file  = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_removeduplicates.metrics.txt",
+        metrics       = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_removeduplicates.metrics.txt",
         picard_params = config['s5_alignment_deduplication']['Picard_params'],
         module_picard = config['modules']['picard']
     shell:
         """
         module load {params.module_picard}
         mkdir -p {params.outdir}
-        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates\
-            --INPUT {input.alignment} \
-            --OUTPUT {output.dedup_alignment} \
-            --METRICS_FILE {params.metrics_file} \
-            {params.picard_params}"
+
+        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates --INPUT {input.alignment} --OUTPUT {output.dedup_alignment} --METRICS_FILE {params.metrics} {params.picard_params}"
         eval $CMD
         """
 
@@ -215,6 +201,7 @@ rule s6a_two_bit_genome:
     shell:
         """
         mkdir -p {params.outdir}
+
         faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
         twoBitInfo {output.twobit_genome} {params.info}
         """
@@ -233,6 +220,7 @@ rule s6b_effective_genome_size:
     shell:
         """
         mkdir -p {params.outdir}
+
         faCount {input.masked_ref_genome} > {output.eff_gen_size}
         """
 
@@ -256,6 +244,7 @@ rule s6c_compute_GC_bias:
         module load {params.module_python}
         module load {params.module_samtools}
         mkdir -p {params.outdir}
+
         samtools index {input.dedup_alignment}
         computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file}
         """
@@ -280,6 +269,7 @@ rule s6d_correct_GC_bias:
         module load {params.module_python}
         module load {params.module_samtools}
         mkdir -p {params.outdir}
+
         correctGCBias_kalign --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads}
         samtools index {output.gc_corrected}
         """
@@ -301,10 +291,8 @@ rule s7a_size_metrics:
         module load {params.module_picard}
         module load {params.module_R}
         mkdir -p {params.outdir}
-        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
-          -I {input.gc_corrected} \
-          -O {output.size_metrics} \
-          -H {output.histogram}"
+
+        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics -I {input.gc_corrected} -O {output.size_metrics} -H {output.histogram}"
         eval "$CMD"
         """
 
@@ -322,6 +310,7 @@ rule s7b_read_count:
         """
         module load {params.module_samtools}
         mkdir -p {params.outdir}
+
         CMD="samtools view -c {input.gc_corrected} -o {output.read_count}"
         eval "$CMD"
         """
