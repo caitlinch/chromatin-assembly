@@ -425,6 +425,13 @@ if (param_performMerge == TRUE){
   print(paste0("Output directory: ", param_Outdir))
   print(paste0("Output log: ", arg_out_log))
   print(paste0("Individual sample logs: ", log_dir))
+  
+  if (param_useSampleName == TRUE){
+    # Output sample ID/name df
+    sample_name_csv_path <- paste0(dirname(arg_out_log), param_s0Dir, "_", param_Species, "_SampleIDs.csv")
+    write.csv(sample_name_df, file = sample_name_csv_path)
+    print(paste0("Sample ID/name csv: ", sample_name_csv_path))
+  }
 } # end: if (param_performMerge == TRUE){
 
 
