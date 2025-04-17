@@ -282,6 +282,7 @@ rule s6d_correct_GC_bias:
         module load {params.module_samtools}
         mkdir -p {params.outdir}
         correctGCBias_kalign --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads}
+        samtools index {output.gc_corrected}
         """
 
 ## Step 7a: Calculate alignment statistics with Picard (slurm_sizemetrics.sh)
@@ -337,24 +338,30 @@ rule s8_peak_analysis:
         dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/dtriple/{{sample}}-{config['input_control']['control_name']}.regions.integrative.xls"
     log: "log/s8_peak_analysis.{sample}.log"
     params:
-        step8_dir     = lambda w, output: os.path.split(os.path.split(os.path.split(output.dpos_op)[0])[0])[0],
-        sample_dir    = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
-        danpos_dir    = lambda w, output: os.path.split(output.dpos_op)[0], 
-        exp_dir       = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{{sample}}/",
-        control_dir   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{config['input_control']['control_name']}/",
-        control_id    = INPUT_CONTROL_SAMPLES,
-        module_danpos = config['modules']['danpos'],
-        module_python = config['modules']['python']
+        step8_dir           = lambda w, output: os.path.split(os.path.split(os.path.split(output.dpos_op)[0])[0])[0],
+        sample_dir          = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
+        danpos_dir          = lambda w, output: os.path.split(output.dpos_op)[0], 
+        exp_dir             = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{{sample}}/",
+        control_dir         = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{config['input_control']['control_name']}/",
+        gc_corrected_index  = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam.bai",
+        control_id          = INPUT_CONTROL_SAMPLES,
+        module_danpos       = config['modules']['danpos'],
+        module_python       = config['modules']['python'],
+        module_samtools     = config['modules']['samtools']
     shell:
         """
         # module load {params.module_python}
         # module load {params.module_danpos}
+        # module load {params.module_samtools}
         # mkdir -p {params.danpos_dir}
         # mkdir -p {params.exp_dir}
         # mkdir -p {params.control_dir}
         # 
         # cp {input.gc_corrected} {params.exp_dir}
+        # cp {params.gc_corrected_index} {params.exp_dir}
+        # 
         # # TODO copy input control (control) = samples specified in chromatin_assembly_config.yml
+        # # TODO copy input control index (.bai) files
         #
         # CMD="python danpos.py dtriple {params.exp_dir}:{params.control_dir} -o {params.danpos_dir}"
         # eval "$CMD"
