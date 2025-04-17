@@ -1,0 +1,360 @@
+## Snakemake - Chromatin Assembly
+## NCMI, CSIRO
+##
+## Caitlin Cherryh, 2025
+## Developed using scripts from Erin Hahn and Jiri Stiller
+
+## Conda environment only version
+# Untested! Use with caution
+
+# To run pipeline set chromatin-assembly/ dir as working directory
+
+# --- Global Variables --- #
+# SAMPLE_IDS – unique identifiers of reads to process
+SAMPLE_IDS  = config['input']['sample_ids']
+
+# INPUT_CONTROL_SAMPLES - samples used as input control with DANPOS (Step 8)
+INPUT_CONTROL_SAMPLES = config['input_control']['control_samples']
+
+
+# --- Complete pipeline run --- #
+## Run all rules
+# To generate files for s0_merge_samples:
+#        s0_r1      = expand("results/{species}/{step_name}/{sample}_merged_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
+#        s0_r2      = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
+rule run_all:
+    input:
+        s1_masked  = expand("results/{species}/{step_name}/{ref_genome_id}.masked", species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
+        s1_index   = expand("results/{species}/{step_name}/{ref_genome_id}.masked.index", species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
+        s2_r1      = expand("results/{species}/{step_name}/{sample}_merged_R1_fastqc.html", species=config['ref_species'], step_name=config['output_dir']['step2'], sample=SAMPLE_IDS),
+        s2_r2      = expand("results/{species}/{step_name}/{sample}_merged_R2_fastqc.html", species=config['ref_species'], step_name=config['output_dir']['step2'], sample=SAMPLE_IDS),
+        s3_r1      = expand("results/{species}/{step_name}/{sample}_merged_withUMI_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step3'], sample=SAMPLE_IDS),
+        s3_r2      = expand("results/{species}/{step_name}/{sample}_merged_withUMI_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step3'], sample=SAMPLE_IDS),
+        s4_algnmt  = expand("results/{species}/{step_name}/{sample}_kalign_{kalign_id}_alignment.sam", species=config['ref_species'], step_name=config['output_dir']['step4'], sample=SAMPLE_IDS, kalign_id=config['s4_read_alignment']['kalign_id']),
+        s5_dedup   = expand("results/{species}/{step_name}/{sample}_alignment_dedup.bam", species=config['ref_species'], step_name=config['output_dir']['step5'], sample=SAMPLE_IDS),
+        s6a_2bit   = expand("results/{species}/{step_name}/{ref_genome_id}_alignment_dedup.2bit", species=config['ref_species'], step_name=config['output_dir']['step6a'], ref_genome_id=config['input']['reference_genome_id']),
+        s6b_gSize  = expand("results/{species}/{step_name}/{ref_genome_id}_effGenSize.txt", species=config['ref_species'], step_name=config['output_dir']['step6b'], ref_genome_id=config['input']['reference_genome_id']),
+        s6c_GCfreq = expand("results/{species}/{step_name}/{sample}_computeGCbias.txt", species=config['ref_species'], step_name=config['output_dir']['step6c'], sample=SAMPLE_IDS),
+        s6d_GCbias = expand("results/{species}/{step_name}/{sample}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], sample=SAMPLE_IDS),
+        s7a_metric = expand("results/{species}/{step_name}/{ref_species}_{sample}_insert_size_metrics.txt", species=config['ref_species'], step_name=config['output_dir']['step7a'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
+        s7b_stats  = expand("results/{species}/{step_name}/{ref_species}_{sample}_count.txt", species=config['ref_species'], step_name=config['output_dir']['step7b'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
+        s8_dpos    = expand("results/{species}/{step_name}/{sample}/dtriple/{sample}-{input_control_name}.positions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], sample=SAMPLE_IDS, input_control_name=config['input_control']['control_name']),
+        s8_dpeak   = expand("results/{species}/{step_name}/{sample}/dtriple/{sample}-{input_control_name}.peaks.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], sample=SAMPLE_IDS, input_control_name=config['input_control']['control_name']),
+        s8_dregion = expand("results/{species}/{step_name}/{sample}/dtriple/{sample}-{input_control_name}.regions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], sample=SAMPLE_IDS, input_control_name=config['input_control']['control_name'])
+
+
+# --- Pipeline steps --- #
+## Step 0: Read collation (SLURM_MergeSamples.sh)
+rule s0_merge_samples:
+    input:
+        config = f"{config['repo_dir']}config/chromatin_assembly_config.yml"
+    output:
+        r1 = expand("results/{species}/{step_name}/{sample}_merged_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
+        r2 = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS)
+    log: "log/s0_merge_samples.log"
+    params:
+        merge_script = f"{config['repo_dir']}/workflow/R/s0_merge_reads.R",
+        log          = f"{config['repo_dir']}log/{config['output_dir']['step0']}_{config['ref_species']}.txt"
+    conda:
+        "envs/chromatin-assembly.yaml"
+    shell:
+        """
+        Rscript {params.merge_script} config={input.config} out={params.log}
+        """
+
+## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
+# Original suffix array command:  biokanga index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked -r waterdragon
+rule s1_mask_repeats:
+    input:
+        ref_genome = config['input']['reference_genome_path']
+    output:
+        masked = f"results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked",
+        index = f"results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index"
+    log: "log/s1_mask_repeats.log"
+    params:
+        outdir              = lambda w, output: os.path.split(output.masked)[0],
+        adapter             = config['params']['adapters'],
+        ref_species         = config['ref_species'], 
+        log                 = f"results/{config['ref_species']}/{config['output_dir']['step1']}/index_logs.log",
+        repeatmasker_engine = config['s1_mask_repeats']['repeatmasker_engine']
+    conda:
+        "envs/chromatin-assembly.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
+        biokanga index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
+        """
+
+## Step 2: Perform quality control using FastQC (slurm_fastqc.sh)
+rule s2_raw_read_QC:
+    input:
+        r1 = f"results/{config['ref_species']}/{config['output_dir']['step0']}/{{sample}}_merged_R1.fastq.gz",
+        r2 = f"results/{config['ref_species']}/{config['output_dir']['step0']}/{{sample}}_merged_R2.fastq.gz"
+    output:
+        r1 = f"results/{config['ref_species']}/{config['output_dir']['step2']}/{{sample}}_merged_R1_fastqc.html",
+        r2 = f"results/{config['ref_species']}/{config['output_dir']['step2']}/{{sample}}_merged_R2_fastqc.html"
+    log: "log/s2_raw_read_QC.{sample}.log"
+    params:
+        outdir        = lambda w, output: os.path.split(output.r1)[0]
+    conda:
+        "envs/chromatin-assembly.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}
+        """
+
+## Step 3: UMI extraction with FGBio and Picard (slurm_extractUMI.sh)
+rule s3_extract_UMI:
+    input:
+        r1 = f"results/{config['ref_species']}/{config['output_dir']['step0']}/{{sample}}_merged_R1.fastq.gz",
+        r2 = f"results/{config['ref_species']}/{config['output_dir']['step0']}/{{sample}}_merged_R2.fastq.gz"
+    output:
+        r1 = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_merged_withUMI_R1.fastq.gz",
+        r2 = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_merged_withUMI_R2.fastq.gz"
+    log: "log/s3_extract_UMI.{sample}.log"
+    params:
+        basename             = "{sample}",
+        outdir               = lambda w, output: os.path.split(output.r1)[0],
+        unmapped_bam         = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_unmapped.bam",
+        unmapped_bam_withUMI = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_unmapped_withUMI.bam",
+        fgbio_params         = config['s3_extract_UMI']['FGBio_params']
+    conda:
+        "envs/chromatin-assembly.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        CMD1="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam \
+	        -F1 {input.r1} \
+	        -F2 {input.r2} \
+	        -O {params.unmapped_bam} \
+	        -SM {params.basename}"
+        eval $CMD1
+        CMD2="java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam \
+	        -i {params.unmapped_bam} \
+	        -o {params.unmapped_bam_withUMI} \
+	        {params.fgbio_params}"
+        eval $CMD2
+        CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq \
+	        -I {params.unmapped_bam_withUMI} \
+	        -F {output.r1} \
+	        -F2 {output.r2}" 
+        eval $CMD3
+        """
+
+## Step 4: Align reads with biokanga align (slurm_kalign_umi.sh)
+rule s4_read_alignment:
+    input:
+        r1 = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_merged_withUMI_R1.fastq.gz",
+        r2 = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_merged_withUMI_R2.fastq.gz",
+        index = rules.s1_mask_repeats.output.index
+    output:
+        alignment = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.sam"
+    log: "log/s4_read_alignment.{sample}.log"
+    params:
+        outdir        = lambda w, output: os.path.split(output.alignment)[0],
+        log_file      = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.log",
+        kalign_params = config['s4_read_alignment']['kalign_params']
+    conda:
+        "envs/chromatin-assembly.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        biokanga align \
+            {params.kalign_params} \
+	        -i {input.r1} \
+	        -u {input.r2} \
+	        -I {input.index} \
+	        -o {output.alignment} \
+	        -T {threads} \
+	        -F {params.log_file}
+        """
+
+## Step 5: Remove PCR and optical duplicates from alignment with Picard (slurm_depup.sh)
+rule s5_alignment_deduplication:
+    input:
+        alignment = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.sam"
+    output:
+        dedup_alignment = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam"
+    log: "log/s5_alignment_deduplication.{sample}.log"
+    params:
+        outdir        = lambda w, output: os.path.split(output.dedup_alignment)[0],
+        metrics_file  = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_removeduplicates.metrics.txt",
+        picard_params = config['s5_alignment_deduplication']['Picard_params']
+    conda:
+        "envs/chromatin-assembly.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates\
+            --INPUT {input.alignment} \
+            --OUTPUT {output.dedup_alignment} \
+            --METRICS_FILE {params.metrics_file} \
+            {params.picard_params}"
+        eval $CMD
+        """
+
+## Step 6a: Generate 2Bit genome with faToTwoBit
+rule s6a_two_bit_genome:
+    input:
+        masked_ref_genome = rules.s1_mask_repeats.output.masked
+    output:
+        twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_alignment_dedup.2bit"
+    log: "log/s6a_two_bit_genome.log"
+    params:
+        outdir = lambda w, output: os.path.split(output.twobit_genome)[0],
+        info   = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab"
+    conda:
+        "envs/Step6_utils.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
+        twoBitInfo {output.twobit_genome} {params.info}
+        """
+
+## Step 6b:  Calculate effective genome size with faCount
+rule s6b_effective_genome_size:
+    input:
+        masked_ref_genome = rules.s1_mask_repeats.output.masked
+    output:
+        eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['input']['reference_genome_id']}_effGenSize.txt"
+    log: "log/s6b_effective_genome_size.log"
+    params:
+        outdir  = lambda w, output: os.path.split(output.eff_gen_size)[0]
+    conda:
+        "envs/Step6_utils.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        faCount {input.masked_ref_genome} > {output.eff_gen_size}
+        """
+
+## Step 6c: Compute GC bias with deeptools (slurm_computeGCBias.sh)
+rule s6c_compute_GC_bias:
+    input:
+        dedup_alignment = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam",
+        twobit_genome   = rules.s6a_two_bit_genome.output.twobit_genome,
+        eff_gen_size    = rules.s6b_effective_genome_size.output.eff_gen_size
+    output:
+        freq_file = f"results/{config['ref_species']}/{config['output_dir']['step6c']}/{{sample}}_computeGCbias.txt"
+    log: "log/s6c_compute_GC_bias.{sample}.log"
+    params:
+        outdir          = lambda w, output: os.path.split(output.freq_file)[0], 
+        samtools_index  = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam.bai",
+        eff_gen_size    = config['s6b_output']['effective_genome_size']
+    conda:
+        "envs/deeptools.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        samtools index {input.dedup_alignment}
+        computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file}
+        """
+
+## Step 6d: Correct GC bias with deeptools (slurm_correctGCBias.sh)
+rule s6d_correct_GC_bias:
+    input:
+        dedup_alignment = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam",
+        twobit_genome   = rules.s6a_two_bit_genome.output.twobit_genome,
+        eff_gen_size    = rules.s6b_effective_genome_size.output.eff_gen_size,
+        freq_file       = f"results/{config['ref_species']}/{config['output_dir']['step6c']}/{{sample}}_computeGCbias.txt"
+    output:
+        gc_corrected = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam"
+    log: "log/s6d_correct_GC_bias.{sample}.log"
+    params:
+        outdir          = lambda w, output: os.path.split(output.gc_corrected)[0], 
+        eff_gen_size    = config['s6b_output']['effective_genome_size']
+    conda:
+        "envs/deeptools.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        correctGCBias --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads}
+        samtools index {output.gc_corrected}
+        """
+
+## Step 7a: Calculate alignment statistics with Picard (slurm_sizemetrics.sh)
+rule s7a_size_metrics:
+    input:
+        gc_corrected = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam"
+    output:
+        size_metrics = f"results/{config['ref_species']}/{config['output_dir']['step7a']}/{config['ref_species']}_{{sample}}_insert_size_metrics.txt",
+        histogram    = f"results/{config['ref_species']}/{config['output_dir']['step7a']}/{config['ref_species']}_{{sample}}_insert_size_histogram.pdf"
+    log: "log/s7a_size_metrics.{sample}.log"
+    params:
+        outdir        = lambda w, output: os.path.split(output.size_metrics)[0]
+    conda:
+        "envs/chromatin-assembly.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
+          -I {input.gc_corrected} \
+          -O {output.size_metrics} \
+          -H {output.histogram}"
+        eval "$CMD"
+        """
+
+## Step 7b: Estimate mean nuclear genome coverage (slurm_read_count_GCcorrect.sh)
+rule s7b_read_count:
+    input:
+        gc_corrected = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam"
+    output:
+        read_count = f"results/{config['ref_species']}/{config['output_dir']['step7b']}/{config['ref_species']}_{{sample}}_count.txt"
+    log: "log/s7b_read_count.{sample}.log"
+    params:
+        outdir          = lambda w, output: os.path.split(output.read_count)[0]
+    conda:
+        "envs/chromatin-assembly.yaml"
+    shell:
+        """
+        mkdir -p {params.outdir}
+        CMD="samtools view -c {input.gc_corrected} -o {output.read_count}"
+        eval "$CMD"
+        """
+
+## Step 8: Peak analysis using DANPOS3
+# Original Slurm script: slurm_dtriple_1_vs_27-29.sh
+rule s8_peak_analysis:
+    input:
+        gc_corrected = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam"
+    output:
+        dpos_op    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/dtriple/{{sample}}-{config['input_control']['control_name']}.positions.integrative.xls",
+        dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/dtriple/{{sample}}-{config['input_control']['control_name']}.peaks.integrative.xls",
+        dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/dtriple/{{sample}}-{config['input_control']['control_name']}.regions.integrative.xls"
+    log: "log/s8_peak_analysis.{sample}.log"
+    params:
+        step8_dir           = lambda w, output: os.path.split(os.path.split(os.path.split(output.dpos_op)[0])[0])[0],
+        sample_dir          = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
+        danpos_dir          = lambda w, output: os.path.split(output.dpos_op)[0], 
+        exp_dir             = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{{sample}}/",
+        control_dir         = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{config['input_control']['control_name']}/",
+        gc_corrected_index  = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam.bai",
+        control_id          = INPUT_CONTROL_SAMPLES
+    conda:
+        "envs/chromatin-assembly.yaml"
+    shell:
+        """
+        # mkdir -p {params.danpos_dir}
+        # mkdir -p {params.exp_dir}
+        # mkdir -p {params.control_dir}
+        # 
+        # cp {input.gc_corrected} {params.exp_dir}
+        # cp {params.gc_corrected_index} {params.exp_dir}
+        # 
+        # # TODO copy input control (control) = samples specified in chromatin_assembly_config.yml
+        # # TODO copy input control index (.bai) files
+        #
+        # CMD="python danpos.py dtriple {params.exp_dir}:{params.control_dir} -o {params.danpos_dir}"
+        # eval "$CMD"
+
+        mkdir -p {params.danpos_dir}
+        mkdir -p {params.exp_dir}
+        mkdir -p {params.control_dir}
+        touch {output.dpos_op}
+        touch {output.dpeak_op}
+        touch {output.dregion_op}
+        """
+

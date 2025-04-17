@@ -1,0 +1,157 @@
+# Chromatin assembly pipeline
+# Configuration file
+
+## Conda environment only version
+# Untested! Use with caution
+
+# NOTE: To run pipeline, set working directory to /path/to/chromatin-assembly/ 
+
+# NOTE: pipeline assumptions about read file naming convention
+# This pipeline was tested on reads with the structure:
+#     {sample_id}_{some_text}_L00{num}_R{1|2}.fastq.gz
+# e.g., R114096_22W5TWLT3_TTCTGCGTCG-TTCGTACACC_L001_R1.fastq.gz
+# If you have data with a different file name structure, you may have issues running the pipeline.
+
+
+##### Section 1: Input data and parameters #####
+# repo_dir: path to the chromatin-assembly directory (including trailing slash) e.g., /path/to/chromatin-assembly/
+repo_dir: "/scratch3/che318/chromatin-assembly/" 
+
+# ref_species: Species name
+ref_species: "gecko"
+
+# MERGING READS
+# Merging reads is an optional step included in the pipeline
+#
+# Parameters:
+# perform_merge: TRUE to merge reads
+# merge_across_dirs: Whether to combine reads from different directories for a given sample.
+#                    TRUE to merge across all directories (one R1/R2 per sample). FALSE to merge within directories (one R1/R2 per sample per dir).
+# read_dir: full path to directory e.g., /full/path/to/chromatin-assembly/data/yeast/reads/ 
+# specify_lanes: TRUE to merge only specified lanes. FALSE to merge all lanes.
+# read_lanes: specific read lanes to merge, as dictionary i.e., ["1", "2", "3", "4", "5", "6", "7", "8"]
+#             Only needed when "specify_lanes" is TRUE
+# use_names: Whether to use sample names for output filepaths
+#            FALSE to use sample IDs in output filenames. TRUE to use sample names in output filenames.
+# sample_names: dictionary containing name/id pairs e.g., ["name_1": "id_1", "name_2": "id_2", "name_3": "id_3"]
+#               Only needed when "use_names" is TRUE
+#               Allows user to replace sample IDs with human-readable name 
+#               Important - keep level of indentation identical for all lines in dictionary
+merge_reads: 
+  perform_merge: TRUE
+  merge_across_dirs: TRUE
+  read_dir: "/scratch3/che318/chromatin-assembly/data/gecko/reads/"
+  specify_lanes: FALSE
+  read_lanes: []
+  use_names: FALSE
+  sample_names: ["sample01":"R114096", "sample02":"R122595", "sample03":"R122596", 
+                "sample04":"R135806", "sample05":"R135860", "sample06":"R31499",
+                "sample07":"R31500", "sample08":"R31502", "sample09":"R54899", 
+                "sample10":"R55025", "sample11":"R55032", "sample12":"R55033",
+                "sample13":"R84119", "sample14":"R87557", "sample15":"SMZ3538",
+                "sample16":"SMZ3540", "sample17":"SMZ3541", "sample18":"SMZ3557",
+                "sample19":"SMZ3559", "sample20":"SMZ3560", "sample21":"SMZ3561"] 
+
+# Input data paths and details
+#   Input for analysis steps. Works for merged reads or individual lanes.
+#
+# Parameters:
+# input_dir: input for analysis steps, either after merging reads or if using a single lane
+#               - For merged reads, enter path to merged reads directory:
+#                 e.g., /full/path/to/chromatin-assembly/results/{species}/0_mergedReads/
+#               - For unmerged reads, enter path to reads directory:
+#                 e.g., /full/path/to/chromatin-assembly/data/{species}/reads/
+# reference_genome_id: human-readable identifier for reference genome
+# reference_genome_path: full path to reference genome e.g.,  /full/path/to/chromatin-assembly/data/yeast/reference_genome/ref_genome.fsa
+# sample_ids: The samples to be run through the pipeline. Each sample ID is a chunk of a filepath. 
+#             Dictionary of sample IDs i.e., ["sample_1", "sample_2", "sample_3"]
+#             Important - keep identation level consistent for all lines in dictionary
+#             If merged reads use sample names (use_names: TRUE), use the sample names here instead of the sample IDs.
+input:
+  input_dir: "/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads/"
+  reference_genome_id: "gecko_genome"
+  reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
+  sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499",
+              "R31500", "R31502", "R54899", "R55025", "R55032", "R55033",
+              "R84119", "R87557", "SMZ3538", "SMZ3540", "SMZ3541", "SMZ3557",
+              "SMZ3559", "SMZ3560", "SMZ3561"] 
+
+# Input control for peak analysis with DANPOS (Step 8)
+#
+# Parameters:
+# control_directory: path to directory containing input control reads
+# control_name: human-readable name, used for naming DANPOS output directories and files
+# control_samples: sample IDs to use as control for peak analysis 
+#                  Provide as dictionary i.e., ["input_control_1", "input_control_2", "input_control_3"]
+#                  (Separate out the lane number id from the sample pattern - don't include "_L00" in string here)
+# control_lanes: DEPRECATED (Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"])
+input_control: 
+  control_directory: "data/yeast/input_control/"
+  control_name: "control"
+  control_samples: ["132620_HCJLVDSX2_GACGATCT-TCGTGCAT"] 
+  control_lanes: ["1"] # DEPRECATED
+
+# Programs and files needed for specific pipeline steps 
+#   (file path relative to chromatin-assembly directory i.e., /full/path/to/resources/adapters/adap_cont_rna.fa)
+params:
+  adapters: "resources/adapters/adap_cont_rna.fa"
+
+
+##### Section 2: Output names #####
+# Names of the output directory generated for each step
+#   Snakemake is smart - it will not overwrite existing files
+#   If you want to rerun a step with a different set of input parameters, you can update the output directory
+#   for that step here, which will allow you to run that step with the new settings
+#   If you want to force Snakemake to rerun a rule, use the flag `-R {rulename}` or `--forcerun {rulename}`
+#       e.g., "snakemake -R somerule" will force Snakemake to re-run all jobs of that rule and everything downstream 
+output_dir:
+  step0: "0_mergedReads"
+  step1: "1_repeatmasker"
+  step2: "2_fastqc"
+  step3: "3_UMIext"
+  step4: "4_kalign_UMI"
+  step5: "5_dedup"
+  step6a: "6a_2BitGenome"
+  step6b: "6b_effGenSize"
+  step6c: "6c_computeGCbias"
+  step6d: "6d_correctGCbias"
+  step7a: "7a_alignmentStatistics"
+  step7b: "7b_genomeCoverage"
+  step8:  "8_dtriple"
+
+
+##### Section 3: Program parameters #####
+# Program parameters for repeat masking with RepeatMasker (Step 1)
+#     RepeatMasker params: user-specified engine
+s1_mask_repeats:
+  repeatmasker_engine: "-engine rmblast"
+
+# Program parameters for UMI extraction with FGBio and Picard (Step 3)
+#   FGBio_params: user-specified parameters for FGBio call (old version: "--read-structure 8M143T 8M143T --molecular-index-tags ZA ZB --single-tag RX")
+s3_extract_UMI:
+  FGBio_params: "-r 8M143T 8M143T -t ZA ZB -s RX"
+
+# Program parameters for aligning reads with kalign (Step 4)
+#   kalign_params: user-specified parameters for kalign call
+#       -c, --minchimeric: minimum chimeric length as a percentage of probe length (default is 0 to disable, otherwise 15..99)
+#       -l, --minacceptreadlen: after any end trimming only accept read for further processing if read is at least this length (default is 50bp, range 15..2000)
+#       -d, --pairminlen:  accept paired end alignments with observed insert sizes of at least this (minimum 25, default = 100)
+#       -U, --pemode: paired end processing mode: 0 - none, 1 - paired end with recover orphan ends, 2 - paired end no orphan recovery, 3 - paired end with recover orphan ends treating orphan ends as SE, 4 - paired end no orphan recovery treating orphan ends as SE (default: 0)
+#   kalign_id: user-specified string to be included in output filepath
+s4_read_alignment:
+  kalign_params: "-c25 -l25 -d50 -U4"
+  kalign_id: "pe_c25_l25_d50_U4"
+
+# Program parameters for removing PCR and optical duplicates from alignment with Picard (Step 5)
+#   Picard_params: user-specified parameters for Picard call
+s5_alignment_deduplication:
+  Picard_params: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
+
+
+##### Section 4: Intermediate output #####
+# Effective genome size, extracted from the output of Step 6b
+#   The number of non-N bases in the genome i.e., {total len} - {total N}
+s6b_output:
+  effective_genome_size: 12003433
+
+
