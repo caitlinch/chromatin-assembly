@@ -4,8 +4,7 @@
 ## Caitlin Cherryh, 2025
 ## Developed using scripts from Erin Hahn and Jiri Stiller
 
-## Caitlin's notes
-# Run script from dir that contains chromatin-assembly dir (not from within chromatin-assembly/)
+# To run pipeline set chromatin-assembly/ dir as working directory
 
 # --- Config file --- #
 configfile: "config/chromatin_assembly_config.yml"
