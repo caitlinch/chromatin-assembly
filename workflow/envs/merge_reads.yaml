@@ -1,0 +1,9 @@
+name: merge_reads
+channels:
+  - conda-forge
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
+dependencies:
+  - conda-forge::r-base
+  - conda-forge::r-yaml
+prefix: /opt/miniconda3/envs/merge_reads
