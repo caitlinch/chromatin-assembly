@@ -23,6 +23,9 @@ file per sample name
 - Multi-sample input now available
     - Restructured all rules to operate per sample (i.e., given a list of samples, 
     the pipeline now applies each step for each sample)
+- Single-lane input now available
+    - Specified within the `merge_reads` section of the `chromatin_assembly_config.yml` file,
+    by inputting only a single lane (or a single lane per sample ID).
  
 ### Fixed
 - Updated all documentation
