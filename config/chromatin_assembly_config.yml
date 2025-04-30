@@ -63,10 +63,9 @@ merge_reads:
   sample_lanes: []          
 
 # Input data paths and details
-#   Input for analysis steps. Works for merged reads or individual lanes.
 #
 # Parameters:
-# input_dir: input for analysis steps, either after merging reads or if using a single lane
+# input_dir: input for analysis steps, after merging reads.
 #            Default path:  /full/path/to/chromatin-assembly/results/{ref_species}/0_mergedReads/
 # reference_genome_id: human-readable identifier for reference genome
 # reference_genome_path: full path to reference genome e.g.,  /full/path/to/chromatin-assembly/data/yeast/reference_genome/ref_genome.fsa
@@ -83,10 +82,7 @@ input:
   input_dir: "/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads/"
   reference_genome_id: "gecko_genome"
   reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
-  input_sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499",
-                    "R31500", "R31502", "R54899", "R55025", "R55032", "R55033",
-                    "R84119", "R87557", "SMZ3538", "SMZ3540", "SMZ3541", "SMZ3557",
-                    "SMZ3559", "SMZ3560", "SMZ3561"] 
+  input_sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499"] 
 
 # Input control for peak analysis with DANPOS (Step 8)
 #
@@ -94,19 +90,14 @@ input:
 # alignment_directory: path to directory containing output from Step 6d (deduplicated and GC-corrected alignments)
 #                      This directory may be specified in Section 2: Output names by changing the name for step6d
 #                      Otherwise, the default directory is: chromatin-assembly/results/{ref_species}/6d_correctGCbias/
-#                      
-# control_directory: path to directory containing input control reads
-# control_name: human-readable name, used for naming DANPOS output directories and files
-# control_samples: sample IDs to use as control for peak analysis 
-#                  Provide as dictionary i.e., ["input_control_1", "input_control_2", "input_control_3"]
-#                  (Separate out the lane number id from the sample pattern - don't include "_L00" in string here)
-# control_lanes: DEPRECATED (Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"])
+# exp_ids: The sample IDs to use as experimental/test data for DANPOS analysis, as a list i.e., e.g., ["id01", "id02", "id03"]
+#           Should be a subset of the `input_sample_ids`
+# control_ids: The sample IDs to use as input control for DANPOS analysis, as a list i.e., e.g., ["id01", "id02", "id03"]
+#              Should be a subset of the `input_sample_ids`
 input_control: 
   alignment_directory: "/scratch3/che318/chromatin-assembly/results/gecko/6d_correctGCbias/"
-  control_directory: "data/yeast/input_control/"
-  control_name: "control"
-  control_samples: ["132620_HCJLVDSX2_GACGATCT-TCGTGCAT"] 
-  control_lanes: ["1"] # DEPRECATED
+  exp_ids: ["R114096", "R122595", "R122596"] 
+  control_ids: ["R135806", "R135860", "R31499"] 
 
 # Programs and files needed for specific pipeline steps 
 #   adapters: file path relative to chromatin-assembly directory i.e., resources/adapters/adap_cont_rna.fa
