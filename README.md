@@ -2,6 +2,20 @@
 
 TODO DOCO Put citation here
 
+---
+
+**Table of Contents:**
+
+- Quickstart guide for the time-impaired
+- Merging reads
+- Updating Slurm jobscripts
+- Pipeline steps
+- Snakemake command lines
+- Pipeline development and testing
+- Having problems?
+  - Troubleshooting
+  - Potential issues
+
 ----
 
 ## Quickstart guide for the time-impaired
@@ -67,7 +81,48 @@ TODO DOCO Put citation here
 
 -----
 
-### Updating Slurm jobscripts
+## Merging reads
+
+For all analyses:
+
+- Specify the input directory in `read_dir` e.g., `read_dir: /full/path/to/chromatin-assembly/data/gecko/reads/`
+- Input the sample IDs you want to analyse in `merge_sample_ids` e.g., `merge_sample_ids: ["id01", "id02", "id03"]`
+- **If you want to combine reads from multiple subdirectories inside the `read_dir`:**
+  - Set `merge_across_dirs: TRUE`
+  - Replace sample IDs with nice human readable names
+  - Set `use_names: TRUE`
+  - Provide names in `sample_names` e.g., `sample_names: ["id01": "name01", "id02": "name02", "id03": "name03"]`
+  
+There are multiple options for merging reads:
+
+- **Merge reads from all lanes for all samples**
+  - Output:  one R1/R2 file for each sample ID, all lanes merged
+  - Set `merge_all_lanes: TRUE`
+  - Set `read_lanes: []`
+  - Set `specify_sample_lanes: FALSE`
+  - Set `sample_lanes: []`
+- **Merge reads from specific lanes for all samples**
+  - Output:  one R1/R2 file for each sample ID, only specific lanes merged, same lanes for each sample ID
+  - Set `merge_all_lanes: FALSE`
+  - Specify lanes to merge in `read_lanes` e.g., `read_lanes: ["1", "2", "3", "4", "5", "6", "7", "8"]`
+  - Set `specify_sample_lanes: FALSE`
+  - Set `sample_lanes: []`
+- **Merge reads from different user-specified lanes for each sample**
+  - Output:  one R1/R2 file for each sample ID, merging specific lanes, different lanes for different sample IDs
+  - Set `merge_all_lanes: FALSE`
+  - Set `read_lanes: []`
+  - Set `specify_sample_lanes: TRUE`
+  - Specify `sample_lanes` with lanes to merge for each sample ID e.g., `sample_lanes: ["R114096":"1,2,3", "R122595":"4,5,6", "R122596":"7,8"]`
+- **Use only a single lane from a single flow cell (no merging)**
+  - Output:  one R1/R2 file for each sample ID from a given lane/flow cell, identical to input R1/R2
+  - Set `merge_all_lanes: FALSE`
+  - Set `read_lanes: []`
+  - Set `specify_sample_lanes: FALSE`
+  - Specify `sample_lanes` with lanes to merge for each sample ID e.g., `sample_lanes: ["R114096":"1", "R122595":"2", "R122596":"3"]`
+
+-----
+
+## Updating Slurm jobscripts
 
 This pipeline comes with a script (`resources/user_update_jobscripts.R`) to generate Slurm job scripts with your user details.
 
@@ -102,9 +157,7 @@ Rscript resources/user_update_jobscripts.R mail-user=FALSE mail-type=FALSE accou
 
 ----
 
-## Quick reference
-
-#### Pipeline steps
+## Pipeline steps
 
 - `s0_merge_samples`: Read collation (**Step 0**)
 - `s1_mask_repeats`: Repeat masking and suffix array creation (**Step 1**)
@@ -120,7 +173,9 @@ Rscript resources/user_update_jobscripts.R mail-user=FALSE mail-type=FALSE accou
 - `s7b_read_count`: Estimate mean nuclear genome coverage (**Step 7b**)
 - `s8_peak_analysis`: Peak analysis using DANPOS3 (**Step 8**)
 
-#### Snakemake command lines
+----
+
+## Snakemake command lines
 
 *See the Snakemake documentation for v7.24.0 (Petrichor version as of 16/04/2025) here:* 
 [Command line interface](https://snakemake.readthedocs.io/en/v7.24.0/executing/cli.html)
@@ -191,34 +246,6 @@ nodes to the graph, so the graph becomes visually cluttered quickly.
 ```
 module load graphviz
 snakemake --forceall --dag | dot -Tpdf > dag.pdf
-```
-
-**Run pipeline on Petrichor with Slurm:**
-
-To run all steps:
-
-```
-snakemake --slurm  --slurm --profile profiles/slurm/
-```
-
-To run the pipeline until it reaches the specified rules or files:
-
-- Replace `{target}` with the desired rule
-
-```
-snakemake --slurm  --slurm --profile profiles/slurm/ --until {target}
-```
-
-To run the pipeline until it reaches the specified rules/files, while preventing 
-execution of particular rules:
-
-- Replace `{run_target}` with the desired rule
-- Replace `{omit_target}` with the rule you wish to skip
-- You can omit multiple rules by separating rule names with a comma e.g., 
-`--omit s1_mask_repeats,s2_raw_read_QC`
-
-```
-snakemake --slurm  --slurm --profile profiles/slurm/ --until {run_target} --omit {omit_target}
 ```
 
 ---
