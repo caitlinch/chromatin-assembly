@@ -12,7 +12,7 @@ configfile: "config/chromatin_assembly_config.yml"
 
 # --- Global Variables --- #
 # SAMPLE_IDS – unique identifiers of reads to process
-SAMPLE_IDS  = config['input']['sample_ids']
+SAMPLE_IDS  = config['input']['input_sample_ids']
 
 # INPUT_CONTROL_SAMPLES - samples used as input control with DANPOS (Step 8)
 INPUT_CONTROL_SAMPLES = config['input_control']['control_samples']
@@ -57,9 +57,10 @@ rule s0_merge_samples:
         merge_script = f"{config['repo_dir']}/workflow/R/s0_merge_reads.R",
         log          = f"{config['repo_dir']}log/{config['output_dir']['step0']}_{config['ref_species']}.txt",
         module_R     = config['modules']['R']
+    conda:
+        "envs/merge_reads.yaml"
     shell:
         """
-        module load {params.module_R}
         Rscript {params.merge_script} config={input.config} out={params.log}
         """
 
