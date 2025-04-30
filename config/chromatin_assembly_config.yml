@@ -18,64 +18,83 @@ repo_dir: "/scratch3/che318/chromatin-assembly/"
 ref_species: "gecko"
 
 # MERGING READS
-# Merging reads is an optional step included in the pipeline
+# See `README.md` for detailed instructions on merging reads
 #
 # Parameters:
-# perform_merge: TRUE to merge reads
-# merge_across_dirs: Whether to combine reads from different directories for a given sample.
-#                    TRUE to merge across all directories (one R1/R2 per sample). FALSE to merge within directories (one R1/R2 per sample per dir).
 # read_dir: full path to directory e.g., /full/path/to/chromatin-assembly/data/yeast/reads/ 
-# specify_lanes: TRUE to merge only specified lanes. FALSE to merge all lanes.
+# merge_sample_ids: The sample IDs to merge, input as a list i.e., e.g., ["id01", "id02", "id03"]
+# merge_across_dirs: Whether to combine reads from different subdirectories (directories within the `read_dir`) for a given sample.
+#                    TRUE to merge across all directories (one R1/R2 per sample). 
+#                    FALSE to merge within directories (one R1/R2 per sample per dir).
+# merge_all_lanes: Whether to specify lanes for merging (i.e., whether to merge only specific lanes)
+#                  TRUE to merge only specified lanes. 
+#                  FALSE to merge all lanes.
+#                  This option merges the same lanes for all sample IDs
 # read_lanes: specific read lanes to merge, as dictionary i.e., ["1", "2", "3", "4", "5", "6", "7", "8"]
-#             Only needed when "specify_lanes" is TRUE
+#             Only needed when `merge_all_lanes: TRUE`
+#             If `merge_all_lanes: FALSE`, set  `read_lanes: []`
+#             This option will merge the specified lanes for all sample ID
 # use_names: Whether to use sample names for output filepaths
-#            FALSE to use sample IDs in output filenames. TRUE to use sample names in output filenames.
-# sample_names: dictionary containing name/id pairs e.g., ["name_1": "id_1", "name_2": "id_2", "name_3": "id_3"]
+#             FALSE to use sample IDs in output filenames -- for sample ID "id01", output file would be "id01_merged_R1.fastq.gz"
+#             TRUE to use sample names in output filenames -- for sample ID "id01" with name "name01", output file would be "name01_merged_R1.fastq.gz"
+# sample_names: dictionary containing name/id pairs e.g., ["id01": "name01", "id02": "name02", "id03": "name03"]
 #               Only needed when "use_names" is TRUE
 #               Allows user to replace sample IDs with human-readable name 
 #               Important - keep level of indentation identical for all lines in dictionary
+#               Important - each sample ID should uniquely identify a single sample
+#               Important - each sample ID should identically match one in the `merge_sample_ids` list or there may be errors
+# specify_sample_lanes: Whether to use different lanes for different sample IDs
+#                       FALSE if using the same lanes for all sample IDs (e.g., using lanes 1-8 for all samples)
+#                       FALSE if not specifying lanes i.e., if `merge_all_lanes: FALSE`
+#                       TRUE to merge only certain lanes for sample IDs, with different lanes to be merged for each sample ID.
+#                       TRUE if using only a single lane from a single flow cell for one or more sample IDs
+#                       Important - If TRUE, must also provide sample_lanes dictionary
+# sample_lanes: dictionary to specify lanes for individual sample IDs, containing name/lane pairs e.g., ["id01": "1", "id02": "1,2", "id03": "1,2,3"]
+#               Only needed when `specify_sample_lanes: TRUE`
 merge_reads: 
-  perform_merge: TRUE
-  merge_across_dirs: TRUE
   read_dir: "/scratch3/che318/chromatin-assembly/data/gecko/reads/"
-  specify_lanes: FALSE
+  merge_sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499"] 
+  merge_across_dirs: TRUE
+  merge_all_lanes: TRUE
   read_lanes: []
   use_names: FALSE
-  sample_names: ["sample01":"R114096", "sample02":"R122595", "sample03":"R122596", 
-                "sample04":"R135806", "sample05":"R135860", "sample06":"R31499",
-                "sample07":"R31500", "sample08":"R31502", "sample09":"R54899", 
-                "sample10":"R55025", "sample11":"R55032", "sample12":"R55033",
-                "sample13":"R84119", "sample14":"R87557", "sample15":"SMZ3538",
-                "sample16":"SMZ3540", "sample17":"SMZ3541", "sample18":"SMZ3557",
-                "sample19":"SMZ3559", "sample20":"SMZ3560", "sample21":"SMZ3561"] 
+  sample_names: [] 
+  specify_sample_lanes: FALSE
+  sample_lanes: []          
 
 # Input data paths and details
 #   Input for analysis steps. Works for merged reads or individual lanes.
 #
 # Parameters:
 # input_dir: input for analysis steps, either after merging reads or if using a single lane
-#               - For merged reads, enter path to merged reads directory:
-#                 e.g., /full/path/to/chromatin-assembly/results/{species}/0_mergedReads/
-#               - For unmerged reads, enter path to reads directory:
-#                 e.g., /full/path/to/chromatin-assembly/data/{species}/reads/
+#            Default path:  /full/path/to/chromatin-assembly/results/{ref_species}/0_mergedReads/
 # reference_genome_id: human-readable identifier for reference genome
 # reference_genome_path: full path to reference genome e.g.,  /full/path/to/chromatin-assembly/data/yeast/reference_genome/ref_genome.fsa
-# sample_ids: The samples to be run through the pipeline. Each sample ID is a chunk of a filepath. 
+# input_sample_ids: The samples to be run through the pipeline. Each sample ID is a chunk of a filepath. 
 #             Dictionary of sample IDs i.e., ["sample_1", "sample_2", "sample_3"]
 #             Important - keep identation level consistent for all lines in dictionary
-#             If merged reads use sample names (use_names: TRUE), use the sample names here instead of the sample IDs.
+#             If you used sample names when merging reads(`use_names: TRUE`), use the sample names here INSTEAD of the sample IDs.
+#             The `input_sample_ids` provided here do not have to be identical to those in the `merge_reads` section above 
+#                 (for example you may want to merge 10 samples, but only apply the full pipeline to 5)
+#             Important - the input for DANPOS (Step 8) is the output from Step 6 (GC coorrected alignment)
+#                   so the `input_sample_ids` variable should include all samples you wish to use as either experimental
+#                   data OR input control for DANPOS.
 input:
   input_dir: "/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads/"
   reference_genome_id: "gecko_genome"
   reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
-  sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499",
-              "R31500", "R31502", "R54899", "R55025", "R55032", "R55033",
-              "R84119", "R87557", "SMZ3538", "SMZ3540", "SMZ3541", "SMZ3557",
-              "SMZ3559", "SMZ3560", "SMZ3561"] 
+  input_sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499",
+                    "R31500", "R31502", "R54899", "R55025", "R55032", "R55033",
+                    "R84119", "R87557", "SMZ3538", "SMZ3540", "SMZ3541", "SMZ3557",
+                    "SMZ3559", "SMZ3560", "SMZ3561"] 
 
 # Input control for peak analysis with DANPOS (Step 8)
 #
 # Parameters:
+# alignment_directory: path to directory containing output from Step 6d (deduplicated and GC-corrected alignments)
+#                      This directory may be specified in Section 2: Output names by changing the name for step6d
+#                      Otherwise, the default directory is: chromatin-assembly/results/{ref_species}/6d_correctGCbias/
+#                      
 # control_directory: path to directory containing input control reads
 # control_name: human-readable name, used for naming DANPOS output directories and files
 # control_samples: sample IDs to use as control for peak analysis 
@@ -83,19 +102,26 @@ input:
 #                  (Separate out the lane number id from the sample pattern - don't include "_L00" in string here)
 # control_lanes: DEPRECATED (Add specific read numbers to dictionary e.g.,  ["1", "2", "3", "4", "5", "6", "7", "8"])
 input_control: 
+  alignment_directory: "/scratch3/che318/chromatin-assembly/results/gecko/6d_correctGCbias/"
   control_directory: "data/yeast/input_control/"
   control_name: "control"
   control_samples: ["132620_HCJLVDSX2_GACGATCT-TCGTGCAT"] 
   control_lanes: ["1"] # DEPRECATED
 
 # Programs and files needed for specific pipeline steps 
-#   (file path relative to chromatin-assembly directory i.e., /full/path/to/resources/adapters/adap_cont_rna.fa)
+#   adapters: file path relative to chromatin-assembly directory i.e., resources/adapters/adap_cont_rna.fa
 params:
   adapters: "resources/adapters/adap_cont_rna.fa"
 
 
 ##### Section 2: Output names #####
 # Names of the output directory generated for each step
+# The relative path to each of these directories is: chromatin-assembly/results/{ref_species}/{stepX}
+#     Where:
+#         {ref_species} is specified above (Section 1: Input data and parameters)
+#         {stepX} is specified below
+# Changing the output directory here allows you to rerun steps with changed parameters
+# Unless you are changing the parameters to rerun a step, you will not need to change these variables
 #   Snakemake is smart - it will not overwrite existing files
 #   If you want to rerun a step with a different set of input parameters, you can update the output directory
 #   for that step here, which will allow you to run that step with the new settings
@@ -130,10 +156,18 @@ s3_extract_UMI:
 
 # Program parameters for aligning reads with kalign (Step 4)
 #   kalign_params: user-specified parameters for kalign call
-#       -c, --minchimeric: minimum chimeric length as a percentage of probe length (default is 0 to disable, otherwise 15..99)
-#       -l, --minacceptreadlen: after any end trimming only accept read for further processing if read is at least this length (default is 50bp, range 15..2000)
-#       -d, --pairminlen:  accept paired end alignments with observed insert sizes of at least this (minimum 25, default = 100)
-#       -U, --pemode: paired end processing mode: 0 - none, 1 - paired end with recover orphan ends, 2 - paired end no orphan recovery, 3 - paired end with recover orphan ends treating orphan ends as SE, 4 - paired end no orphan recovery treating orphan ends as SE (default: 0)
+#       -c, --minchimeric: minimum chimeric length as a percentage of probe length
+#                             Default = 0 (to disable), otherwise 15 - 99
+#       -l, --minacceptreadlen: after any end trimming only accept read for further processing if read is at least this length (in bp)
+#                                   Default = 50, range is 15 - 2000
+#       -d, --pairminlen:  accept paired end alignments with observed insert sizes of at least this (in bp)
+#                                Default = 100, minimum = 25
+#       -U, --pemode: paired end processing mode (default = 0): 
+#                         0 - none, 
+#                         1 - paired end with recover orphan ends, 
+#                         2 - paired end no orphan recovery, 
+#                         3 - paired end with recover orphan ends treating orphan ends as SE, 
+#                         4 - paired end no orphan recovery treating orphan ends as SE
 #   kalign_id: user-specified string to be included in output filepath
 s4_read_alignment:
   kalign_params: "-c25 -l25 -d50 -U4"
@@ -153,6 +187,7 @@ s6b_output:
 
 
 ##### Section 5: Modules #####
+# For use on the CSIRO HPC system Petrichor
 # Update module versions here, as required
 modules:
   danpos: "danpos/3.1.1"
