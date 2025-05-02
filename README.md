@@ -26,15 +26,7 @@ TODO DOCO Put citation here
     - My directory is `/scratch3/che318/chromatin-assembly/`
 2. Navigate in terminal to the `chromatin-assembly/` directory
     - **Command**: `cd /scratch3/che318/chromatin-assembly/`
-3. Activate the Python module
-    - **Command**: `module load python`
-4. Create conda environment
-    - Create a conda environment with the software faCount and faToTwoBit (needed for Step 6a and Step 6b)
-    - **Command**: `conda create --name Step6_utils --file workflow/envs/Step6_utils.txt`
-5. Export the conda environment
-    - Exporting the `Step6_utils` conda environment allows Snakemake access to the environment during run time
-    - **Command**: `conda activate Step6_utils; conda env export > workflow/envs/Step6_utils.yaml`
-6. Add your data to the `data/` directory
+3. Add your data to the `data/` directory
     - Within the chromatin-assembly directory, create a directory called `data/` 
     - Create a new directory within `data/`, named after your species (e.g., `data/gecko/`). 
     - Inside the species folder, create three folders: `input_control/`, `reads/`, and `reference_genome/`
@@ -43,41 +35,45 @@ TODO DOCO Put citation here
       - `chromatin-assembly/data/{species}/reads/` – contains raw reads
       - `chromatin-assembly/data/{species}/input_control/` – contains input control for DANPOS3 (peak analysis)
       - `chromatin-assembly/data/{species}/reference_genome/` – contains reference genome in fasta (`.fasta` or `.fsa`) file format
-7. Specify parameters for your dataset
+4. Specify parameters for your dataset
     - Open the file `config/chromatin_assembly_config.yml` and update file paths and parameters for your data
-8. Generate Slurm job scripts using the R script `resources/user_update_jobscripts.R`:
+5. Generate Slurm job scripts using the R script `resources/user_update_jobscripts.R`:
     - **Command**: `module load R`
     - **Command**: `Rscript resources/user_update_jobscripts.R mail-user={email@email.com} mail-type={when_mail} account={account}`
 	  - Replace each set of curly brackets with your preferred Slurm details
 	  - **e.g.,** `Rscript resources/user_update_jobscripts.R mail-user=test@test.com mail-type=FAIL account=OD-123456`
 	  - See "Updating Slurm jobscripts" below for more details
-9. Update Snakemake profiles
+6. Update Snakemake profiles
     - Snakemake uses profiles to determine what computational resources to use for each step on each system
     - Update the account ID in each of the following files:
       - `chromatin-assembly/profiles/hpc_test/config.yaml` -- profile for dry runs and testing
       - `chromatin-assembly/profiles/slurm/config.yaml` -- profile for pipeline runs
-10. *(Optional)* Perform a dry run of the full pipeline:
+7. Perform a dry run of the full pipeline:
+    - Load Python module to access Snakemake: `module load python`
     - **In terminal**: `snakemake -n -p -c1`
     - **By job script**: `sbatch jobscripts/pipeline_dry_run.sh`
-11. *(Optional)* Perform Step 0 (Merge reads):
+8. Perform Step 0 (Merge reads):
     - **Command**: `sbatch jobscripts/slurm_pipeline_S0.sh`
-12. Perform Step 1 (read masking) and Step 2 (QC)  
+9. Perform Step 1 (read masking) and Step 2 (QC)  
     - **Command**: `sbatch jobscripts/slurm_pipeline_S1-2.sh`
-13. Perform Step 3 (UMI extraction) and Step 4 (align reads):
+10. Perform Step 3 (UMI extraction) and Step 4 (align reads):
     - **Command**: `sbatch jobscripts/slurm_pipeline_S3-4.sh`
-14. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size):
+11. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size):
     - **Command**: `sbatch jobscripts/slurm_pipeline_S5-6b.sh`
-15. Update the effective genome size value
+12. Update the effective genome size value
     - Open file `config/chromatin_assembly_config.yml`
     - Update effective genome size value in "Section 4: Intermediate output"
     - Effective genome size is extracted from output of Step 6b, and calculated as the number of non-N bases in the genome
         - i.e., (Total length) - (Total N)
-16. Perform Step 6c (compute GC bias) and Step 6d (correct GC bias)
+13. Perform Step 6c (compute GC bias) and Step 6d (correct GC bias)
     - **Command**: `sbatch jobscripts/slurm_pipeline_S6c-6d.sh`
-17. Perform Step 7a (calculate alignment statistics) and 7b (estimate mean nuclear genome covert): 
+14. Perform Step 7a (calculate alignment statistics) and 7b (estimate mean nuclear genome covert): 
     - **Command**: `sbatch jobscripts/slurm_pipeline_S7a-7b.sh`
-18. *(Optional)* Perform Step 8 (peak analysis with DANPOS):
-    - **Command**: `sbatch jobscripts/slurm_pipeline_S7a-7b.sh`
+15. *(Optional)* Perform Step 8 (peak analysis with DANPOS):
+    - Update DANPOS run parameters in config file
+      - Open file `config/chromatin_assembly_config.yml`
+      - Go to "Input control for peak analysis with DANPOS (Step 8)" and enter desired sample IDs and test name.
+    - **Command**: `sbatch jobscripts/slurm_pipeline_S8.sh`
 
 -----
 
@@ -290,3 +286,15 @@ might be missing a file or have an incorrect file path
   - Snakemake does not automatically rerun jobs when new input files are added
   - To get a list of the output files that are affected: `snakemake --list-input-changes`
   - To force a rerun of the new input files: `snakemake -n --forcerun $(snakemake --list-input-changes)`
+- **Can't run Step 0 because R isn't available installed?**
+  - The conda environment "merge_reads" is provided at `workflow/envs/merge_reads.yaml`
+  - Snakemake should be able to use this conda environment during run time
+  - If this environment isn't working, try creating the environment and manually exporting it:
+    - To manually create the environment: `conda env create --file workflow/envs/merge_reads.yaml`
+    - To re-export the environment: `conda activate merge_reads; conda env export > workflow/envs/merge_reads.yaml`
+- **Can't run Step 6a or Step 6b because faCount and faToTwoBit aren't installed?**
+  - The conda environment "Step6" is provided at `workflow/envs/Step6.yaml`
+  - Snakemake should be able to use this conda environment during run time
+  - If this environment isn't working, try creating the environment and manually exporting it:
+    - To manually create the environment: `conda env create --name Step6 --file workflow/envs/Step6.yaml`
+    - To re-export the environment: `conda activate Step6; conda env export > workflow/envs/Step6.yaml`
