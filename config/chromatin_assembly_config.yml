@@ -34,7 +34,7 @@ ref_species: "gecko"
 #             Only needed when `merge_all_lanes: TRUE`
 #             If `merge_all_lanes: FALSE`, set  `read_lanes: []`
 #             This option will merge the specified lanes for all sample ID
-# use_names: Whether to use sample names for output filepaths
+# use_names: Whether to use sample names for output filepaths. Used to create human-readable output file names.
 #             FALSE to use sample IDs in output filenames -- for sample ID "id01", output file would be "id01_merged_R1.fastq.gz"
 #             TRUE to use sample names in output filenames -- for sample ID "id01" with name "name01", output file would be "name01_merged_R1.fastq.gz"
 # sample_names: dictionary containing name/id pairs e.g., ["id01": "name01", "id02": "name02", "id03": "name03"]
@@ -72,10 +72,15 @@ merge_reads:
 # input_sample_ids: The samples to be run through the pipeline. Each sample ID is a chunk of a filepath. 
 #             Dictionary of sample IDs i.e., ["sample_1", "sample_2", "sample_3"]
 #             Important - keep identation level consistent for all lines in dictionary
-#             If you used sample names when merging reads(`use_names: TRUE`), use the sample names here INSTEAD of the sample IDs.
-#             The `input_sample_ids` provided here do not have to be identical to those in the `merge_reads` section above 
-#                 (for example you may want to merge 10 samples, but only apply the full pipeline to 5)
-#             Important - the input for DANPOS (Step 8) is the output from Step 6 (GC coorrected alignment)
+#             Note - the `input_sample_ids` should be the sample IDs for the MERGED files
+#                   Given the `merge_reads` parameters:
+#                          `merge_sample_ids: ["id01", "id02", "id03"]`
+#                          `sample_names: ["id01": "name01", "id02": "name02", "id03": "name03"]`
+#                   If you used sample IDs when merging reads (`use_names: TRUE`), use the sample IDs here:
+#                         `input_sample_ids: ["id01", "id02", "id03"]`
+#                   If you used sample names when merging reads (`use_names: TRUE`), use the sample names here:
+#                         `input_sample_ids: ["name01", "name02", "name03"]`
+#             Note - the input for DANPOS (Step 8) is the output from Step 6 (GC corrected alignment)
 #                   so the `input_sample_ids` variable should include all samples you wish to use as either experimental
 #                   data OR input control for DANPOS.
 input:
@@ -87,15 +92,13 @@ input:
 # Input control for peak analysis with DANPOS (Step 8)
 #
 # Parameters:
-# alignment_directory: path to directory containing output from Step 6d (deduplicated and GC-corrected alignments)
-#                      This directory may be specified in Section 2: Output names by changing the name for step6d
-#                      Otherwise, the default directory is: chromatin-assembly/results/{ref_species}/6d_correctGCbias/
+# test_name: Descriptive name for test, to be used as name of output directory
 # exp_ids: The sample IDs to use as experimental/test data for DANPOS analysis, as a list i.e., e.g., ["id01", "id02", "id03"]
 #           Should be a subset of the `input_sample_ids`
 # control_ids: The sample IDs to use as input control for DANPOS analysis, as a list i.e., e.g., ["id01", "id02", "id03"]
 #              Should be a subset of the `input_sample_ids`
-input_control: 
-  alignment_directory: "/scratch3/che318/chromatin-assembly/results/gecko/6d_correctGCbias/"
+peak_analysis: 
+  test_name: "danpos_test"
   exp_ids: ["R114096", "R122595", "R122596"] 
   control_ids: ["R135806", "R135860", "R31499"] 
 
