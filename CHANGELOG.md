@@ -28,6 +28,16 @@ file per sample name
     by inputting only a single lane (or a single lane per sample ID).
  
 ### Fixed
+- Fixed DANPOS3 rule `s8_peak_analysis`
+  - Specify experiment and input control in `chromatin_assembly_config.yml` file
+  - This rule:
+    - Creates a new directory for the DANPOS analysis with a user-specified name
+    - Copies the input data into the directory
+    - Copies the experimental data into the directory
+    - Runs `dtriple` command using DANPOS3
+  - Data is copied across because in the DANPOS command line, the input is
+  a directory. So by copying only the needed data for that DANPOS run into a 
+  directory, we can provide that directory as the input parameter.
 - Updated all documentation
 - Used Snakemake linter and made the following (suggested) changes:
   - Create separate output log for execution of each rule (i.e., one log per 
