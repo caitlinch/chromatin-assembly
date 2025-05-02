@@ -33,7 +33,7 @@ Where:
 - `{lane_number}` is a single digit lane number from 1-9
 - `{read_number}` is either `1` or `2`
 
-An example file path for the sample "133165" is:
+An example file path with the sample ID "133165" is:
 ```
 data/reads/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R1.fastq.gz
 ```
@@ -42,9 +42,9 @@ Sample IDs can be any part of the file name. However, the sample ID does impact
 how the read files are processed and collated. For the file path above, valid sample IDs
 would be:
 
-- `133165`
+- `133165` (would merge reads with the same sample ID but different flow cells)
 - `133165_H3NTTDSX3`
-- `133165_H3NTTDSX3_GTGAAGTG-GAGCAATC`
+- `133165_H3NTTDSX3_GTGAAGTG-GAGCAATC` 
 - `133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001` (would process each lane as a separate sample)
 
 ### Read merging
@@ -136,6 +136,8 @@ Before running the pipeline, update the account ID for Slurm within the followin
 
 - `chromatin-assembly/profiles/hpc_test/config.yaml`
 - `chromatin-assembly/profiles/slurm/config.yaml`
+
+-----
 
 # Output
 

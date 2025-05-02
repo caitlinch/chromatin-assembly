@@ -11,13 +11,12 @@ TODO DOCO publish release when pipeline complete and tested
 
 TODO DOCO reference specific release 
 
----------
-
 If you use this pipeline, please cite it:
 
-Cherryh, C., Stiller, J., Hahn, E. E. 2025. Chromatin assembly pipeline. GitHub 
+`{Authors here}` 2025. Chromatin assembly pipeline. GitHub 
 repository. https://github.com/caitlinch/chromatin-assembly
 
+---------
 
 ## Related papers
 Hahn, E. E., Alexander, M. R., Grealy, A., Holleley, C. E. 2024. Hot alkaline 

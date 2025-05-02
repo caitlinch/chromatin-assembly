@@ -9,6 +9,8 @@ Key points to remember:
 
 - All file paths in this document assume the working directory is the `chromatin-assembly/` folder
 
+-----
+
 ## HPC use for snakemake v8+
 The current version of Snakemake on Petrichor is v7.24.0.
 
@@ -99,6 +101,8 @@ The complete command line to execute Steps 2-3 would be:
 ```
 snakemake --executor slurm --workflow-profile profiles/slurm/ --until s3_extract_UMI --omit s1_mark_repeats
 ```
+
+-----
 
 ## Useful command line options
 

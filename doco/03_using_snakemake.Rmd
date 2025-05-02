@@ -9,6 +9,8 @@ Key points to remember:
 
 - All file paths in this document assume the working directory is the `chromatin-assembly/` folder
 
+-----
+
 ## Useful command lines
 Load modules needed by Snakemake on Petrichor:
 ```
@@ -26,15 +28,17 @@ To merge reads on Petrichor with Slurm:
 snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples --omit s1_mask_repeats,s2_raw_read_QC,s3_extract_UMI
 ```
 
+Full run of pipeline on Petrichor with Slurm:
+```
+snakemake --slurm --profile profiles/slurm/
+```
+
 Full run of pipeline on Petrichor with Slurm, skipping read merging:
 ```
 snakemake --slurm --profile profiles/slurm/ --omit s0_merge_samples
 ```
 
-Full run of pipeline on Petrichor with Slurm:
-```
-snakemake --slurm --profile profiles/slurm/
-```
+-----
 
 ## Controlling pipeline execution
 Instead of running the entire pipeline with 1 core, you can control which
@@ -72,6 +76,8 @@ snakemake --until s3_extract_UMI --omit s1_mark_repeats -cN
 
 You can also execute a single rule of the pipeline by using the desired output 
 file path with `snakemake -p {output_file_path}`.
+
+-----
 
 ## Running the pipeline on a HPC
 The current version of Snakemake on Petrichor is v7.24.0.
@@ -148,6 +154,8 @@ Some notes on [Running Snakemake on a cluster](https://docs.s3it.uzh.ch/how-to_a
   
 **Note**: Snakemake and Slurm have different names for resources (refer to 
 [Advanced Resource Specifications](https://snakemake.github.io/snakemake-plugin-catalog/plugins/executor/slurm.html#advanced-resource-specifications) )
+
+-----
 
 ## Running the pipeline locally
 

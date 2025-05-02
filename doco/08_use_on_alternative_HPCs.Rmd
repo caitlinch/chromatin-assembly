@@ -20,6 +20,8 @@ an alternative HPC system.
 
 There are two main ways to update the pipeline for your HPC system.
 
+-----
+
 ## Using environment modules
 If your HPC system uses an environment module system, you should be able to 
 simply update the names of the environment modules within the 
@@ -56,6 +58,8 @@ using the provided conda environment `workflow/envs/Step6_utils.yaml`. Provided
 the HPC system you are using has conda environments, you will not need to do
 anything to make this work.
 
+-----
+
 ## Using the conda environment approach
 
 > Important:
@@ -90,8 +94,10 @@ install:
 - [biokanga](https://github.com/csiro-crop-informatics/biokanga)
 - [DANPOS3](https://github.com/sklasfeld/DANPOS3)
 
-You may need to update the shell command for Step 8 to ensure the path to DANPOS
-is correct for your installation
+You may need to:
+
+- update the shell command for Step 1 and Step 4 to ensure the path to biokanga is correct for your installation
+- update the shell command for Step 8 to ensure the path to DANPOS3 is correct for your installation
 
 
 ### Running the conda-only version
