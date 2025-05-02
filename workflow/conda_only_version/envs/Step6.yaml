@@ -1,0 +1,10 @@
+name: Step6
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconda::ucsc-fatotwobit
+  - bioconda::ucsc-facount
+  - bioconda::ucsc-twobitinfo
+prefix: /home/che318/.conda/envs/Step6

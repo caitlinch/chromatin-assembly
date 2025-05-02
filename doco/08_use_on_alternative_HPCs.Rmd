@@ -1,0 +1,128 @@
+---
+title: "Adapting the pipeline for other HPC systems"
+author: "Caitlin Cherryh"
+date: "2025-05-02"
+output: html_document
+---
+
+This pipeline was developed for use on the CSIRO HPC system Petrichor.
+
+Some choices were made to make running the pipeline on this system easy and 
+adaptable for users. For example, users specify the environment modules in the
+`chromatin_assembly_config.yml` file. This allows the version of the module used
+in the pipeline to be updated as the system is updated. On the down side,
+it means commands to load environment modules are hardcoded in the shell commands
+for individual rules, rather than being defined within the rule using the 
+`envmodules:` command.
+
+These choices mean some modifications are necessary to run the pipeline on 
+an alternative HPC system.
+
+There are two main ways to update the pipeline for your HPC system.
+
+-----
+
+## Using environment modules
+If your HPC system uses an environment module system, you should be able to 
+simply update the names of the environment modules within the 
+`chromatin_assembly_config.yml` file.
+
+The modules used (as of 17/04/2025) are:
+```
+##### Section 5: Modules #####
+# Update module versions here, as required
+modules:
+  danpos: "danpos/3.1.1"
+  fastqc: "fastqc/0.11.9"
+  fgbio: "fgbio/2.0.2"
+  kit4b: "kit4b/200218"
+  picard: "picard/3.0.0"
+  python: "python/3.9.4"
+  R: "R/4.0.5"
+  repeatmasker: "repeatmasker/4.1.2p1"
+  samtools: "samtools/1.18.0"
+```
+
+For example, if the DANPOS module in your HPC system is called `DANPOS` and is v3.0.0, you would
+update the name as such:
+```
+##### Section 5: Modules #####
+# Update module versions here, as required
+modules:
+  danpos: "DANPOS/3.0.0"
+```
+
+Step 6 of the pipeline also uses the programs faToTwoBit, twoBitInfo, 
+and faCount. These are accessed within the pipeline when Step 6 is executed,
+using the provided conda environment `workflow/envs/Step6_utils.yaml`. Provided
+the HPC system you are using has conda environments, you will not need to do
+anything to make this work.
+
+-----
+
+## Using conda environments
+
+> Important:
+> This approach has not been tested.
+
+If your HPC does not have environment modules, or you wish to use a conda 
+environment for some other reason, I provide a version of the pipeline that uses
+a conda environment with the majority of software packages. The conda environment
+does not need to be specified by the user, as it is included in the conda-only 
+Snakefile.
+
+### Key differences
+
+In the original pipeline, the following steps are executed using the `kit4b` module:
+
+- Step 1: creating suffix array (after RepeatMasker is applied to reference genome) with `ngskit4b index`
+- Step 4: read alignment with `ngskit4b kalign`
+
+The kit4b module is no longer available. For the conda environment version of the
+pipeline, we recommend installing [biokanga](https://github.com/csiro-crop-informatics/biokanga).
+
+The shell commands for these steps have been updated to use 
+[biokanga](https://github.com/csiro-crop-informatics/biokanga):
+
+- Step 1: `ngskit4b index` replaced with `biokanga index`
+- Step 4: `ngskit4b kalign` replaced with `biokanga align`
+
+### Software installation
+Before running the conda-only version of the pipeline, you will also need to 
+install:
+
+- [biokanga](https://github.com/csiro-crop-informatics/biokanga)
+- [DANPOS3](https://github.com/sklasfeld/DANPOS3)
+
+You may need to:
+
+- update the shell command for Step 1 and Step 4 to ensure the path to biokanga is correct for your installation
+- update the shell command for Step 8 to ensure the path to DANPOS3 is correct for your installation
+
+
+### Running the conda-only version
+There is a separate Snakefile and config file for this version.
+
+The config file is at `workflow/conda_only_version/chromatin_assembly_config.yml`,
+and should be updated as specified in the `README.md`.
+
+The Snakefile is at `workflow/conda_only_version/Snakefile`
+
+If you use this version, you will have to specify the Snakefile and config file
+when you call Snakemake by adding the `--snakefile` and `configfile` flags:
+
+```
+snakemake \
+  --snakefile workflow/conda_only_version/Snakefile \
+  --configfile workflow/conda_only_version/chromatin_assembly_config.yml 
+```
+
+Other arguments are added as usual.
+e.g., to perform a dry run:
+```
+snakemake \
+  --snakefile workflow/conda_only_version/Snakefile \
+  --configfile workflow/conda_only_version/chromatin_assembly_config.yml \
+  -c1 -n -p
+```
+

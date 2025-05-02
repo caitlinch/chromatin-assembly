@@ -9,7 +9,7 @@
 #SBATCH --time=01:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=1
 #SBATCH --mail-user=caitlin.cherryh@csiro.au
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT
 #SBATCH --account=OD-233464
@@ -22,5 +22,5 @@ module load python
 # ---------------- Pipeline Steps ------------------- #
 # Run:
 #       Step 0 - Merge reads
-snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples
+snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples --omit s1_mask_repeats,s2_raw_read_QC,s3_extract_UMI
 

@@ -1,0 +1,9 @@
+name: merge_reads
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - conda-forge::r-base
+  - conda-forge::r-yaml
+prefix: /home/che318/.conda/envs/merge_reads
