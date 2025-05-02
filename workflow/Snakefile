@@ -48,7 +48,7 @@ rule s0_merge_samples:
         r2 = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS)
     log: f"log/s0_merge_samples.{config['ref_species']}.log"
     params:
-        merge_script = f"{config['repo_dir']}/workflow/R/s0_merge_reads.R",
+        merge_script = f"{config['repo_dir']}workflow/R/s0_merge_reads.R",
         log          = f"{config['repo_dir']}log/{config['output_dir']['step0']}_{config['ref_species']}.txt",
         module_R     = config['modules']['R']
     conda:
