@@ -177,3 +177,5 @@ cython_debug/
 doco/.DS_Store
 **/.DS_Store
 .Rhistory
+README.html
+doco/*.html
