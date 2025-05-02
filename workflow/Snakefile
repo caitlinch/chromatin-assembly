@@ -198,7 +198,7 @@ rule s6a_two_bit_genome:
         outdir = lambda w, output: os.path.split(output.twobit_genome)[0],
         info   = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab"
     conda:
-        "envs/Step6_utils.yaml"
+        "envs/Step6.yaml"
     shell:
         """
         mkdir -p {params.outdir}
@@ -217,7 +217,7 @@ rule s6b_effective_genome_size:
     params:
         outdir  = lambda w, output: os.path.split(output.eff_gen_size)[0]
     conda:
-        "envs/Step6_utils.yaml"
+        "envs/Step6.yaml"
     shell:
         """
         mkdir -p {params.outdir}
