@@ -97,7 +97,7 @@ peak_analysis:
   exp_ids: ["R114096", "R122595", "R122596"] 
   control_ids: ["R135806", "R135860", "R31499"] 
 
-# Programs and files needed for specific pipeline steps 
+# Adapters
 #   adapters: file path relative to chromatin-assembly directory i.e., resources/adapters/adap_cont_rna.fa
 params:
   adapters: "resources/adapters/adap_cont_rna.fa"
