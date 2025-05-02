@@ -22,5 +22,5 @@ module load python
 # ---------------- Pipeline Steps ------------------- #
 # Run:
 #       Step 0 - Merge reads
-snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples --omit s1_mask_repeats,s3_extract_UMI
+snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples --omit s1_mask_repeats,s2_raw_read_QC,s3_extract_UMI
 

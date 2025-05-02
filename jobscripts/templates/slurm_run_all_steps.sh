@@ -35,7 +35,7 @@ snakemake -n -p -c1
 # snakemake --slurm --profile profiles/hpc_test/ --until s0_merge_samples
 
 ## To run chromatin-assembly pipeline (Steps 1-8):
-snakemake --slurm --profile profiles/hpc_test/ --until s8_peak_analysis --omit s0_merge_samples
+snakemake --slurm --profile profiles/hpc_test/ --until s8_peak_analysis
 
 
 
