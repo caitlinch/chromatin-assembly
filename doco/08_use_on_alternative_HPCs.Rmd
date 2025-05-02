@@ -1,7 +1,7 @@
 ---
 title: "Adapting the pipeline for other HPC systems"
 author: "Caitlin Cherryh"
-date: "2025-04-17"
+date: "2025-05-02"
 output: html_document
 ---
 
@@ -60,7 +60,7 @@ anything to make this work.
 
 -----
 
-## Using the conda environment approach
+## Using conda environments
 
 > Important:
 > This approach has not been tested.
