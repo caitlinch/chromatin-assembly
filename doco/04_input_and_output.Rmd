@@ -1,7 +1,7 @@
 ---
 title: "Input and output"
 author: "Caitlin Cherryh"
-date: "2025-04-15"
+date: "2025-05-02"
 output: html_document
 ---
 
@@ -11,8 +11,12 @@ Running the `chromatin-assembly` pipeline requires at minimum, a set of reads
 and a reference genome. For convenience, we provide directories to store these
 input files within the `data/` directory.
 
+We recommend creating a separate directory, named after your species, for input 
+data e.g., `data/{species}/`, where `{species}` is the name of your species.
+
+
 ## i. Reads
-Reads can (but do not have to be) placed in the `data/reads/` directory of the
+Reads can (but do not have to be) placed in the `data/{species}/reads/` directory of the
 `chromatin-assembly` repository.
 
 ### Selecting reads
@@ -22,12 +26,13 @@ TODO DOCO complete section on choice of reads
 The Snakemake pipeline assumes that the file path for the reads fits the 
 pattern: 
 ```
-data/reads/{sample_id}_{some_string}_L00{lane_number}_R{read_number}.fastq.gz
+data/{species}/reads/{sample_id}_{some_string}_L00{lane_number}_R{read_number}.fastq.gz
 ```
 
 Where:
 
-- `data/reads/` is the directory containing the reads
+- `data/{species}/reads/` is the directory containing the reads (and `{species}`
+is the species name)
 - `{sample_id}` is a string that can be used to identify the sample
 - `{some_string}` is a string including some information about the flow cell
 - `{lane_number}` is a single digit lane number from 1-9
@@ -35,7 +40,7 @@ Where:
 
 An example file path with the sample ID "133165" is:
 ```
-data/reads/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R1.fastq.gz
+data/{species}/reads/133165_H3NTTDSX3_GTGAAGTG-GAGCAATC_L001_R1.fastq.gz
 ```
 
 Sample IDs can be any part of the file name. However, the sample ID does impact 
@@ -54,21 +59,22 @@ Choice of sample ID impacts how the pipeline will treat your sample.
 Choosing sample IDs carefully allows you to either combine or keep separate reads from
 different methods (e.g., from multiple flow cells).
 
-Say you have a sample ID `R31500` which was run on multiple flow cells. You have 
-two lanes from each flow cell. The reads for the sample are spread across two directories, 
+Take the following example of some reads from geckos. Say you have a sample ID 
+`R31500` which was run on multiple flow cells. You have  two lanes from each 
+flow cell. The reads for the sample are spread across two directories,  
 `AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/` and `AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/`.
 
 The file paths would look like this:
 
 ```
-data/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L001_R1.fastq.gz
-data/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L001_R2.fastq.gz
-data/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L002_R1.fastq.gz
-data/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L002_R2.fastq.gz
-data/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L001_R1.fastq.gz
-data/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L001_R2.fastq.gz
-data/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L002_R1.fastq.gz
-data/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L002_R2.fastq.gz
+data/gecko/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L001_R1.fastq.gz
+data/gecko/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L001_R2.fastq.gz
+data/gecko/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L002_R1.fastq.gz
+data/gecko/reads/AGRF_NXGSQCAGRF24120020-1_22W5TWLT3/R31500_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L002_R2.fastq.gz
+data/gecko/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L001_R1.fastq.gz
+data/gecko/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L001_R2.fastq.gz
+data/gecko/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L002_R1.fastq.gz
+data/gecko/reads/AGRF_NXGSQCAGRF24120020-1_22W5V5LT3/R31500_22W5V5LT3_TCACACGTGG-TGTATAGGTC_L002_R2.fastq.gz
 ```
 
 For sample ID `R31500`:
@@ -92,13 +98,13 @@ For sample IDs `R31500_22W5TWLT3` and `R31500_22W5V5LT3`
 
 ## ii. Reference genome
 The reference genome can (but does not have to be) placed in the 
-`data/reference_genome/` directory of the `chromatin-assembly` repository.
+`data/{species}/reference_genome/` directory of the `chromatin-assembly` repository.
 
 TODO DOCO complete section on choice of reference genome, including necessary file format
 
 ## iii. DANPOS input control
-The input control can (but do not have to be) placed in the 
-`data/input_control/` directory of the `chromatin-assembly` repository.
+The input control reads are placed in the same directory as the reads, usually
+the `data/{species}/reads/` directory of the `chromatin-assembly` repository.
 
 TODO DOCO complete section on choice of input control for DANPOS
 

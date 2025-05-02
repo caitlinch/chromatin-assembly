@@ -1,6 +1,0 @@
-This is a read that will be used for input control in Step 8 (Peak analysis with DANPOS).
-This is an example of a fastq file.
-The fastq files can be in the same directory (like in this example) or in different directories inside the "reads/" dir
-E.g.,
-	- chromatin-assembly/data/template/reads/flowcell_1/
-	- chromatin-assembly/data/template/reads/flowcell_2/

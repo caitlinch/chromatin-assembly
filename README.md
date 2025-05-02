@@ -29,11 +29,10 @@ TODO DOCO Put citation here
 3. Add your data to the `data/` directory
     - Within the chromatin-assembly directory, create a directory called `data/` 
     - Create a new directory within `data/`, named after your species (e.g., `data/gecko/`). 
-    - Inside the species folder, create three folders: `input_control/`, `reads/`, and `reference_genome/`
+    - Inside the species folder, create two folders: `reads/`, and `reference_genome/`
     - Copy your data into the relevant files. 
     - The directories should look like something like this (where `{species}` is replaced with your species name):
-      - `chromatin-assembly/data/{species}/reads/` – contains raw reads
-      - `chromatin-assembly/data/{species}/input_control/` – contains input control for DANPOS3 (peak analysis)
+      - `chromatin-assembly/data/{species}/reads/` – contains raw reads, both experimental data and input control for DANPOS3 (peak analysis)
       - `chromatin-assembly/data/{species}/reference_genome/` – contains reference genome in fasta (`.fasta` or `.fsa`) file format
 4. Specify parameters for your dataset
     - Open the file `config/chromatin_assembly_config.yml` and update file paths and parameters for your data

@@ -1,7 +1,7 @@
 ---
 title: "The `chromatin-assembly` pipeline"
 author: "Caitlin Cherryh"
-date: "2025-04-15"
+date: "2025-05-02"
 output: html_document
 ---
 
@@ -19,9 +19,11 @@ The `caitlinch/chromatin-assembly` GitHub repository has the following structure
   - Includes the `chromatin_assembly_config.yml` file, which is used to specify file paths and input parameters
 - `data/`
   - Input data (one folder per species), with a separate folder for:
-    - `input_control/` -- reads used for peak analysis with DANPOS (Step 8)
-    - `reads/` -- raw reads (in `fastq.gz` format)
-    - `reference_genome/` -- reference genome for your species (in `.fasta` or `.fsa` format)
+  - `reads/` 
+      - Raw reads (in `fastq.gz` format)
+      - Includes both experimental reads and those used for peak analysis with DANPOS (Step 8)
+  - `reference_genome/`
+    - Reference genome for your species (in `.fasta` or `.fsa` format)
 - `doco/`
   - Includes documentation on pipeline use and modifying input parameters
 - `jobscripts/`
