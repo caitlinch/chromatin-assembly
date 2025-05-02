@@ -11,7 +11,7 @@ configfile: "config/chromatin_assembly_config.yml"
 
 # --- Global Variables --- #
 # SAMPLE_IDS – unique identifiers of reads to process
-SAMPLE_IDS  = config['input']['sample_ids']
+SAMPLE_IDS  = config['input']['input_sample_ids']
 
 # --- Complete pipeline run --- #
 ## Run all rules
@@ -324,7 +324,7 @@ rule s8_peak_analysis:
         test_indexes    = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
         control_indexes = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids']),
         analysis_dir    = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
-        danpos_op_dir   = lambda w, output: os.path.split(output.dpos_op)[0]
+        danpos_op_dir   = lambda w, output: os.path.split(output.dpos_op)[0],
         test_dir        = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/test/",
         control_dir     = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/control/",
         module_danpos   = config['modules']['danpos'],
@@ -340,12 +340,12 @@ rule s8_peak_analysis:
         mkdir -p {params.control_dir}
         
         cp {input.test_als} {params.test_dir}
-        cp {input.test_indexes} {params.test_dir}
+        cp {params.test_indexes} {params.test_dir}
 
         cp {input.control_als} {params.control_dir}
-        cp {input.control_indexes} {params.control_dir}
+        cp {params.control_indexes} {params.control_dir}
 
-        CMD="python danpos.py dtriple {params.test_dir}:{params.control_dir} -o {params.danpos_dir}"
+        CMD="python danpos.py dtriple {params.test_dir}:{params.control_dir} -o {params.danpos_op_dir}"
         eval "$CMD"
         """
 

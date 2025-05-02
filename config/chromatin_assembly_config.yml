@@ -12,7 +12,7 @@
 
 ##### Section 1: Input data and parameters #####
 # repo_dir: path to the chromatin-assembly directory (including trailing slash) e.g., /path/to/chromatin-assembly/
-repo_dir: "/scratch3/che318/chromatin-assembly/" 
+repo_dir: "/scratch3/che318/chromatin-assembly/"
 
 # ref_species: Species name
 ref_species: "mouse"
@@ -52,14 +52,14 @@ ref_species: "mouse"
 #               Only needed when `specify_sample_lanes: TRUE`
 merge_reads: 
   read_dir: "/scratch3/che318/chromatin-assembly/data/mouse/reads/"
-  merge_sample_ids: ["133143", "133133"] 
+  merge_sample_ids: ["133143", "133133"]
   merge_across_dirs: TRUE
   merge_all_lanes: TRUE
   read_lanes: []
   use_names: FALSE
-  sample_names: [] 
+  sample_names: []
   specify_sample_lanes: FALSE
-  sample_lanes: []          
+  sample_lanes: []
 
 # Input data paths and details
 # Merged reads will be in directory: /full/path/to/chromatin-assembly/results/{ref_species}/0_mergedReads/
@@ -82,7 +82,7 @@ merge_reads:
 #                   data OR input control for DANPOS.
 input:
   reference_genome_id: "GRCm38.p6"
-  reference_genome_path: "/scratch3/che318/chromatin-assembly/data/mouse/reference_genome/GCF_000001635.26_GRCm38.p6_genomic.fna
+  reference_genome_path: "/scratch3/che318/chromatin-assembly/data/mouse/reference_genome/GCF_000001635.26_GRCm38.p6_genomic.fna"
   input_sample_ids: ["133143", "133133"] 
 
 # Input control for peak analysis with DANPOS (Step 8)

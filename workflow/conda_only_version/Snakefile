@@ -11,7 +11,7 @@
 
 # --- Global Variables --- #
 # SAMPLE_IDS – unique identifiers of reads to process
-SAMPLE_IDS  = config['input']['sample_ids']
+SAMPLE_IDS  = config['input']['input_sample_ids']
 
 # --- Complete pipeline run --- #
 ## Run all rules
@@ -338,12 +338,12 @@ rule s8_peak_analysis:
         mkdir -p {params.control_dir}
         
         cp {input.test_als} {params.test_dir}
-        cp {input.test_indexes} {params.test_dir}
+        cp {params.test_indexes} {params.test_dir}
 
         cp {input.control_als} {params.control_dir}
-        cp {input.control_indexes} {params.control_dir}
+        cp {params.control_indexes} {params.control_dir}
 
-        CMD="python danpos.py dtriple {params.test_dir}:{params.control_dir} -o {params.danpos_dir}"
+        CMD="python danpos.py dtriple {params.test_dir}:{params.control_dir} -o {params.danpos_op_dir}"
         eval "$CMD"
         """
         
