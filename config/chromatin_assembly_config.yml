@@ -17,7 +17,7 @@ repo_dir: "/scratch3/che318/chromatin-assembly/"
 # ref_species: Species name
 ref_species: "gecko"
 
-# MERGING READS
+# Merging reads
 # See `README.md` for detailed instructions on merging reads
 #
 # Parameters:
