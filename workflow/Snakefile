@@ -9,14 +9,9 @@
 # --- Config file --- #
 configfile: "config/chromatin_assembly_config.yml"
 
-
 # --- Global Variables --- #
 # SAMPLE_IDS – unique identifiers of reads to process
-SAMPLE_IDS  = config['input']['input_sample_ids']
-
-# INPUT_CONTROL_SAMPLES - samples used as input control with DANPOS (Step 8)
-INPUT_CONTROL_SAMPLES = config['input_control']['control_samples']
-
+SAMPLE_IDS  = config['input']['sample_ids']
 
 # --- Complete pipeline run --- #
 ## Run all rules
@@ -39,10 +34,9 @@ rule run_all:
         s6d_GCbias = expand("results/{species}/{step_name}/{sample}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], sample=SAMPLE_IDS),
         s7a_metric = expand("results/{species}/{step_name}/{ref_species}_{sample}_insert_size_metrics.txt", species=config['ref_species'], step_name=config['output_dir']['step7a'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
         s7b_stats  = expand("results/{species}/{step_name}/{ref_species}_{sample}_count.txt", species=config['ref_species'], step_name=config['output_dir']['step7b'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
-        s8_dpos    = expand("results/{species}/{step_name}/{sample}/dtriple/{sample}-{input_control_name}.positions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], sample=SAMPLE_IDS, input_control_name=config['input_control']['control_name']),
-        s8_dpeak   = expand("results/{species}/{step_name}/{sample}/dtriple/{sample}-{input_control_name}.peaks.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], sample=SAMPLE_IDS, input_control_name=config['input_control']['control_name']),
-        s8_dregion = expand("results/{species}/{step_name}/{sample}/dtriple/{sample}-{input_control_name}.regions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], sample=SAMPLE_IDS, input_control_name=config['input_control']['control_name'])
-
+        s8_dpos    = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.positions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name']),
+        s8_dpeak   = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.peaks.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name']),
+        s8_dregion = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.regions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name'])
 
 # --- Pipeline steps --- #
 ## Step 0: Read collation (SLURM_MergeSamples.sh)
@@ -52,7 +46,7 @@ rule s0_merge_samples:
     output:
         r1 = expand("results/{species}/{step_name}/{sample}_merged_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
         r2 = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS)
-    log: "log/s0_merge_samples.log"
+    log: f"log/s0_merge_samples.{config['ref_species']}.log"
     params:
         merge_script = f"{config['repo_dir']}/workflow/R/s0_merge_reads.R",
         log          = f"{config['repo_dir']}log/{config['output_dir']['step0']}_{config['ref_species']}.txt",
@@ -72,7 +66,7 @@ rule s1_mask_repeats:
     output:
         masked = f"results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked",
         index = f"results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index"
-    log: "log/s1_mask_repeats.log"
+    log: f"log/s1_{config['ref_species']}_mask_repeats.log"
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
         adapter             = config['params']['adapters'],
@@ -193,7 +187,7 @@ rule s6a_two_bit_genome:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
         twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_alignment_dedup.2bit"
-    log: "log/s6a_two_bit_genome.log"
+    log: f"log/s6a_two_bit_genome.{config['ref_species']}.log"
     params:
         outdir = lambda w, output: os.path.split(output.twobit_genome)[0],
         info   = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab"
@@ -202,7 +196,6 @@ rule s6a_two_bit_genome:
     shell:
         """
         mkdir -p {params.outdir}
-
         faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
         twoBitInfo {output.twobit_genome} {params.info}
         """
@@ -213,7 +206,7 @@ rule s6b_effective_genome_size:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
         eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['input']['reference_genome_id']}_effGenSize.txt"
-    log: "log/s6b_effective_genome_size.log"
+    log: f"log/s6b_effective_genome_size.{config['ref_species']}.log"
     params:
         outdir  = lambda w, output: os.path.split(output.eff_gen_size)[0]
     conda:

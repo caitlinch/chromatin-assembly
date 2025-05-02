@@ -19,7 +19,6 @@ ref_species: "gecko"
 
 # Merging reads
 # See `README.md` for detailed instructions on merging reads
-#
 # Parameters:
 # read_dir: full path to directory e.g., /full/path/to/chromatin-assembly/data/yeast/reads/ 
 # merge_sample_ids: The sample IDs to merge, input as a list i.e., e.g., ["id01", "id02", "id03"]
@@ -63,10 +62,8 @@ merge_reads:
   sample_lanes: []          
 
 # Input data paths and details
-#
+# Merged reads will be in directory: /full/path/to/chromatin-assembly/results/{ref_species}/0_mergedReads/
 # Parameters:
-# input_dir: input for analysis steps, after merging reads.
-#            Default path:  /full/path/to/chromatin-assembly/results/{ref_species}/0_mergedReads/
 # reference_genome_id: human-readable identifier for reference genome
 # reference_genome_path: full path to reference genome e.g.,  /full/path/to/chromatin-assembly/data/yeast/reference_genome/ref_genome.fsa
 # input_sample_ids: The samples to be run through the pipeline. Each sample ID is a chunk of a filepath. 
@@ -84,13 +81,11 @@ merge_reads:
 #                   so the `input_sample_ids` variable should include all samples you wish to use as either experimental
 #                   data OR input control for DANPOS.
 input:
-  input_dir: "/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads/"
   reference_genome_id: "gecko_genome"
   reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
   input_sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499"] 
 
 # Input control for peak analysis with DANPOS (Step 8)
-#
 # Parameters:
 # test_name: Descriptive name for test, to be used as name of output directory
 # exp_ids: The sample IDs to use as experimental/test data for DANPOS analysis, as a list i.e., e.g., ["id01", "id02", "id03"]
