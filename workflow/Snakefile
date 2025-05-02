@@ -320,44 +320,39 @@ rule s7b_read_count:
 # Original Slurm script: slurm_dtriple_1_vs_27-29.sh
 rule s8_peak_analysis:
     input:
-        gc_corrected = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam"
+        test_als    = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
+        control_als = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids'])
     output:
-        dpos_op    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/dtriple/{{sample}}-{config['input_control']['control_name']}.positions.integrative.xls",
-        dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/dtriple/{{sample}}-{config['input_control']['control_name']}.peaks.integrative.xls",
-        dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/dtriple/{{sample}}-{config['input_control']['control_name']}.regions.integrative.xls"
-    log: "log/s8_peak_analysis.{sample}.log"
+        dpos_op    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.positions.integrative.xls",
+        dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.peaks.integrative.xls",
+        dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.regions.integrative.xls"
+    log: f"log/s8_peak_analysis.{config['peak_analysis']['test_name']}.log"
     params:
-        step8_dir           = lambda w, output: os.path.split(os.path.split(os.path.split(output.dpos_op)[0])[0])[0],
-        sample_dir          = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
-        danpos_dir          = lambda w, output: os.path.split(output.dpos_op)[0], 
-        exp_dir             = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{{sample}}/",
-        control_dir         = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{{sample}}/{config['input_control']['control_name']}/",
-        gc_corrected_index  = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam.bai",
-        control_id          = INPUT_CONTROL_SAMPLES,
-        module_danpos       = config['modules']['danpos'],
-        module_python       = config['modules']['python']    
+        test_indexes    = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
+        control_indexes = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids']),
+        analysis_dir    = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
+        danpos_op_dir   = lambda w, output: os.path.split(output.dpos_op)[0]
+        test_dir        = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/test/",
+        control_dir     = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/control/",
+        module_danpos   = config['modules']['danpos'],
+        module_python   = config['modules']['python']    
     shell:
         """
-        # module load {params.module_python}
-        # module load {params.module_danpos}
-        # mkdir -p {params.danpos_dir}
-        # mkdir -p {params.exp_dir}
-        # mkdir -p {params.control_dir}
-        # 
-        # cp {input.gc_corrected} {params.exp_dir}
-        # cp {params.gc_corrected_index} {params.exp_dir}
-        # 
-        # # TODO copy input control (control) = samples specified in chromatin_assembly_config.yml
-        # # TODO copy input control index (.bai) files
-        #
-        # CMD="python danpos.py dtriple {params.exp_dir}:{params.control_dir} -o {params.danpos_dir}"
-        # eval "$CMD"
+        module load {params.module_python}
+        module load {params.module_danpos}
 
-        mkdir -p {params.danpos_dir}
-        mkdir -p {params.exp_dir}
+        mkdir -p {params.analysis_dir}
+        mkdir -p {params.danpos_op_dir}
+        mkdir -p {params.test_dir}
         mkdir -p {params.control_dir}
-        touch {output.dpos_op}
-        touch {output.dpeak_op}
-        touch {output.dregion_op}
+        
+        cp {input.test_als} {params.test_dir}
+        cp {input.test_indexes} {params.test_dir}
+
+        cp {input.control_als} {params.control_dir}
+        cp {input.control_indexes} {params.control_dir}
+
+        CMD="python danpos.py dtriple {params.test_dir}:{params.control_dir} -o {params.danpos_dir}"
+        eval "$CMD"
         """
 
