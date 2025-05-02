@@ -179,3 +179,4 @@ doco/.DS_Store
 .Rhistory
 README.html
 doco/*.html
+**/*.html
