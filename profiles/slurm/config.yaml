@@ -1,7 +1,11 @@
 default-resources:
   - slurm_account="od-233464"
+  - runtime="160h"
+  - mem_mb="48000"
+  - nodes="1"
+  - cpus_per_task="10"
 
-max-jobs-per-second: 1
+max-jobs-per-second: 10
 max-status-checks-per-second: 1
 jobs: 10
 keep-going: True
@@ -9,55 +13,55 @@ rerun-incomplete: True
 printshellcmds: True
 
 set-resources:
-  s0_merge_samples: runtime="05:00:00"
-  s0_merge_samples: mem="20GB"
-  s0_merge_samples: nodes=1
-  s0_merge_samples: cpus_per_task=8
-  s1_mask_repeats: runtime="2-00:00:00"
-  s1_mask_repeats: mem="80GB"
-  s1_mask_repeats: nodes=1
-  s1_mask_repeats: cpus_per_task=20
-  s2_raw_read_QC: runtime="12-00:00:00"
-  s2_raw_read_QC: mem="12GB"
-  s2_raw_read_QC: nodes=1
-  s2_raw_read_QC: cpus_per_task=3
-  3_extract_UMI: runtime="3-00:00:00"
-  3_extract_UMI: mem="512GB"
-  3_extract_UMI: nodes=1
-  3_extract_UMI: cpus_per_task=64
-  s4_read_alignment: runtime="7-00:00:00"
-  s4_read_alignment: mem="512GB"
-  s4_read_alignment: nodes=1
-  s4_read_alignment: cpus_per_task=64
-  s5_alignment_deduplication: runtime="12-00:00:00"
-  s5_alignment_deduplication: mem="48GB"
-  s5_alignment_deduplication: nodes=1
-  s5_alignment_deduplication: cpus_per_task=5
-  s6a_two_bit_genome: runtime="08:00:00"
-  s6a_two_bit_genome: mem="48GB"
-  s6a_two_bit_genome: nodes=1
-  s6a_two_bit_genome: cpus_per_task=2
-  s6b_effective_genome_size: runtime="08:00:00"
-  s6b_effective_genome_size: mem="48GB"
-  s6b_effective_genome_size: nodes=1
-  s6b_effective_genome_size: cpus_per_task=2
-  s6c_compute_GC_bias: runtime="08:00:00"
-  s6c_compute_GC_bias: mem="48GB"
-  s6c_compute_GC_bias: nodes=1
-  s6c_compute_GC_bias: cpus_per_task=2
-  s6d_correct_GC_bias: runtime="08:00:00"
-  s6d_correct_GC_bias: mem="48GB"
-  s6d_correct_GC_bias: nodes=1
-  s6d_correct_GC_bias: cpus_per_task=10
-  s7a_size_metrics: runtime="01:00:00"
-  s7a_size_metrics: mem="6GB"
-  s7a_size_metrics: nodes=1
-  s7a_size_metrics: cpus_per_task=2
-  s7b_read_count: runtime="01:00:00"
-  s7b_read_count: mem="6GB"
-  s7b_read_count: nodes=1
-  s7b_read_count: cpus_per_task=2
-  s8_peak_analysis: runtime="60:00:00"
-  s8_peak_analysis: mem="48GB"
-  s8_peak_analysis: nodes=1
-  s8_peak_analysis: cpus_per_task=2
+  - s0_merge_samples:runtime=5h
+  - s0_merge_samples:mem_mb=20000
+  - s0_merge_samples:nodes=1
+  - s0_merge_samples:cpus_per_task=8
+  - s1_mask_repeats:runtime=160h
+  - s1_mask_repeats:mem_mb=80000
+  - s1_mask_repeats:nodes=1
+  - s1_mask_repeats:cpus_per_task=20
+  - s2_raw_read_QC:runtime=12h
+  - s2_raw_read_QC:mem_mb=12000
+  - s2_raw_read_QC:nodes=1
+  - s2_raw_read_QC:cpus_per_task=3
+  - s3_extract_UMI:runtime=160h
+  - s3_extract_UMI:mem_mb=512000
+  - s3_extract_UMI:nodes=1
+  - s3_extract_UMI:cpus_per_task=64
+  - s4_read_alignment:runtime=160h
+  - s4_read_alignment:mem_mb=512000
+  - s4_read_alignment:nodes=1
+  - s4_read_alignment:cpus_per_task=6
+  - s5_alignment_deduplication:runtime=160h
+  - s5_alignment_deduplication:mem_mb=48000
+  - s5_alignment_deduplication:nodes=1
+  - s5_alignment_deduplication:cpus_per_task=5
+  - s6a_two_bit_genome:runtime=8h
+  - s6a_two_bit_genome:mem_mb=48000
+  - s6a_two_bit_genome:nodes=1
+  - s6a_two_bit_genome:cpus_per_task=2
+  - s6b_effective_genome_size:runtime=8h
+  - s6b_effective_genome_size:mem_mb=48000
+  - s6b_effective_genome_size:nodes=1
+  - s6b_effective_genome_size:cpus_per_task=2
+  - s6c_compute_GC_bias:runtime=8h
+  - s6c_compute_GC_bias:mem_mb=48000
+  - s6c_compute_GC_bias:nodes=1
+  - s6c_compute_GC_bias:cpus_per_task=2
+  - s6d_correct_GC_bias:runtime=8h
+  - s6d_correct_GC_bias:mem_mb=48000
+  - s6d_correct_GC_bias:nodes=1
+  - s6d_correct_GC_bias:cpus_per_task=10
+  - s7a_size_metrics:runtime=2h
+  - s7a_size_metrics:mem_mb=6000
+  - s7a_size_metrics:nodes=1
+  - s7a_size_metrics:cpus_per_task=2
+  - s7b_read_count:runtime=2h
+  - s7b_read_count:mem_mb=6000
+  - s7b_read_count:nodes=1
+  - s7b_read_count:cpus_per_task=2
+  - s8_peak_analysis:runtime=100h
+  - s8_peak_analysis:mem_mb=48000
+  - s8_peak_analysis:nodes=1
+  - s8_peak_analysis:cpus_per_task=2
