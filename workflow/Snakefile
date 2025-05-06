@@ -20,8 +20,8 @@ SAMPLE_IDS  = config['input']['input_sample_ids']
 #        s0_r2      = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
 rule run_all:
     input:
-        s1_masked  = expand("results/{species}/{step_name}/{ref_genome_id}.masked", species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
-        s1_index   = expand("results/{species}/{step_name}/{ref_genome_id}.masked.index", species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
+        s1_masked  = expand("{repo_dir}results/{species}/{step_name}/{ref_genome_id}.masked", repo_dir=config['repo_dir'], species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
+        s1_index   = expand("{repo_dir}results/{species}/{step_name}/{ref_genome_id}.masked.index", repo_dir=config['repo_dir'], species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
         s2_r1      = expand("results/{species}/{step_name}/{sample}_merged_R1_fastqc.html", species=config['ref_species'], step_name=config['output_dir']['step2'], sample=SAMPLE_IDS),
         s2_r2      = expand("results/{species}/{step_name}/{sample}_merged_R2_fastqc.html", species=config['ref_species'], step_name=config['output_dir']['step2'], sample=SAMPLE_IDS),
         s3_r1      = expand("results/{species}/{step_name}/{sample}_merged_withUMI_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step3'], sample=SAMPLE_IDS),
@@ -50,11 +50,14 @@ rule s0_merge_samples:
     params:
         merge_script = f"{config['repo_dir']}workflow/R/s0_merge_reads.R",
         log          = f"{config['repo_dir']}log/{config['output_dir']['step0']}_{config['ref_species']}.txt",
-        module_R     = config['modules']['R']
-    conda:
-        "envs/merge_reads.yaml"
+        module_R     = config['modules']['R'],
+        module_miniforge3 = config['modules']['miniforge3'],
+        enabler_miniforge3 = config['modules']['miniforge3_enabler']
     shell:
         """
+        module load {params.module_miniforge3}
+        source {params.enabler_miniforge3}
+        conda activate merge_reads
         Rscript {params.merge_script} config={input.config} out={params.log}
         """
 
@@ -64,15 +67,16 @@ rule s1_mask_repeats:
     input:
         ref_genome = config['input']['reference_genome_path']
     output:
-        masked = f"results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked",
-        index = f"results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index"
-    log: f"log/s1_{config['ref_species']}_mask_repeats.log"
+        masked = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked",
+        index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index"
+    log: f"{config['repo_dir']}log/s1_{config['ref_species']}_mask_repeats.log"
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
-        adapter             = config['params']['adapters'],
-        ref_species         = config['ref_species'], 
-        log                 = f"results/{config['ref_species']}/{config['output_dir']['step1']}/index_logs.log",
+        ref_genome_basename = lambda w, input: os.path.split(input.ref_genome)[1],
+        ngskit4b_log        = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/ngskit_index_log.{config['input']['reference_genome_id']}.log",
+        adapter             = f"{config['repo_dir']}{config['params']['adapters']}",
         repeatmasker_engine = config['s1_mask_repeats']['repeatmasker_engine'],
+        species_name        = config['s1_mask_repeats']['ngskit_index_species_name'], 
         module_repeatmasker = config['modules']['repeatmasker'],
         module_kit4b        = config['modules']['kit4b']
     shell:
@@ -80,9 +84,14 @@ rule s1_mask_repeats:
         module load {params.module_repeatmasker}
         module load {params.module_kit4b}
         mkdir -p {params.outdir}
+        cd {params.outdir}
 
-        RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
-        ngskit4b index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
+        RepeatMasker -pa {threads} -dir {params.outdir} -qq -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
+
+        # Copy RepeatMasker output from created RM directory to the {params.outdir}
+        find {params.outdir} -name '{params.ref_genome_basename}' -exec cp '{{}}' {output.masked} \;
+
+        ngskit4b index -i {output.masked} -o {output.index} -r '{params.species_name}' -T {threads} -F {params.ngskit4b_log}
         """
 
 ## Step 2: Perform quality control using FastQC (slurm_fastqc.sh)
@@ -189,13 +198,17 @@ rule s6a_two_bit_genome:
         twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_alignment_dedup.2bit"
     log: f"log/s6a_two_bit_genome.{config['ref_species']}.log"
     params:
-        outdir = lambda w, output: os.path.split(output.twobit_genome)[0],
-        info   = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab"
-    conda:
-        "envs/Step6.yaml"
+        outdir            = lambda w, output: os.path.split(output.twobit_genome)[0],
+        info              = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab",
+        module_miniforge3 = config['modules']['miniforge3'],
+        enabler_miniforge3 = config['modules']['miniforge3_enabler']
     shell:
         """
+        module load {params.module_miniforge3}
+        source {params.enabler_miniforge3}
+        conda activate Step6
         mkdir -p {params.outdir}
+
         faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
         twoBitInfo {output.twobit_genome} {params.info}
         """
@@ -208,11 +221,14 @@ rule s6b_effective_genome_size:
         eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['input']['reference_genome_id']}_effGenSize.txt"
     log: f"log/s6b_effective_genome_size.{config['ref_species']}.log"
     params:
-        outdir  = lambda w, output: os.path.split(output.eff_gen_size)[0]
-    conda:
-        "envs/Step6.yaml"
+        outdir             = lambda w, output: os.path.split(output.eff_gen_size)[0],
+        module_miniforge3  = config['modules']['miniforge3'],
+        enabler_miniforge3 = config['modules']['miniforge3_enabler']
     shell:
         """
+        module load {params.module_miniforge3}
+        source {params.enabler_miniforge3}
+        conda activate Step6
         mkdir -p {params.outdir}
 
         faCount {input.masked_ref_genome} > {output.eff_gen_size}
