@@ -214,7 +214,7 @@ rule s6b_effective_genome_size:
         eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['input']['reference_genome_id']}_effGenSize.txt"
     log: f"log/s6b_effective_genome_size.{config['ref_species']}.log"
     params:
-        outdir             = lambda w, output: os.path.split(output.eff_gen_size)[0]
+        outdir = lambda w, output: os.path.split(output.eff_gen_size)[0]
     conda:
         "envs/Step6.yaml"
     shell:
