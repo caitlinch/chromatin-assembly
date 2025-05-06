@@ -20,8 +20,8 @@ SAMPLE_IDS  = config['input']['input_sample_ids']
 #        s0_r2      = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
 rule run_all:
     input:
-        s1_masked  = expand("results/{species}/{step_name}/{ref_genome_id}.masked", species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
-        s1_index   = expand("results/{species}/{step_name}/{ref_genome_id}.masked.index", species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
+        s1_masked  = expand("{repo_dir}results/{species}/{step_name}/{ref_genome_id}.masked", repo_dir=config['repo_dir'], species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
+        s1_index   = expand("{repo_dir}results/{species}/{step_name}/{ref_genome_id}.masked.index", repo_dir=config['repo_dir'], species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
         s2_r1      = expand("results/{species}/{step_name}/{sample}_merged_R1_fastqc.html", species=config['ref_species'], step_name=config['output_dir']['step2'], sample=SAMPLE_IDS),
         s2_r2      = expand("results/{species}/{step_name}/{sample}_merged_R2_fastqc.html", species=config['ref_species'], step_name=config['output_dir']['step2'], sample=SAMPLE_IDS),
         s3_r1      = expand("results/{species}/{step_name}/{sample}_merged_withUMI_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step3'], sample=SAMPLE_IDS),
@@ -63,22 +63,29 @@ rule s1_mask_repeats:
     input:
         ref_genome = config['input']['reference_genome_path']
     output:
-        masked = f"results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked",
-        index = f"results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index"
-    log: f"log/s1_mask_repeats.{config['ref_species']}.log"
+        masked = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked",
+        index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index"
+    log: f"{config['repo_dir']}log/s1_{config['ref_species']}_mask_repeats.log"
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
+        ref_genome_basename = lambda w, input: os.path.split(input.ref_genome)[1],
+        ngskit4b_log        = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/ngskit_index_log.{config['input']['reference_genome_id']}.log",
         adapter             = config['params']['adapters'],
-        ref_species         = config['ref_species'], 
-        log                 = f"results/{config['ref_species']}/{config['output_dir']['step1']}/index_logs.log",
-        repeatmasker_engine = config['s1_mask_repeats']['repeatmasker_engine']
+        repeatmasker_engine = config['s1_mask_repeats']['repeatmasker_engine'],
+        species_name        = config['s1_mask_repeats']['ngskit_index_species_name']
     conda:
-        "envs/merge_reads.yaml"
+        "envs/chromatin-assembly.yaml"
     shell:
         """
         mkdir -p {params.outdir}
-        RepeatMasker -pa {threads} -qq -dir {params.outdir} -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
-        biokanga index -i {output.masked} -o {output.index} -r '{params.ref_species}' -T {threads} -F {params.log}
+        cd {params.outdir}
+
+        RepeatMasker -pa {threads} -dir {params.outdir} -qq -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
+
+        # Copy RepeatMasker output from created RM directory to the {params.outdir}
+        find {params.outdir} -name '{params.ref_genome_basename}' -exec cp '{{}}' {output.masked} \;
+
+        biokanga index -i {output.masked} -o {output.index} -r '{params.species_name}' -T {threads} -F {params.ngskit4b_log}
         """
 
 ## Step 2: Perform quality control using FastQC (slurm_fastqc.sh)
@@ -91,7 +98,7 @@ rule s2_raw_read_QC:
         r2 = f"results/{config['ref_species']}/{config['output_dir']['step2']}/{{sample}}_merged_R2_fastqc.html"
     log: "log/s2_raw_read_QC.{sample}.log"
     params:
-        outdir        = lambda w, output: os.path.split(output.r1)[0]
+        outdir = lambda w, output: os.path.split(output.r1)[0]
     conda:
         "envs/chromatin-assembly.yaml"
     shell:
