@@ -26,10 +26,9 @@ TODO DOCO Put citation here
     - For example, my directory is `/scratch3/che318/chromatin-assembly/`
 2. Navigate in terminal to the `chromatin-assembly/` directory
     - **Command**: `cd /scratch3/che318/chromatin-assembly/`
-3. Create conda environments needed for pipeline Steps 1 and 6
-    - **Load python and miniforge3 modules:** `module load python miniforge3; source /apps/miniforge3/enable_miniforge.sh`
-    - **Create `merge_reads` conda environment:** `conda env create -f /workflow/envs/merge_reads.yaml`
-    - **Create `Step6` conda environment:** `conda env create -f /workflow/envs/Step6.yaml`
+3. Use Snakemake to generate conda environments needed for pipeline Steps 1 and 6
+    - **Load python module:** `module load python`
+    - **Generate conda environments:** `snakemake --use-conda --conda-create-envs-only -c1`
 4. Add your data to the `data/` directory
     - Within the chromatin-assembly directory, create a directory called `data/` 
     - Create a new directory within `data/`, named after your species (e.g., `data/gecko/`). 
@@ -289,7 +288,13 @@ might be missing a file or have an incorrect file path
   - Snakemake does not automatically rerun jobs when new input files are added
   - To get a list of the output files that are affected: `snakemake --list-input-changes`
   - To force a rerun of the new input files: `snakemake -n --forcerun $(snakemake --list-input-changes)`
-- **Can't run Step 0 because R isn't available installed?**
+- **Snakemake locked directory and can't run new job?**
+  - Delete contents of the hidden directory `.snakemake/conda/` and try again
+  - Still not working? Delete the whole hidden directory `.snakemake/` and try again
+- **Issues generating conda environments with Snakemake?**
+  - Delete contents of the hidden directory `.snakemake/locks/` and try again
+  - Still not working? Delete the whole hidden directory `.snakemake/` and try again
+- **Can't run Step 0 because R isn't available?**
   - The conda environment "merge_reads" is provided at `workflow/envs/merge_reads.yaml`
   - If this environment isn't working, try creating the environment and manually exporting it:
     - To manually create the environment: `conda env create --file workflow/envs/merge_reads.yaml`

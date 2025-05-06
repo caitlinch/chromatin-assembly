@@ -30,12 +30,8 @@ module load python
 # Perform a dry run
 snakemake -n -p -c1
 
-## To merge reads (Step 0)
-# If reads are already merged, comment out following line to skip
-# snakemake --slurm --profile profiles/hpc_test/ --until s0_merge_samples
-
-## To run chromatin-assembly pipeline (Steps 1-8):
-snakemake --slurm --profile profiles/slurm/ --until s8_peak_analysis
+## To run chromatin-assembly pipeline (Steps 0-8):
+snakemake --slurm --profile profiles/slurm/ --use-conda
 
 
 

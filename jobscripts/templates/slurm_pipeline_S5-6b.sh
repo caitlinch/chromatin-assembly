@@ -33,6 +33,6 @@ source /apps/miniforge3/enable_miniforge.sh
 #       We cannot skip ahead to Step 6C, as we need to manually enter the effective genome size 
 #       (output from Step 6b) into the config/chromatin_assembly_config.yml files
 snakemake --slurm --profile profiles/slurm/ --until s5_alignment_deduplication --omit s0_merge_samples
-snakemake --slurm --profile profiles/slurm/ --until s6a_two_bit_genome --omit s0_merge_samples
-snakemake --slurm --profile profiles/slurm/ --until s6b_effective_genome_size --omit s0_merge_samples
+snakemake --slurm --profile profiles/slurm/ --use-conda --until s6a_two_bit_genome --omit s0_merge_samples
+snakemake --slurm --profile profiles/slurm/ --use-conda --until s6b_effective_genome_size --omit s0_merge_samples
 

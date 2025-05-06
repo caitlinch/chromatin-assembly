@@ -187,8 +187,6 @@ modules:
   fastqc: "fastqc/0.11.9"
   fgbio: "fgbio/2.0.2"
   kit4b: "kit4b/200218"
-  miniforge3: "miniforge3/24.9.0"
-  miniforge3_enabler: "/apps/miniforge3/enable_miniforge.sh"
   picard: "picard/3.0.0"
   python: "python/3.9.4"
   R: "R/4.0.5"

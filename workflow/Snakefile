@@ -49,15 +49,11 @@ rule s0_merge_samples:
     log: f"log/s0_merge_samples.{config['ref_species']}.log"
     params:
         merge_script = f"{config['repo_dir']}workflow/R/s0_merge_reads.R",
-        log          = f"{config['repo_dir']}log/{config['output_dir']['step0']}_{config['ref_species']}.txt",
-        module_R     = config['modules']['R'],
-        module_miniforge3 = config['modules']['miniforge3'],
-        enabler_miniforge3 = config['modules']['miniforge3_enabler']
+        log          = f"{config['repo_dir']}log/{config['output_dir']['step0']}_{config['ref_species']}.txt"
+    conda: 
+	    "envs/merge_reads.yaml"
     shell:
         """
-        module load {params.module_miniforge3}
-        source {params.enabler_miniforge3}
-        conda activate merge_reads
         Rscript {params.merge_script} config={input.config} out={params.log}
         """
 
@@ -199,14 +195,11 @@ rule s6a_two_bit_genome:
     log: f"log/s6a_two_bit_genome.{config['ref_species']}.log"
     params:
         outdir            = lambda w, output: os.path.split(output.twobit_genome)[0],
-        info              = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab",
-        module_miniforge3 = config['modules']['miniforge3'],
-        enabler_miniforge3 = config['modules']['miniforge3_enabler']
+        info              = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab"
+    conda:
+        "envs/Step6.yaml"
     shell:
         """
-        module load {params.module_miniforge3}
-        source {params.enabler_miniforge3}
-        conda activate Step6
         mkdir -p {params.outdir}
 
         faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
@@ -221,14 +214,11 @@ rule s6b_effective_genome_size:
         eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['input']['reference_genome_id']}_effGenSize.txt"
     log: f"log/s6b_effective_genome_size.{config['ref_species']}.log"
     params:
-        outdir             = lambda w, output: os.path.split(output.eff_gen_size)[0],
-        module_miniforge3  = config['modules']['miniforge3'],
-        enabler_miniforge3 = config['modules']['miniforge3_enabler']
+        outdir             = lambda w, output: os.path.split(output.eff_gen_size)[0]
+    conda:
+        "envs/Step6.yaml"
     shell:
         """
-        module load {params.module_miniforge3}
-        source {params.enabler_miniforge3}
-        conda activate Step6
         mkdir -p {params.outdir}
 
         faCount {input.masked_ref_genome} > {output.eff_gen_size}
