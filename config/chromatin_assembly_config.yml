@@ -12,6 +12,7 @@
 
 ##### Section 1: Input data and parameters #####
 # repo_dir: path to the chromatin-assembly directory (including trailing slash) e.g., /path/to/chromatin-assembly/
+#           Remember to include trailing slash!
 repo_dir: "/scratch3/che318/chromatin-assembly/"
 
 # ref_species: Species name
@@ -135,8 +136,11 @@ output_dir:
 ##### Section 3: Program parameters #####
 # Program parameters for repeat masking with RepeatMasker (Step 1)
 #     repeatmasker_engine: user-specified engine for use with RepeatMasker
+#     ngskit_index_species_name: user-specified species name for use with ngskit index 
 s1_mask_repeats:
   repeatmasker_engine: "-engine rmblast"
+  ngskit_index_species_name: "Mus musculus"
+
 
 # Program parameters for UMI extraction with FGBio and Picard (Step 3)
 #   FGBio_params: user-specified parameters for FGBio call (old version: "--read-structure 8M143T 8M143T --molecular-index-tags ZA ZB --single-tag RX")
@@ -183,6 +187,8 @@ modules:
   fastqc: "fastqc/0.11.9"
   fgbio: "fgbio/2.0.2"
   kit4b: "kit4b/200218"
+  miniforge3: "miniforge3/24.9.0"
+  miniforge3_enabler: "/apps/miniforge3/enable_miniforge.sh"
   picard: "picard/3.0.0"
   python: "python/3.9.4"
   R: "R/4.0.5"
