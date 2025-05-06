@@ -1,5 +1,7 @@
 default-resources:
-    threads: 2
-    mem_mb: 1000
-    disk_mb: 1000
-    runtime: "5m"
+   - threads=2
+   - mem_mb=1000
+   - disk_mb=1000
+   - runtime="30m"
+
+
