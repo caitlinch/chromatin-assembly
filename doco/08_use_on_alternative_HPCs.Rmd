@@ -103,16 +103,22 @@ You may need to:
 ### Running the conda-only version
 There is a separate Snakefile and config file for this version.
 
-The config file is at `workflow/conda_only_version/chromatin_assembly_config.yml`,
-and should be updated as specified in the `README.md`.
+The config file is at `workflow/conda_only_version/chromatin_assembly_config.yml`.
+Follow the instructions in the quick-start guide `README.md` to enter parameters
+for your dataset.
 
 The Snakefile is at `workflow/conda_only_version/Snakefile`
 
-If you use this version, you will have to specify the Snakefile and config file
-when you call Snakemake by adding the `--snakefile` and `configfile` flags:
+If you use this version, you will need to add the following flags to Snakemake 
+calls:
+
+- Specify the conda-only version of the Snakefile with `--snakefile`
+- Specify the conda-only version of the config file with `--configfile`
+- Tell Snakemake to use conda environments with `--use-conda`
 
 ```
 snakemake \
+  --use-conda  \
   --snakefile workflow/conda_only_version/Snakefile \
   --configfile workflow/conda_only_version/chromatin_assembly_config.yml 
 ```
@@ -121,8 +127,11 @@ Other arguments are added as usual.
 e.g., to perform a dry run:
 ```
 snakemake \
+  --use-conda \
   --snakefile workflow/conda_only_version/Snakefile \
   --configfile workflow/conda_only_version/chromatin_assembly_config.yml \
   -c1 -n -p
 ```
 
+If you are using the provided jobscripts, remember to update the Snakemake call 
+within each jobscript.
