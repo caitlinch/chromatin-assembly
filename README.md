@@ -6,15 +6,58 @@ TODO DOCO Put citation here
 
 **Table of Contents:**
 
+- Summary
+- Pipeline development and testing
 - Quickstart guide for the time-impaired
 - Merging reads
 - Updating Slurm jobscripts
 - Pipeline steps
 - Snakemake command lines
-- Pipeline development and testing
 - Having problems?
   - Troubleshooting
   - Potential issues
+
+----
+
+## Summary
+
+This is a Snakemake pipeline to perform chromatin assembly and analysis. 
+
+This document is a quick-start guide to get the pipeline running. Detailed 
+documentation is provided in the `doco/` directory.
+
+
+----
+
+## Pipeline development and testing
+This pipeline was developed to be run on:
+
+- the Petrichor server (at CSIRO)
+- Using Slurm
+- Using environment modules
+
+It has not been tested in other environments.
+
+#### Running the pipeline on other HPC systems
+
+For convenience adapting the pipeline to other HPC environments, we provide an 
+(untested!) version of the pipeline for use on other environments. This version
+is located at `chromatin-assembly/workflow/conda_only_version/` and uses conda
+environments (instead of environment modules) so it is more transferable. 
+
+The main files for the conda-only version of the pipeline are:
+
+- The Snakefile
+  - `workflow/conda_only_version/Snakefile`
+- The config file
+  - `workflow/conda_only_version/chromatin-assembly_config.yml`
+- The conda environments
+  - `workflow/conda_only_version/envs/`
+
+See `doco/08_use_on_alternative_HPCs.Rmd` for details on using this version of 
+the pipeline.
+
+
 
 ----
 
@@ -245,16 +288,6 @@ nodes to the graph, so the graph becomes visually cluttered quickly.
 module load graphviz
 snakemake --forceall --dag | dot -Tpdf > dag.pdf
 ```
-
----
-
-## Pipeline development and testing
-This pipeline was developed to be run on:
-
-- the Petrichor server (at CSIRO)
-- Using Slurm
-
-It has not been tested in other environments.
 
 -----
 

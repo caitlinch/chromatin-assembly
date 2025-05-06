@@ -109,12 +109,24 @@ for your dataset.
 
 The Snakefile is at `workflow/conda_only_version/Snakefile`
 
+Before running Snakemake with this version of the pipeline, you will
+need to generate the conda environments using Snakemake:
+
+```
+snakemake
+  --snakefile workflow/conda_only_version/Snakefile \
+  --configfile workflow/conda_only_version/chromatin_assembly_config.yml \
+  --use-conda \
+  --conda-create-envs-only \
+  -c1
+```
+
 If you use this version, you will need to add the following flags to Snakemake 
 calls:
 
+- Tell Snakemake to use conda environments with `--use-conda`
 - Specify the conda-only version of the Snakefile with `--snakefile`
 - Specify the conda-only version of the config file with `--configfile`
-- Tell Snakemake to use conda environments with `--use-conda`
 
 ```
 snakemake \
@@ -134,4 +146,4 @@ snakemake \
 ```
 
 If you are using the provided jobscripts, remember to update the Snakemake call 
-within each jobscript.
+within each jobscript!

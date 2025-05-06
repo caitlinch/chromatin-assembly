@@ -23,7 +23,7 @@ The `caitlinch/chromatin-assembly` GitHub repository has the following structure
       - Raw reads (in `fastq.gz` format)
       - Includes both experimental reads and those used for peak analysis with DANPOS (Step 8)
   - `reference_genome/`
-    - Reference genome for your species (in `.fasta` or `.fsa` format)
+    - Reference genome for your species (in `.fasta`, `.fna`, `.fsa` etc. format)
 - `doco/`
   - Includes documentation on pipeline use and modifying input parameters
 - `jobscripts/`
@@ -34,7 +34,7 @@ The `caitlinch/chromatin-assembly` GitHub repository has the following structure
 - `profiles/`
   - Snakemake uses profiles to determine what computational resources to use for each step on each system
     - `hpc_test/config.yaml`
-      - For server (Petrichor) testing/development or dry runs
+      - For server dry runs
     - `local/config.yaml`
       - For local (not server) testing/development or dry runs
     - `slurm/config.yaml`
