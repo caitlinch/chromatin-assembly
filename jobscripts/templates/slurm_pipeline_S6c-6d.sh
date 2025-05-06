@@ -12,7 +12,7 @@
 #SBATCH --time=20:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=10
+#SBATCH --cpus-per-task=1
 #SBATCH --mail-user=caitlin.cherryh@csiro.au
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT
 #SBATCH --account=OD-233464

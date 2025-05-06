@@ -9,7 +9,7 @@
 #SBATCH --time=100:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=64
+#SBATCH --cpus-per-task=1
 #SBATCH --mail-user=caitlin.cherryh@csiro.au
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT
 #SBATCH --account=OD-233464
@@ -23,5 +23,5 @@ module load python
 # Assuming that output from Steps 1-2 is present, run:
 #       Step 3 - UMI extraction with FGBio and Picard
 #       Step 4 - Align reads with kalign 
-snakemake --slurm --profile profiles/slurm/ --until s4_read_alignment --omit s0_merge_samples
+snakemake --slurm --profile profiles/slurm/ --until s4_read_alignment --omit s1_mask_repeats,s2_raw_read_QC
 

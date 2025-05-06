@@ -13,7 +13,7 @@
 #SBATCH --time=100:00:00 
 #SBATCH --mem=10MB
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=2
+#SBATCH --cpus-per-task=1
 #SBATCH --mail-user=caitlin.cherryh@csiro.au
 #SBATCH --mail-type=ALL
 #SBATCH --account=OD-233464
@@ -35,7 +35,7 @@ snakemake -n -p -c1
 # snakemake --slurm --profile profiles/hpc_test/ --until s0_merge_samples
 
 ## To run chromatin-assembly pipeline (Steps 1-8):
-snakemake --slurm --profile profiles/hpc_test/ --until s8_peak_analysis
+snakemake --slurm --profile profiles/slurm/ --until s8_peak_analysis
 
 
 

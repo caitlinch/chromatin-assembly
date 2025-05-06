@@ -9,7 +9,7 @@
 #SBATCH --time=100:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=20
+#SBATCH --cpus-per-task=1
 #SBATCH --mail-user=caitlin.cherryh@csiro.au
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT
 #SBATCH --account=OD-233464
@@ -23,5 +23,6 @@ module load python
 # Run:
 #       Step 1 - Repeat masking with RepeatMasker and suffix array
 #       Step 2 - Quality control using FastQC
-snakemake --slurm --profile profiles/slurm/ --until s2_raw_read_QC --omit s0_merge_samples
+snakemake --slurm --profile profiles/slurm/ --until s1_mask_repeats
+snakemake --slurm --profile profiles/slurm/ --until s2_raw_read_QC --omit s1_mask_repeats,s3_extract_UMI
 
