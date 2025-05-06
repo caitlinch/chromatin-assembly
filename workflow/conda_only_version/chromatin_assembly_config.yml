@@ -5,7 +5,6 @@
 # Untested! Use with caution
 
 # NOTE: To run pipeline, set working directory to /path/to/chromatin-assembly/ 
-
 # NOTE: pipeline assumptions about read file naming convention
 # This pipeline was tested on reads with the structure:
 #     {sample_id}_{some_text}_L00{num}_R{1|2}.fastq.gz
@@ -15,10 +14,11 @@
 
 ##### Section 1: Input data and parameters #####
 # repo_dir: path to the chromatin-assembly directory (including trailing slash) e.g., /path/to/chromatin-assembly/
-repo_dir: "/scratch3/che318/chromatin-assembly/" 
+#           Remember to include trailing slash!
+repo_dir: "/scratch3/che318/chromatin-assembly/"
 
 # ref_species: Species name
-ref_species: "gecko"
+ref_species: "mouse"
 
 # Merging reads
 # See `README.md` for detailed instructions on merging reads
@@ -54,15 +54,15 @@ ref_species: "gecko"
 # sample_lanes: dictionary to specify lanes for individual sample IDs, containing name/lane pairs e.g., ["id01": "1", "id02": "1,2", "id03": "1,2,3"]
 #               Only needed when `specify_sample_lanes: TRUE`
 merge_reads: 
-  read_dir: "/scratch3/che318/chromatin-assembly/data/gecko/reads/"
-  merge_sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499"] 
+  read_dir: "/scratch3/che318/chromatin-assembly/data/mouse/reads/"
+  merge_sample_ids: ["133143", "133133"]
   merge_across_dirs: TRUE
   merge_all_lanes: TRUE
   read_lanes: []
   use_names: FALSE
-  sample_names: [] 
+  sample_names: []
   specify_sample_lanes: FALSE
-  sample_lanes: []     
+  sample_lanes: []
 
 # Input data paths and details
 # Merged reads will be in directory: /full/path/to/chromatin-assembly/results/{ref_species}/0_mergedReads/
@@ -84,9 +84,9 @@ merge_reads:
 #                   so the `input_sample_ids` variable should include all samples you wish to use as either experimental
 #                   data OR input control for DANPOS.
 input:
-  reference_genome_id: "gecko_genome"
-  reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
-  input_sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499"] 
+  reference_genome_id: "GRCm38.p6"
+  reference_genome_path: "/scratch3/che318/chromatin-assembly/data/mouse/reference_genome/GCF_000001635.26_GRCm38.p6_genomic.fna"
+  input_sample_ids: ["133143", "133133"] 
 
 # Input control for peak analysis with DANPOS (Step 8)
 # Parameters:
@@ -96,9 +96,9 @@ input:
 # control_ids: The sample IDs to use as input control for DANPOS analysis, as a list i.e., e.g., ["id01", "id02", "id03"]
 #              Should be a subset of the `input_sample_ids`
 peak_analysis: 
-  test_name: "danpos_test"
-  exp_ids: ["R114096", "R122595", "R122596"] 
-  control_ids: ["R135806", "R135860", "R31499"] 
+  test_name: "133143-133133"
+  exp_ids: ["133143"] 
+  control_ids: ["133133"] 
 
 # Adapters
 #   adapters: file path relative to chromatin-assembly directory i.e., resources/adapters/adap_cont_rna.fa
@@ -137,9 +137,12 @@ output_dir:
 
 ##### Section 3: Program parameters #####
 # Program parameters for repeat masking with RepeatMasker (Step 1)
-#     RepeatMasker params: user-specified engine
+#     repeatmasker_engine: user-specified engine for use with RepeatMasker
+#     ngskit_index_species_name: user-specified species name for use with ngskit index 
 s1_mask_repeats:
   repeatmasker_engine: "-engine rmblast"
+  ngskit_index_species_name: "Mus musculus"
+
 
 # Program parameters for UMI extraction with FGBio and Picard (Step 3)
 #   FGBio_params: user-specified parameters for FGBio call (old version: "--read-structure 8M143T 8M143T --molecular-index-tags ZA ZB --single-tag RX")
@@ -169,13 +172,6 @@ s4_read_alignment:
 #   Picard_params: user-specified parameters for Picard call
 s5_alignment_deduplication:
   Picard_params: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
-
-
-##### Section 4: Intermediate output #####
-# Effective genome size, extracted from the output of Step 6b
-#   The number of non-N bases in the genome i.e., {total len} - {total N}
-s6b_output:
-  effective_genome_size: 12003433
 
 
 ##### Section 4: Intermediate output #####
