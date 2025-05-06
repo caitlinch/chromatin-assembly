@@ -28,6 +28,10 @@ file per sample name
     by inputting only a single lane (or a single lane per sample ID).
  
 ### Fixed
+- Fixed internal handling of conda environments. Pipeline can now use conda 
+environments specified in each rule.
+- Fixed formatting of profiles `profiles/hpc_test/config.yaml`, `profiles/local/config.yaml`,
+and `profiles/slurm/config.yaml`
 - Fixed DANPOS3 rule `s8_peak_analysis`
   - Specify experiment and input control in `chromatin_assembly_config.yml` file
   - This rule:
