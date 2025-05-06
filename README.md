@@ -23,52 +23,56 @@ TODO DOCO Put citation here
 **Note:** These steps have been tested on Petrichor and locally (MacOS v15.3.1, Apple M2 Pro Chip).
 
 1. Download the [caitlinch/chromatin-assembly](https://github.com/caitlinch/chromatin-assembly) GitHub repository and move it to where you want to run your pipeline 
-    - My directory is `/scratch3/che318/chromatin-assembly/`
+    - For example, my directory is `/scratch3/che318/chromatin-assembly/`
 2. Navigate in terminal to the `chromatin-assembly/` directory
     - **Command**: `cd /scratch3/che318/chromatin-assembly/`
-3. Add your data to the `data/` directory
+3. Create conda environments needed for pipeline Steps 1 and 6
+    - **Load python and miniforge3 modules:** `module load python miniforge3; source /apps/miniforge3/enable_miniforge.sh`
+    - **Create `merge_reads` conda environment:** `conda env create -f /workflow/envs/merge_reads.yaml`
+    - **Create `Step6` conda environment:** `conda env create -f /workflow/envs/Step6.yaml`
+4. Add your data to the `data/` directory
     - Within the chromatin-assembly directory, create a directory called `data/` 
     - Create a new directory within `data/`, named after your species (e.g., `data/gecko/`). 
     - Inside the species folder, create two folders: `reads/`, and `reference_genome/`
     - Copy your data into the relevant files. 
     - The directories should look like something like this (where `{species}` is replaced with your species name):
-      - `chromatin-assembly/data/{species}/reads/` – contains raw reads, both experimental data and input control for DANPOS3 (peak analysis)
-      - `chromatin-assembly/data/{species}/reference_genome/` – contains reference genome in fasta (`.fasta` or `.fsa`) file format
-4. Specify parameters for your dataset
+      - `chromatin-assembly/data/{species}/reads/` – contains raw reads (`.fastq.gz`), both experimental data and input control for DANPOS3 (peak analysis)
+      - `chromatin-assembly/data/{species}/reference_genome/` – contains reference genome in fasta (`.fasta`, `.fsa`, `.fna` etc.) file format
+5. Specify parameters for your dataset
     - Open the file `config/chromatin_assembly_config.yml` and update file paths and parameters for your data
-5. Generate Slurm job scripts using the R script `resources/user_update_jobscripts.R`:
+6. Generate Slurm job scripts using the R script `resources/user_update_jobscripts.R`:
     - **Command**: `module load R`
     - **Command**: `Rscript resources/user_update_jobscripts.R mail-user={email@email.com} mail-type={when_mail} account={account}`
 	  - Replace each set of curly brackets with your preferred Slurm details
 	  - **e.g.,** `Rscript resources/user_update_jobscripts.R mail-user=test@test.com mail-type=FAIL account=OD-123456`
 	  - See "Updating Slurm jobscripts" below for more details
-6. Update Snakemake profiles
+7. Update Snakemake profiles
     - Snakemake uses profiles to determine what computational resources to use for each step on each system
     - Update the account ID in each of the following files:
       - `chromatin-assembly/profiles/hpc_test/config.yaml` -- profile for dry runs and testing
       - `chromatin-assembly/profiles/slurm/config.yaml` -- profile for pipeline runs
-7. Perform a dry run of the full pipeline:
+8. Perform a dry run of the full pipeline:
     - Load Python module to access Snakemake: `module load python`
     - **In terminal**: `snakemake -n -p -c1`
     - **By job script**: `sbatch jobscripts/pipeline_dry_run.sh`
-8. Perform Step 0 (Merge reads):
+9. Perform Step 0 (Merge reads):
     - **Command**: `sbatch jobscripts/slurm_pipeline_S0.sh`
-9. Perform Step 1 (read masking) and Step 2 (QC)  
+10. Perform Step 1 (read masking) and Step 2 (QC)  
     - **Command**: `sbatch jobscripts/slurm_pipeline_S1-2.sh`
-10. Perform Step 3 (UMI extraction) and Step 4 (align reads):
+11. Perform Step 3 (UMI extraction) and Step 4 (align reads):
     - **Command**: `sbatch jobscripts/slurm_pipeline_S3-4.sh`
-11. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size):
+12. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size):
     - **Command**: `sbatch jobscripts/slurm_pipeline_S5-6b.sh`
-12. Update the effective genome size value
+13. Update the effective genome size value
     - Open file `config/chromatin_assembly_config.yml`
     - Update effective genome size value in "Section 4: Intermediate output"
     - Effective genome size is extracted from output of Step 6b, and calculated as the number of non-N bases in the genome
         - i.e., (Total length) - (Total N)
-13. Perform Step 6c (compute GC bias) and Step 6d (correct GC bias)
+14. Perform Step 6c (compute GC bias) and Step 6d (correct GC bias)
     - **Command**: `sbatch jobscripts/slurm_pipeline_S6c-6d.sh`
-14. Perform Step 7a (calculate alignment statistics) and 7b (estimate mean nuclear genome covert): 
+15. Perform Step 7a (calculate alignment statistics) and 7b (estimate mean nuclear genome covert): 
     - **Command**: `sbatch jobscripts/slurm_pipeline_S7a-7b.sh`
-15. *(Optional)* Perform Step 8 (peak analysis with DANPOS):
+16. *(Optional)* Perform Step 8 (peak analysis with DANPOS):
     - Update DANPOS run parameters in config file
       - Open file `config/chromatin_assembly_config.yml`
       - Go to "Input control for peak analysis with DANPOS (Step 8)" and enter desired sample IDs and test name.
@@ -287,13 +291,11 @@ might be missing a file or have an incorrect file path
   - To force a rerun of the new input files: `snakemake -n --forcerun $(snakemake --list-input-changes)`
 - **Can't run Step 0 because R isn't available installed?**
   - The conda environment "merge_reads" is provided at `workflow/envs/merge_reads.yaml`
-  - Snakemake should be able to use this conda environment during run time
   - If this environment isn't working, try creating the environment and manually exporting it:
     - To manually create the environment: `conda env create --file workflow/envs/merge_reads.yaml`
     - To re-export the environment: `conda activate merge_reads; conda env export > workflow/envs/merge_reads.yaml`
 - **Can't run Step 6a or Step 6b because faCount and faToTwoBit aren't installed?**
   - The conda environment "Step6" is provided at `workflow/envs/Step6.yaml`
-  - Snakemake should be able to use this conda environment during run time
   - If this environment isn't working, try creating the environment and manually exporting it:
     - To manually create the environment: `conda env create --name Step6 --file workflow/envs/Step6.yaml`
     - To re-export the environment: `conda activate Step6; conda env export > workflow/envs/Step6.yaml`
