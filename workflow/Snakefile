@@ -42,23 +42,24 @@ rule run_all:
 ## Step 0: Read collation (SLURM_MergeSamples.sh)
 rule s0_merge_samples:
     input:
-        config = f"{config['repo_dir']}config/chromatin_assembly_config.yml"
+        reads_dir = config['merge_reads']['read_dir']
     output:
         r1 = expand("results/{species}/{step_name}/{sample}_merged_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
         r2 = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS)
     log: f"log/s0_merge_samples.{config['ref_species']}.log"
     params:
+        config = f"{config['repo_dir']}config/chromatin_assembly_config.yml",
         merge_script = f"{config['repo_dir']}workflow/R/s0_merge_reads.R",
         log          = f"{config['repo_dir']}log/{config['output_dir']['step0']}_{config['ref_species']}.txt"
     conda: 
 	    "envs/merge_reads.yaml"
     shell:
         """
-        Rscript {params.merge_script} config={input.config} out={params.log}
+        Rscript {params.merge_script} config={params.config} out={params.log}
         """
 
 ## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
-# Original suffix array command:  ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked -r waterdragon
+# Original suffix array command:  ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked.index -r waterdragon
 rule s1_mask_repeats:
     input:
         ref_genome = config['input']['reference_genome_path']
@@ -69,7 +70,7 @@ rule s1_mask_repeats:
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
         ref_genome_basename = lambda w, input: os.path.split(input.ref_genome)[1],
-        ngskit4b_log        = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/ngskit_index_log.{config['input']['reference_genome_id']}.log",
+        ngskit4b_log        = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index.log",
         adapter             = f"{config['repo_dir']}{config['params']['adapters']}",
         repeatmasker_engine = config['s1_mask_repeats']['repeatmasker_engine'],
         species_name        = config['s1_mask_repeats']['ngskit_index_species_name'], 
@@ -84,8 +85,8 @@ rule s1_mask_repeats:
 
         RepeatMasker -pa {threads} -dir {params.outdir} -qq -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
 
-        # Copy RepeatMasker output from created RM directory to the {params.outdir}
-        find {params.outdir} -name '{params.ref_genome_basename}' -exec cp '{{}}' {output.masked} \;
+        # Copy and rename RepeatMasker output with human-readable name
+        cp {params.ref_genome_basename}.masked {output.masked}
 
         ngskit4b index -i {output.masked} -o {output.index} -r '{params.species_name}' -T {threads} -F {params.ngskit4b_log}
         """
