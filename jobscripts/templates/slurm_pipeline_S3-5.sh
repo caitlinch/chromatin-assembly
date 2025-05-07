@@ -5,7 +5,7 @@
 # NOTE: Depending on your data, you may need to update the resources in this job script or
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
-#SBATCH --job-name=CA_S3-S4
+#SBATCH --job-name=CA_S345
 #SBATCH --time=100:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
