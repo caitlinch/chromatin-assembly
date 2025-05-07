@@ -1,0 +1,62 @@
+digraph chromatin_assembly {
+  // Defining pipeline
+
+  subgraph cluster_0 {
+    style=filled;
+    color=lightgrey;
+    node [style=filled,color=white];
+    S1 -> S6a;
+    S1 -> S6b;
+    S6a -> twobit;
+    S6b -> eff_gen_size;
+    label = "";
+  }
+
+  subgraph cluster_1 {
+    style=filled;
+    color=lightgrey;
+    node [style=filled,color=white];
+    S0 -> S2;
+    S2 -> fastqc_op;
+    S0 -> S3;
+    S3 -> S4;
+    S4 -> S5;
+    S5 -> sample_al;
+    label = "";
+  }
+
+  ref_genome -> S1;
+  reads -> S0;
+  twobit -> {S6c S6d}; 
+  eff_gen_size -> {S6c S6d}; 
+  sample_al -> {S6c S6d};
+  S6c -> S6d;
+  S6d -> sample_al_dedup;
+  sample_al_dedup -> {S7a S7b S8};
+  
+  // Defining individual nodes
+  ref_genome [shape=ellipse, style=filled, color=orange, label="Reference\ngenome"];
+  twobit [shape=ellipse, style=filled, color=lightblue, label="Two bit genome"];
+  eff_gen_size [shape=ellipse, style=filled, color=lightblue, label="Effective genome size"];
+  reads [shape=ellipse, style=filled, color=orange, label="Reads"];
+  fastqc_op [shape=ellipse, style=filled, color=lightblue, label="FastQC reports"];
+  sample_al [shape=ellipse, style=filled, color=lightblue, label="De-duplicated\nalignment"];
+  sample_al_dedup [shape=ellipse, style=filled, color=lightblue, label="GC-corrected\nde-duplicated\nalignment"];
+  S0 [shape=diamond, label="S0\nMerge reads"];
+  S1 [shape=diamond, label="S1\nMask repeats"];
+  S2 [shape=diamond, label="S2\nFastQC"];
+  S3 [shape=diamond, label="S3\nUMI extraction"];
+  S4 [shape=diamond, label="S4\nRead alignment"];
+  S5 [shape=diamond, label="S5\nRemove duplicates"];
+  S6a [shape=diamond, label="S6a\nGenerate\ntwo bit genome"];
+  S6b [shape=diamond, label="S6b\nCalculate effective\ngenome size"];
+  S6c [shape=diamond, label="S6c\nCompute GC bias"];
+  S6d [shape=diamond, label="S6d\nCorrect GC bias"];
+  S7a [shape=diamond, label="S7a\nCollect size metrics"];
+  S7b [shape=diamond, label="S7b\nEstimate mean\nnuclear genome\ncoverage"];
+  S8 [shape=diamond, label="S8\nPeak analysis\nwith DANPOS3"];
+
+  // Customizing graph layout
+  edge [color=gray];
+  rankdir=TB;
+}

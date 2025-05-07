@@ -6,16 +6,16 @@ TODO DOCO Put citation here
 
 **Table of Contents:**
 
-- Summary
-- Pipeline development and testing
-- Quickstart guide for the time-impaired
-- Merging reads
-- Updating Slurm jobscripts
-- Pipeline steps
-- Snakemake command lines
-- Having problems?
-  - Troubleshooting
-  - Potential issues
+- [Summary](#summary)
+- [Pipeline development and testing](#pipeline-development-and-testing)
+- [Quickstart guide for the time-impaired](#quickstart-guide-for-the-time-impaired)
+- [Merging reads](#merging-reads)
+- [Updating Slurm jobscripts](#updating-slurm-jobscripts)
+- [Pipeline steps](#pipeline-steps)
+- [Snakemake command lines](#snakemake-command-lines)
+- [Having problems?](#having-problems)
+  - [Troubleshooting](#troubleshooting)
+  - [Potential issues](#potential-issues)
 
 ----
 
@@ -68,10 +68,7 @@ the pipeline.
     - For example, my directory is `/scratch3/che318/chromatin-assembly/`
 2. Navigate in terminal to the `chromatin-assembly/` directory
     - **Command**: `cd /scratch3/che318/chromatin-assembly/`
-3. Use Snakemake to generate conda environments needed for pipeline Steps 1 and 6
-    - **Load python module:** `module load python`
-    - **Generate conda environments:** `snakemake --use-conda --conda-create-envs-only -c1`
-4. Add your data to the `data/` directory
+3. Add your data to the `data/` directory
     - Within the chromatin-assembly directory, create a directory called `data/` 
     - Create a new directory within `data/`, named after your species (e.g., `data/gecko/`). 
     - Inside the species folder, create two folders: `reads/`, and `reference_genome/`
@@ -79,13 +76,16 @@ the pipeline.
     - The directories should look like something like this (where `{species}` is replaced with your species name):
       - `chromatin-assembly/data/{species}/reads/` – contains raw reads (`.fastq.gz`), both experimental data and input control for DANPOS3 (peak analysis)
       - `chromatin-assembly/data/{species}/reference_genome/` – contains reference genome in fasta (`.fasta`, `.fsa`, `.fna` etc.) file format
-5. Specify parameters for your dataset
+4. Specify parameters for your dataset
     - Open the file `config/chromatin_assembly_config.yml` and update file paths and parameters for your data
-6. Update Snakemake profiles
+5. Update Snakemake profiles
     - Snakemake uses profiles to determine what computational resources to use for each step on each system
     - Update the account ID in each of the following files:
       - `chromatin-assembly/profiles/hpc_test/config.yaml` -- profile for dry runs and testing
       - `chromatin-assembly/profiles/slurm/config.yaml` -- profile for pipeline runs
+6. Use Snakemake to generate conda environments needed for pipeline Steps 1 and 6
+    - **Load python module:** `module load python`
+    - **Generate conda environments:** `snakemake --use-conda --conda-create-envs-only -c1`
 7. Generate Slurm job scripts using the R script `resources/user_update_jobscripts.R`:
     - **Command**: `module load R`
     - **Command**: `Rscript resources/user_update_jobscripts.R mail-user={email@email.com} mail-type={when_mail} account={account}`
@@ -119,11 +119,37 @@ the pipeline.
       - Go to "Input control for peak analysis with DANPOS (Step 8)" and enter desired sample IDs and test name.
     - **Command**: `sbatch jobscripts/slurm_pipeline_S8.sh`
 
-#### Rule dependencies
 
-TODO update dependency
+#### Running multiple Snakemake instances
+*See the documentation: [How does Snakemake lock the working directory?](https://snakemake.readthedocs.io/en/stable/project_info/faq.html#how-does-snakemake-lock-the-working-directory)*
 
-#### Running the whole pipeline
+Snakemake locks a working directory by input and output files. It's not possible
+to run multiple instances that want to create the same output files. 
+
+However, you can run two instances that generate separate and disjoint sets of 
+output files.
+
+For example, you may wish to run at the same time:
+
+- Step 2 (Raw read QC) using `jobscripts/slurm_pipeline_S2.sh`
+- Steps 1, 6a, and 6b (reference genome processing) using `jobscripts/slurm_pipeline_S2.sh`
+
+You can do this at your own risk by adding the command line option `--nolock`
+
+e.g., to run Step 1 (mask repeats) without locking:
+
+```
+snakemake --slurm --profile profiles/slurm/ --until s1_mask_repeats --nolock
+```
+
+If you use the `--nolock` option, be very careful that there are no rules running
+in both instances of Snakemake. 
+
+To test this, you can do a dry run and compare thelist of rules that will be 
+run in each instance. Also check the input/output files and make sure there are 
+no overlapping files between the two instances.
+
+#### Recommendations on running the pipeline
 You can run the whole pipeline using the jobscript `slurm_run_all_steps.sh`.
 This is not recommended unless you already know the effective genome size, as
 Steps 6c and 6d require those as input. If you do not have the correct effective
@@ -352,17 +378,21 @@ might be missing a file or have an incorrect file path
   - To get a list of the output files that are affected: `snakemake --list-input-changes`
   - To force a rerun of the new input files: `snakemake -n --forcerun $(snakemake --list-input-changes)`
 - **Snakemake locked directory and can't run new job?**
-  - Delete contents of the hidden directory `.snakemake/conda/` and try again
-  - Still not working? Delete the whole hidden directory `.snakemake/` and try again
+  - Try rerunning the Snakemake command with the additional command line. parameter `--unlock`
+      - `--unlock` can be used to remove a stale lock, e.g., if the machine powered off or a job was killed while a Snakemake instance was still running
+  - Not working? Delete contents of the hidden directory `.snakemake/locks/` and try again
 - **Issues generating conda environments with Snakemake?**
-  - Delete contents of the hidden directory `.snakemake/locks/` and try again
-  - Still not working? Delete the whole hidden directory `.snakemake/` and try again
+  - Delete contents of the hidden directory `.snakemake/conda/` and try again
 - **Can't run Step 0 because R isn't available?**
+  - Check whether the conda environments have been created in the hidden directory `.snakemake/conda/`
+  - Try to generate the conda environments using `snakemake --use-conda --conda-create-envs-only -c1`
   - The conda environment "merge_reads" is provided at `workflow/envs/merge_reads.yaml`
   - If this environment isn't working, try creating the environment and manually exporting it:
     - To manually create the environment: `conda env create --file workflow/envs/merge_reads.yaml`
     - To re-export the environment: `conda activate merge_reads; conda env export > workflow/envs/merge_reads.yaml`
 - **Can't run Step 6a or Step 6b because faCount and faToTwoBit aren't installed?**
+  - Check whether the conda environments have been created in the hidden directory `.snakemake/conda/`
+  - Try to generate the conda environments using `snakemake --use-conda --conda-create-envs-only -c1` 
   - The conda environment "Step6" is provided at `workflow/envs/Step6.yaml`
   - If this environment isn't working, try creating the environment and manually exporting it:
     - To manually create the environment: `conda env create --name Step6 --file workflow/envs/Step6.yaml`
