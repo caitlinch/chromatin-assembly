@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: sbatch slurm_pipeline_S3-4.sh
+# Usage: sbatch slurm_pipeline_S2.sh
 
 # NOTE: Depending on your data, you may need to update the resources in this job script or
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)

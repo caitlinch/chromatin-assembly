@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: sbatch slurm_pipeline_S1.sh
+# Usage: sbatch slurm_pipeline_S1_S6a_S6b.sh
 
 # NOTE: Depending on your data, you may need to update the resources in this job script or
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
@@ -22,7 +22,8 @@ module load python
 # ---------------- Pipeline Steps ------------------- #
 # Run:
 #       Step 1 - Repeat masking with RepeatMasker and suffix array
-#       Step 2 - Quality control using FastQC
+#       Step 6a - Generate 2Bit genome with faToTwoBit
+#       Step 6b - Calculate effective genome size with faCount
 snakemake --slurm --profile profiles/slurm/ --until s1_mask_repeats
 snakemake --slurm --profile profiles/slurm/ --use-conda --until s6a_two_bit_genome --omit s0_merge_samples
 snakemake --slurm --profile profiles/slurm/ --use-conda --until s6b_effective_genome_size --omit s0_merge_samples
