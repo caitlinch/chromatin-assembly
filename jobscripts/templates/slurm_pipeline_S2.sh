@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Usage: sbatch slurm_pipeline_S1-2.sh
+# Usage: sbatch slurm_pipeline_S3-4.sh
 
 # NOTE: Depending on your data, you may need to update the resources in this job script or
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
-#SBATCH --job-name=CA_S1-S2
+#SBATCH --job-name=CA_S3-S4
 #SBATCH --time=100:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
@@ -20,9 +20,7 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Run:
-#       Step 1 - Repeat masking with RepeatMasker and suffix array
+# Assuming that output from Step 0 is present, run:
 #       Step 2 - Quality control using FastQC
-snakemake --slurm --profile profiles/slurm/ --until s1_mask_repeats
 snakemake --slurm --profile profiles/slurm/ --until s2_raw_read_QC --omit s1_mask_repeats,s3_extract_UMI
 

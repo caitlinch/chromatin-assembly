@@ -20,8 +20,9 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Assuming that output from Steps 1-2 is present, run:
+# Assuming that output from Steps 0 and 1 is present, run:
 #       Step 3 - UMI extraction with FGBio and Picard
 #       Step 4 - Align reads with kalign 
-snakemake --slurm --profile profiles/slurm/ --until s4_read_alignment --omit s1_mask_repeats,s2_raw_read_QC
+#       Step 5 - Remove PCR and optical duplicates from alignment with Picard
+snakemake --slurm --profile profiles/slurm/ --until s5_alignment_deduplication --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size
 

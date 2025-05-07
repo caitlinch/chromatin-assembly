@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Usage: sbatch slurm_pipeline_S7a-7b.sh
+# Usage: sbatch slurm_pipeline_S1.sh
 
 # NOTE: Depending on your data, you may need to update the resources in this job script or
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
-#SBATCH --job-name=CA_S7a-S7b
-#SBATCH --time=03:00:00
+#SBATCH --job-name=CA_S1-S2
+#SBATCH --time=100:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
@@ -20,8 +20,10 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Assuming that output from Steps 1-6d is present, run:
-#       Step 7a - Calculate alignment statistics with Picard 
-#       Step 7b - Estimate mean nuclear genome cover with Picard 
-snakemake --slurm --profile profiles/slurm/ --until s7a_size_metrics
-snakemake --slurm --profile profiles/slurm/ --until s7b_read_count
+# Run:
+#       Step 1 - Repeat masking with RepeatMasker and suffix array
+#       Step 2 - Quality control using FastQC
+snakemake --slurm --profile profiles/slurm/ --until s1_mask_repeats
+snakemake --slurm --profile profiles/slurm/ --use-conda --until s6a_two_bit_genome --omit s0_merge_samples
+snakemake --slurm --profile profiles/slurm/ --use-conda --until s6b_effective_genome_size --omit s0_merge_samples
+
