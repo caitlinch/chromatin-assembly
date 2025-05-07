@@ -26,7 +26,6 @@ This is a Snakemake pipeline to perform chromatin assembly and analysis.
 This document is a quick-start guide to get the pipeline running. Detailed 
 documentation is provided in the `doco/` directory.
 
-
 ----
 
 ## Pipeline development and testing
@@ -82,29 +81,29 @@ the pipeline.
       - `chromatin-assembly/data/{species}/reference_genome/` – contains reference genome in fasta (`.fasta`, `.fsa`, `.fna` etc.) file format
 5. Specify parameters for your dataset
     - Open the file `config/chromatin_assembly_config.yml` and update file paths and parameters for your data
-6. Generate Slurm job scripts using the R script `resources/user_update_jobscripts.R`:
+6. Update Snakemake profiles
+    - Snakemake uses profiles to determine what computational resources to use for each step on each system
+    - Update the account ID in each of the following files:
+      - `chromatin-assembly/profiles/hpc_test/config.yaml` -- profile for dry runs and testing
+      - `chromatin-assembly/profiles/slurm/config.yaml` -- profile for pipeline runs
+7. Generate Slurm job scripts using the R script `resources/user_update_jobscripts.R`:
     - **Command**: `module load R`
     - **Command**: `Rscript resources/user_update_jobscripts.R mail-user={email@email.com} mail-type={when_mail} account={account}`
 	  - Replace each set of curly brackets with your preferred Slurm details
 	  - **e.g.,** `Rscript resources/user_update_jobscripts.R mail-user=test@test.com mail-type=FAIL account=OD-123456`
 	  - See "Updating Slurm jobscripts" below for more details
-7. Update Snakemake profiles
-    - Snakemake uses profiles to determine what computational resources to use for each step on each system
-    - Update the account ID in each of the following files:
-      - `chromatin-assembly/profiles/hpc_test/config.yaml` -- profile for dry runs and testing
-      - `chromatin-assembly/profiles/slurm/config.yaml` -- profile for pipeline runs
 8. Perform a dry run of the full pipeline:
     - Load Python module to access Snakemake: `module load python`
     - **In terminal**: `snakemake -n -p -c1`
     - **By job script**: `sbatch jobscripts/pipeline_dry_run.sh`
 9. Perform Step 0 (Merge reads):
     - **Command**: `sbatch jobscripts/slurm_pipeline_S0.sh`
-10. Perform Step 1 (read masking) and Step 2 (QC)  
-    - **Command**: `sbatch jobscripts/slurm_pipeline_S1-2.sh`
-11. Perform Step 3 (UMI extraction) and Step 4 (align reads):
-    - **Command**: `sbatch jobscripts/slurm_pipeline_S3-4.sh`
-12. Perform Step 5 (remove duplicates), Step 6a (two-bit genome) and Step 6b (calculate genome size):
-    - **Command**: `sbatch jobscripts/slurm_pipeline_S5-6b.sh`
+10. Perform Step 1 (read masking), Step 6a (generate two bit genome) and Step 6b (calculate genome size):
+    - **Command**: `sbatch jobscripts/slurm_pipeline_S1_S6a_S6b.sh`    
+11. Perform Step 2 (read QC):
+  - **Command**: `sbatch jobscripts/slurm_pipeline_S2.sh`    
+12. Perform Step 3 (UMI extraction), Step 4 (align reads) and Step 5 (remove duplicates):  
+  - **Command**: `sbatch jobscripts/slurm_pipeline_S3-5.sh`    
 13. Update the effective genome size value
     - Open file `config/chromatin_assembly_config.yml`
     - Update effective genome size value in "Section 4: Intermediate output"
@@ -119,6 +118,37 @@ the pipeline.
       - Open file `config/chromatin_assembly_config.yml`
       - Go to "Input control for peak analysis with DANPOS (Step 8)" and enter desired sample IDs and test name.
     - **Command**: `sbatch jobscripts/slurm_pipeline_S8.sh`
+
+#### Rule dependencies
+
+TODO update dependency
+
+#### Running the whole pipeline
+You can run the whole pipeline using the jobscript `slurm_run_all_steps.sh`.
+This is not recommended unless you already know the effective genome size, as
+Steps 6c and 6d require those as input. If you do not have the correct effective
+genome size, Steps 6c and 6d will run with whatever value is present in the 
+`config/chromatin_assembly_config.yml` file, which may not be correct for your data
+
+To run the pipeline in as few steps as possible:
+
+- Follow steps 1-7 from the Quickstart Guide above 
+- Run pipeline steps 0 - 6b:
+    - **Command:** `snakemake --slurm --profile profiles/slurm/ --use-conda --until s6b_effective_genome_size`
+    - The `--use-conda` flag is important for Steps 0, 6a and 6b!
+    - If the above command doesn't run Step 2 (due to input/output dependencies), run it separately with
+    `snakemake --slurm --profile profiles/slurm/ --until s2_raw_read_QC`
+- Update the effective genome size value in the file `config/chromatin_assembly_config.yml`
+- Run pipeline steps 6c - 8
+    - Due to the rule dependencies, you will have to enter multiple Snakemake commands
+    to run these steps
+    - **Command:** `snakemake --slurm --profile profiles/slurm/ --until s6d_correct_GC_bias`
+    - **Command:** `snakemake --slurm --profile profiles/slurm/ --until s7a_size_metrics`
+    - **Command:** `snakemake --slurm --profile profiles/slurm/ --until s7b_read_count`
+    - **Command:** `snakemake --slurm --profile profiles/slurm/ --until s8_peak_analysis`
+
+Petrichor has a wall time limit of 160 hours. Running the pipeline in two chunks
+like this means you may hit a wall time limit. 
 
 -----
 
