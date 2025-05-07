@@ -54,6 +54,7 @@ rule s0_merge_samples:
         "envs/merge_reads.yaml"
     shell:
         """
+        # s0_merge_samples
         Rscript {params.merge_script} config={input.config} out={params.log}
         """
 
@@ -77,15 +78,16 @@ rule s1_mask_repeats:
         "envs/chromatin-assembly.yaml"
     shell:
         """
+        # s1_mask_repeats
         mkdir -p {params.outdir}
         cd {params.outdir}
 
         RepeatMasker -pa {threads} -dir {params.outdir} -qq -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
 
-        # Copy RepeatMasker output from created RM directory to the {params.outdir}
-        find {params.outdir} -name '{params.ref_genome_basename}' -exec cp '{{}}' {output.masked} \;
+        # Copy and rename RepeatMasker output with human-readable name
+        cp {params.ref_genome_basename}.masked {output.masked}
 
-        biokanga index -i {output.masked} -o {output.index} -r '{params.species_name}' -T {threads} -F {params.ngskit4b_log}
+        ngskit4b index -i {output.masked} -o {output.index} -r '{params.species_name}' -T {threads} -F {params.ngskit4b_log}
         """
 
 ## Step 2: Perform quality control using FastQC (slurm_fastqc.sh)
@@ -103,6 +105,7 @@ rule s2_raw_read_QC:
         "envs/chromatin-assembly.yaml"
     shell:
         """
+        # s2_raw_read_QC
         mkdir -p {params.outdir}
         fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}
         """
@@ -126,6 +129,7 @@ rule s3_extract_UMI:
         "envs/chromatin-assembly.yaml"
     shell:
         """
+        # s3_extract_UMI
         mkdir -p {params.outdir}
         CMD1="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam \
 	        -F1 {input.r1} \
@@ -162,6 +166,7 @@ rule s4_read_alignment:
         "envs/chromatin-assembly.yaml"
     shell:
         """
+        # s4_read_alignment
         mkdir -p {params.outdir}
         biokanga align \
             {params.kalign_params} \
@@ -188,6 +193,7 @@ rule s5_alignment_deduplication:
         "envs/chromatin-assembly.yaml"
     shell:
         """
+        # s5_alignment_deduplication
         mkdir -p {params.outdir}
         CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates\
             --INPUT {input.alignment} \
@@ -211,6 +217,7 @@ rule s6a_two_bit_genome:
         "envs/Step6.yaml"
     shell:
         """
+        # s6a_two_bit_genome
         mkdir -p {params.outdir}
         faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
         twoBitInfo {output.twobit_genome} {params.info}
@@ -229,6 +236,7 @@ rule s6b_effective_genome_size:
         "envs/Step6.yaml"
     shell:
         """
+        # s6b_effective_genome_size
         mkdir -p {params.outdir}
         faCount {input.masked_ref_genome} > {output.eff_gen_size}
         """
@@ -250,6 +258,7 @@ rule s6c_compute_GC_bias:
         "envs/deeptools.yaml"
     shell:
         """
+        # s6c_compute_GC_bias
         mkdir -p {params.outdir}
         samtools index {input.dedup_alignment}
         computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file}
@@ -272,6 +281,7 @@ rule s6d_correct_GC_bias:
         "envs/deeptools.yaml"
     shell:
         """
+        # s6d_correct_GC_bias
         mkdir -p {params.outdir}
         correctGCBias --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads}
         samtools index {output.gc_corrected}
@@ -291,6 +301,7 @@ rule s7a_size_metrics:
         "envs/chromatin-assembly.yaml"
     shell:
         """
+        # s7a_size_metrics
         mkdir -p {params.outdir}
         CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
           -I {input.gc_corrected} \
@@ -312,6 +323,7 @@ rule s7b_read_count:
         "envs/chromatin-assembly.yaml"
     shell:
         """
+        # s7b_read_count
         mkdir -p {params.outdir}
         CMD="samtools view -c {input.gc_corrected} -o {output.read_count}"
         eval "$CMD"
@@ -339,6 +351,7 @@ rule s8_peak_analysis:
         "envs/chromatin-assembly.yaml"
     shell:
         """
+        # s8_peak_analysis
         mkdir -p {params.analysis_dir}
         mkdir -p {params.danpos_op_dir}
         mkdir -p {params.test_dir}

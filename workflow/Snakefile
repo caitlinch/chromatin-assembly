@@ -55,6 +55,7 @@ rule s0_merge_samples:
 	    "envs/merge_reads.yaml"
     shell:
         """
+        # s0_merge_samples
         Rscript {params.merge_script} config={params.config} out={params.log}
         """
 
@@ -78,6 +79,7 @@ rule s1_mask_repeats:
         module_kit4b        = config['modules']['kit4b']
     shell:
         """
+        # s1_mask_repeats
         module load {params.module_repeatmasker}
         module load {params.module_kit4b}
         mkdir -p {params.outdir}
@@ -105,6 +107,7 @@ rule s2_raw_read_QC:
         module_fastqc = config['modules']['fastqc']
     shell:
         """
+        # s2_raw_read_QC
         module load {params.module_fastqc}
         mkdir -p {params.outdir}
 
@@ -130,6 +133,7 @@ rule s3_extract_UMI:
         module_fgbio         = config['modules']['fgbio']
     shell:
         """
+        # s3_extract_UMI
         module load {params.module_picard}
         module load {params.module_fgbio}
         mkdir -p {params.outdir}
@@ -160,6 +164,7 @@ rule s4_read_alignment:
         module_kit4b  = config['modules']['kit4b']
     shell:
         """
+        # s4_read_alignment
         module load {params.module_kit4b}
         mkdir -p {params.outdir}
 
@@ -180,6 +185,7 @@ rule s5_alignment_deduplication:
         module_picard = config['modules']['picard']
     shell:
         """
+        # s5_alignment_deduplication
         module load {params.module_picard}
         mkdir -p {params.outdir}
 
@@ -201,6 +207,7 @@ rule s6a_two_bit_genome:
         "envs/Step6.yaml"
     shell:
         """
+        # s6a_two_bit_genome
         mkdir -p {params.outdir}
 
         faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
@@ -220,6 +227,7 @@ rule s6b_effective_genome_size:
         "envs/Step6.yaml"
     shell:
         """
+        # s6b_effective_genome_size
         mkdir -p {params.outdir}
 
         faCount {input.masked_ref_genome} > {output.eff_gen_size}
@@ -242,6 +250,7 @@ rule s6c_compute_GC_bias:
         module_samtools = config['modules']['samtools']
     shell:
         """
+        # s6c_compute_GC_bias
         module load {params.module_python}
         module load {params.module_samtools}
         mkdir -p {params.outdir}
@@ -267,6 +276,7 @@ rule s6d_correct_GC_bias:
         module_samtools = config['modules']['samtools']
     shell:
         """
+        # s6d_correct_GC_bias
         module load {params.module_python}
         module load {params.module_samtools}
         mkdir -p {params.outdir}
@@ -289,6 +299,7 @@ rule s7a_size_metrics:
         module_R      = config['modules']['R']
     shell:
         """
+        # s7a_size_metrics
         module load {params.module_picard}
         module load {params.module_R}
         mkdir -p {params.outdir}
@@ -309,6 +320,7 @@ rule s7b_read_count:
         module_samtools = config['modules']['samtools']
     shell:
         """
+        # s7b_read_count
         module load {params.module_samtools}
         mkdir -p {params.outdir}
 
@@ -338,6 +350,7 @@ rule s8_peak_analysis:
         module_python   = config['modules']['python']    
     shell:
         """
+        # s8_peak_analysis
         module load {params.module_python}
         module load {params.module_danpos}
 
