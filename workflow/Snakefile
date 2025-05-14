@@ -46,11 +46,11 @@ rule s0_merge_samples:
     output:
         r1 = expand("results/{species}/{step_name}/{sample}_merged_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
         r2 = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS)
-    log: f"log/s0_merge_samples.{config['ref_species']}.log"
+    log: f"logs/s0_merge_samples.{config['ref_species']}.log"
     params:
         config = f"{config['repo_dir']}config/chromatin_assembly_config.yml",
         merge_script = f"{config['repo_dir']}workflow/R/s0_merge_reads.R",
-        log          = f"{config['repo_dir']}log/{config['output_dir']['step0']}_{config['ref_species']}.txt"
+        log          = f"{config['repo_dir']}logs/{config['output_dir']['step0']}_{config['ref_species']}.txt"
     conda: 
 	    "envs/merge_reads.yaml"
     shell:
@@ -67,7 +67,7 @@ rule s1_mask_repeats:
     output:
         masked = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked",
         index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index"
-    log: f"{config['repo_dir']}log/s1_{config['ref_species']}_mask_repeats.log"
+    log: f"{config['repo_dir']}logs/s1_{config['ref_species']}_mask_repeats.log"
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
         ref_genome_basename = lambda w, input: os.path.split(input.ref_genome)[1],
@@ -101,7 +101,7 @@ rule s2_raw_read_QC:
     output:
         r1 = f"results/{config['ref_species']}/{config['output_dir']['step2']}/{{sample}}_merged_R1_fastqc.html",
         r2 = f"results/{config['ref_species']}/{config['output_dir']['step2']}/{{sample}}_merged_R2_fastqc.html"
-    log: "log/s2_raw_read_QC.{sample}.log"
+    log: "logs/s2_raw_read_QC.{sample}.log"
     params:
         outdir        = lambda w, output: os.path.split(output.r1)[0],
         module_fastqc = config['modules']['fastqc']
@@ -122,7 +122,7 @@ rule s3_extract_UMI:
     output:
         r1 = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_merged_withUMI_R1.fastq.gz",
         r2 = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_merged_withUMI_R2.fastq.gz"
-    log: "log/s3_extract_UMI.{sample}.log"
+    log: "logs/s3_extract_UMI.{sample}.log"
     params:
         basename             = "{sample}",
         outdir               = lambda w, output: os.path.split(output.r1)[0],
@@ -156,7 +156,7 @@ rule s4_read_alignment:
         index = rules.s1_mask_repeats.output.index
     output:
         alignment = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.sam"
-    log: "log/s4_read_alignment.{sample}.log"
+    log: "logs/s4_read_alignment.{sample}.log"
     params:
         outdir        = lambda w, output: os.path.split(output.alignment)[0],
         log_file      = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.log",
@@ -177,7 +177,7 @@ rule s5_alignment_deduplication:
         alignment = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.sam"
     output:
         dedup_alignment = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam"
-    log: "log/s5_alignment_deduplication.{sample}.log"
+    log: "logs/s5_alignment_deduplication.{sample}.log"
     params:
         outdir        = lambda w, output: os.path.split(output.dedup_alignment)[0],
         metrics       = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_removeduplicates.metrics.txt",
@@ -199,7 +199,7 @@ rule s6a_two_bit_genome:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
         twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_alignment_dedup.2bit"
-    log: f"log/s6a_two_bit_genome.{config['ref_species']}.log"
+    log: f"logs/s6a_two_bit_genome.{config['ref_species']}.log"
     params:
         outdir            = lambda w, output: os.path.split(output.twobit_genome)[0],
         info              = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab"
@@ -220,7 +220,7 @@ rule s6b_effective_genome_size:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
         eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['input']['reference_genome_id']}_effGenSize.txt"
-    log: f"log/s6b_effective_genome_size.{config['ref_species']}.log"
+    log: f"logs/s6b_effective_genome_size.{config['ref_species']}.log"
     params:
         outdir = lambda w, output: os.path.split(output.eff_gen_size)[0]
     conda:
@@ -241,7 +241,7 @@ rule s6c_compute_GC_bias:
         eff_gen_size    = rules.s6b_effective_genome_size.output.eff_gen_size
     output:
         freq_file = f"results/{config['ref_species']}/{config['output_dir']['step6c']}/{{sample}}_computeGCbias.txt"
-    log: "log/s6c_compute_GC_bias.{sample}.log"
+    log: "logs/s6c_compute_GC_bias.{sample}.log"
     params:
         outdir          = lambda w, output: os.path.split(output.freq_file)[0], 
         samtools_index  = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam.bai",
@@ -268,7 +268,7 @@ rule s6d_correct_GC_bias:
         freq_file       = f"results/{config['ref_species']}/{config['output_dir']['step6c']}/{{sample}}_computeGCbias.txt"
     output:
         gc_corrected = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam"
-    log: "log/s6d_correct_GC_bias.{sample}.log"
+    log: "logs/s6d_correct_GC_bias.{sample}.log"
     params:
         outdir          = lambda w, output: os.path.split(output.gc_corrected)[0], 
         eff_gen_size    = config['s6b_output']['effective_genome_size'],
@@ -292,7 +292,7 @@ rule s7a_size_metrics:
     output:
         size_metrics = f"results/{config['ref_species']}/{config['output_dir']['step7a']}/{config['ref_species']}_{{sample}}_insert_size_metrics.txt",
         histogram    = f"results/{config['ref_species']}/{config['output_dir']['step7a']}/{config['ref_species']}_{{sample}}_insert_size_histogram.pdf"
-    log: "log/s7a_size_metrics.{sample}.log"
+    log: "logs/s7a_size_metrics.{sample}.log"
     params:
         outdir        = lambda w, output: os.path.split(output.size_metrics)[0], 
         module_picard = config['modules']['picard'],
@@ -314,7 +314,7 @@ rule s7b_read_count:
         gc_corrected = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam"
     output:
         read_count = f"results/{config['ref_species']}/{config['output_dir']['step7b']}/{config['ref_species']}_{{sample}}_count.txt"
-    log: "log/s7b_read_count.{sample}.log"
+    log: "logs/s7b_read_count.{sample}.log"
     params:
         outdir          = lambda w, output: os.path.split(output.read_count)[0], 
         module_samtools = config['modules']['samtools']
@@ -338,7 +338,7 @@ rule s8_peak_analysis:
         dpos_op    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.positions.integrative.xls",
         dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.peaks.integrative.xls",
         dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.regions.integrative.xls"
-    log: f"log/s8_peak_analysis.{config['peak_analysis']['test_name']}.log"
+    log: f"logs/s8_peak_analysis.{config['peak_analysis']['test_name']}.log"
     params:
         test_indexes    = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
         control_indexes = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids']),

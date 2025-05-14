@@ -17,8 +17,8 @@
 #SBATCH --mail-user=caitlin.cherryh@csiro.au
 #SBATCH --mail-type=ALL
 #SBATCH --account=OD-233464
-#SBATCH --error=/scratch3/che318/chromatin-assembly/log/slurm_%j_%x.err
-#SBATCH --out=/scratch3/che318/chromatin-assembly/log/slurm_%j_%x.out
+#SBATCH --error=/scratch3/che318/chromatin-assembly/logs/slurm_%j_%x.err
+#SBATCH --out=/scratch3/che318/chromatin-assembly/logs/slurm_%j_%x.out
 
 # ----------------Modules------------------------- #
 module load python
