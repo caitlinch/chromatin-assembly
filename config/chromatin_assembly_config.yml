@@ -18,49 +18,21 @@ repo_dir: "/scratch3/che318/chromatin-assembly/"
 # ref_species: Species name
 ref_species: "mouse"
 
+# binomial_species_name: user-specified species name for use with ngskit index 
+binomial_species_name: "Mus musculus"
+
+# Effective genome size, extracted from the output of Step 6b
+#   The number of non-N bases in the genome i.e., {total len} - {total N}
+effective_genome_size: 12003433
+
 # Merging reads
 # See `README.md` for detailed instructions on merging reads
 # Parameters:
 # read_dir: full path to directory e.g., /full/path/to/chromatin-assembly/data/yeast/reads/ 
-# merge_sample_ids: The sample IDs to merge, input as a list i.e., e.g., ["id01", "id02", "id03"]
-# merge_across_dirs: Whether to combine reads from different subdirectories (directories within the `read_dir`) for a given sample.
-#                    TRUE to merge across all directories (one R1/R2 per sample). 
-#                    FALSE to merge within directories (one R1/R2 per sample per dir).
-# merge_all_lanes: Whether to specify lanes for merging (i.e., whether to merge only specific lanes)
-#                  TRUE to merge only specified lanes. 
-#                  FALSE to merge all lanes.
-#                  This option merges the same lanes for all sample IDs
-# read_lanes: specific read lanes to merge, as dictionary i.e., ["1", "2", "3", "4", "5", "6", "7", "8"]
-#             Only needed when `merge_all_lanes: TRUE`
-#             If `merge_all_lanes: FALSE`, set  `read_lanes: []`
-#             This option will merge the specified lanes for all sample ID
-# use_names: Whether to use sample names for output filepaths. Used to create human-readable output file names.
-#             FALSE to use sample IDs in output filenames -- for sample ID "id01", output file would be "id01_merged_R1.fastq.gz"
-#             TRUE to use sample names in output filenames -- for sample ID "id01" with name "name01", output file would be "name01_merged_R1.fastq.gz"
-# sample_names: dictionary containing name/id pairs e.g., ["id01": "name01", "id02": "name02", "id03": "name03"]
-#               Only needed when "use_names" is TRUE
-#               Allows user to replace sample IDs with human-readable name 
-#               Important - keep level of indentation identical for all lines in dictionary
-#               Important - each sample ID should uniquely identify a single sample
-#               Important - each sample ID should identically match one in the `merge_sample_ids` list or there may be errors
-# specify_sample_lanes: Whether to use different lanes for different sample IDs
-#                       FALSE if using the same lanes for all sample IDs (e.g., using lanes 1-8 for all samples)
-#                       FALSE if not specifying lanes i.e., if `merge_all_lanes: FALSE`
-#                       TRUE to merge only certain lanes for sample IDs, with different lanes to be merged for each sample ID.
-#                       TRUE if using only a single lane from a single flow cell for one or more sample IDs
-#                       Important - If TRUE, must also provide sample_lanes dictionary
-# sample_lanes: dictionary to specify lanes for individual sample IDs, containing name/lane pairs e.g., ["id01": "1", "id02": "1,2", "id03": "1,2,3"]
-#               Only needed when `specify_sample_lanes: TRUE`
+# merge_dict: optional filepath specifying lanes to merge and human-readable sample names
 merge_reads: 
   read_dir: "/scratch3/che318/chromatin-assembly/data/mouse/reads/"
-  merge_sample_ids: ["133143", "133133"]
-  merge_across_dirs: TRUE
-  merge_all_lanes: TRUE
-  read_lanes: []
-  use_names: FALSE
-  sample_names: []
-  specify_sample_lanes: FALSE
-  sample_lanes: []
+  merge_dict: "/scratch3/che318/chromatin-assembly/mouse_sample_dict.txt"
 
 # Input data paths and details
 # Merged reads will be in directory: /full/path/to/chromatin-assembly/results/{ref_species}/0_mergedReads/
@@ -136,11 +108,8 @@ output_dir:
 ##### Section 3: Program parameters #####
 # Program parameters for repeat masking with RepeatMasker (Step 1)
 #     repeatmasker_engine: user-specified engine for use with RepeatMasker
-#     ngskit_index_species_name: user-specified species name for use with ngskit index 
 s1_mask_repeats:
   repeatmasker_engine: "-engine rmblast"
-  ngskit_index_species_name: "Mus musculus"
-
 
 # Program parameters for UMI extraction with FGBio and Picard (Step 3)
 #   FGBio_params: user-specified parameters for FGBio call (old version: "--read-structure 8M143T 8M143T --molecular-index-tags ZA ZB --single-tag RX")
@@ -172,14 +141,7 @@ s5_alignment_deduplication:
   Picard_params: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
 
 
-##### Section 4: Intermediate output #####
-# Effective genome size, extracted from the output of Step 6b
-#   The number of non-N bases in the genome i.e., {total len} - {total N}
-s6b_output:
-  effective_genome_size: 12003433
-
-
-##### Section 5: Modules #####
+##### Section 4: Modules #####
 # For use on the CSIRO HPC system Petrichor
 # Update module versions here, as required
 modules:
