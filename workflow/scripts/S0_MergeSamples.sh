@@ -37,22 +37,7 @@ output_dir="/scratch3/che318/chromatin-assembly/results/Pcoll/0_mergedReads"
 log_dir="/scratch3/che318/chromatin-assembly/logs/0_mergedReads"
 
 sample_ID_keep_first_segment_only=true
-lane_dict_file="/scratch3/che318/chromatin-assembly/lane_dict"
 name_dict_file="/scratch3/che318/chromatin-assembly/dict"
-merge_all_lanes=FALSE
-
-
-########### TEMP CODE ################
-temp_lane_dict="122|8 
-111|1 
-222|1,2 
-333|1,2,3 
-444|1,2,3,4 
-555|1,2,3,4,5 
-666|1,2,3,4,5,6 
-777|1,2,3,4,5,6,7 
-888|1,2,3,4,5,6,7,8 
-"
 
 temp_name_dict="sample_ID|sample_name|sample_lanes
 122||8 
@@ -104,64 +89,7 @@ echo "Sample IDs:"
 for s_id in ${samples}; do echo $s_id; done
 echo "" 
 
-
-## To Merge lanes (from specified dictionary)
-for s_id in ${samples}; do 
-    echo "Sample ID: ${s_id}"
-    declare -a R1_files=()
-    declare -a R2_files=()
-    if grep "${s_id}" -q $lane_dict_file; then 
-        echo "Merge lanes provided: TRUE"
-        s_lane_str=$(grep "${s_id}" $lane_dict_file | awk -F '|' '{print $2}')
-        echo "User-specified lanes to merge: ${s_lane_str}"
-        for lane in $(echo $s_lane_str | tr ',' '\n' | sort); do
-            R1_files+=( $(find $data_dir -type f | \
-                grep $s_id | grep -i -e "_R1_" -e "_R1\." -e "\.R1\." -e "\.R1_" | \
-                grep -e $(printf '_L%03d_' $lane) -e $(printf '\.L%03d_' $lane) -e $(printf '_L%03d\.' $lane) -e $(printf '\.L%03d\.' $lane)) )
-            R2_files+=( $(find $data_dir -type f | \
-                grep $s_id | grep -i -e "_R2_" -e "_R2\." -e "\.R1\." -e "\.R1_" | \
-                grep -e $(printf '_L%03d_' $lane) -e $(printf '\.L%03d_' $lane) \-e $(printf '_L%03d\.' $lane) -e $(printf '\.L%03d\.' $lane)) )
-            apply_cat_command=true
-        done
-    else
-        echo "Merge lanes provided: FALSE"
-        if (find ${data_dir} -type f -exec basename {} \; | grep "${s_id}" | grep -P -q "L[0-9]{3}"); then
-            echo "Files with L000 pattern found: TRUE"
-            sample_all_lanes=$(find ${data_dir} -type f -exec basename {} \; | grep "${s_id}" | grep -oP "L[0-9]{3}" | sort | uniq | sed 's/L//' | tr '\n' ' ')
-            echo "Merging all present lanes: ${sample_all_lanes}"
-            R1_files+=( $(find ${data_dir} | \
-                grep "${s_id}" | \
-                grep -i -e "_R1_" -e "_R1\." -e "\.R1\." -e "\.R1_" | \
-                sort) )
-            R2_files+=( $(find ${data_dir} | \
-                grep "${s_id}" | \
-                grep -i -e "_R2_" -e "_R2\." -e "\.R1\." -e "\.R1_" | \
-                sort) )
-            apply_cat_command=true
-        else 
-            echo "Files with '_L000' pattern found: FALSE"
-            echo "No files for this sample contain lane numbers in the format LXXX, where X is a digit from 0-9"
-            apply_cat_command=false
-        fi
-    fi
-    if [ "$apply_cat_command" == "true" ]; then
-        echo "Concatenating files for ${s_id}"
-        echo "${R1_files[@]}" 
-        echo "${R2_files[@]}"
-        cat $(echo "${R1_files[@]}") > "$output_dir/${s_id}_merged_R1.fastq.gz"
-        echo "${R1_files[@]}"  > "$log_dir/${species_name}.${s_id}_merged_R1.log"
-        cat $(echo "${R2_files[@]}") > "$output_dir/${s_id}_merged_R2.fastq.gz"
-        echo "${R2_files[@]}"  > "$log_dir/${species_name}.${s_id}_merged_R2.log"
-        echo "Merging complete for ${s_id}"
-    else
-        echo "No merging performed for ${s_id}"
-    fi
-    echo ""
-done
-
-## RENAME FILES USING: /scratch3/che318/chromatin-assembly/dict
-# Iterate through the dict file line by line
-# Rename files using mv
+# Merge reads
 for s_id in ${samples}; do 
     echo "Sample ID: ${s_id}"
     declare -a R1_files=()
