@@ -48,15 +48,38 @@ rule s0_merge_samples:
         r2 = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS)
     log: f"logs/s0_merge_samples.{config['ref_species']}.log"
     params:
-        config = f"{config['repo_dir']}config/chromatin_assembly_config.yml",
-        merge_script = f"{config['repo_dir']}workflow/R/s0_merge_reads.R",
-        log          = f"{config['repo_dir']}logs/{config['output_dir']['step0']}_{config['ref_species']}.txt"
-    conda: 
-	    "envs/merge_reads.yaml"
+        output_dir = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step0']}",
+        log_dir      = f"{config['repo_dir']}logs/{config['output_dir']['step0']}"
     shell:
         """
         # s0_merge_samples
-        Rscript {params.merge_script} config={params.config} out={params.log}
+        echo "Preparing directories"
+        mkdir -p {params.output_dir}
+        mkdir -p {params.log_dir}
+        
+        echo "Collecting .fastq.gz files (from directory and subdirectories)"
+        all_fastq=$(find {input.reads_dir} -type f -name "*.fastq.gz")
+        
+        echo "Collecting sample IDs"
+        declare -a samples=()
+        for file in $(echo $all_fastq); do
+            sample=$(echo "$(basename "$file")" | awk -F'_' {{'print $1'}})
+            if [[ ! " ${{samples[*]}} " =~ " ${{sample}} " ]]; then
+                echo $sample
+                samples+=("$sample")
+            fi
+        done
+        
+        echo "Merging reads per sample:"
+        for sample in "${{samples[@]}}"; do
+            echo $sample
+            cat `find $data_dir | grep $sample | grep "_R1\.|_R1_" | sort` > "{params.output_dir}/${{sample}}_merged_R1.fastq.gz"
+            find $data_dir | grep $sample | grep "_R1\.|_R1_" | sort > "{params.log_dir}/${{sample}}_merged_R1.log"
+            cat `find $data_dir | grep $sample | grep "_R2\.|_R2_" | sort` > "{params.output_dir}/${{sample}}_merged_R2.fastq.gz"
+            find $data_dir | grep $sample | grep "_R2\.|_R2_" | sort > "{params.log_dir}/${{sample}}_merged_R2.log"
+        done
+        echo "Merging complete"
+        echo "Log directory: {params.log_dir}"
         """
 
 ## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
@@ -67,7 +90,7 @@ rule s1_mask_repeats:
     output:
         masked = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked",
         index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index"
-    log: f"{config['repo_dir']}logs/s1_{config['ref_species']}_mask_repeats.log"
+    log: f"{config['repo_dir']}logs/s1_mask_repeats.{config['ref_species']}.log"
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
         ref_genome_basename = lambda w, input: os.path.split(input.ref_genome)[1],
