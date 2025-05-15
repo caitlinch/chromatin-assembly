@@ -49,37 +49,12 @@ rule s0_merge_samples:
     log: f"logs/s0_merge_samples.{config['ref_species']}.log"
     params:
         output_dir = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step0']}",
-        log_dir      = f"{config['repo_dir']}logs/{config['output_dir']['step0']}"
+        log_dir    = f"{config['repo_dir']}logs/{config['output_dir']['step0']}",
+        merge_dict = config['merge_reads']['merge_dict']
     shell:
         """
         # s0_merge_samples
-        echo "Preparing directories"
-        mkdir -p {params.output_dir}
-        mkdir -p {params.log_dir}
-        
-        echo "Collecting .fastq.gz files (from directory and subdirectories)"
-        all_fastq=$(find {input.reads_dir} -type f -name "*.fastq.gz")
-        
-        echo "Collecting sample IDs"
-        declare -a samples=()
-        for file in $(echo $all_fastq); do
-            sample=$(echo "$(basename "$file")" | awk -F'_' {{'print $1'}})
-            if [[ ! " ${{samples[*]}} " =~ " ${{sample}} " ]]; then
-                echo $sample
-                samples+=("$sample")
-            fi
-        done
-        
-        echo "Merging reads per sample:"
-        for sample in "${{samples[@]}}"; do
-            echo $sample
-            cat `find $data_dir | grep $sample | grep "_R1\.|_R1_" | sort` > "{params.output_dir}/${{sample}}_merged_R1.fastq.gz"
-            find $data_dir | grep $sample | grep "_R1\.|_R1_" | sort > "{params.log_dir}/${{sample}}_merged_R1.log"
-            cat `find $data_dir | grep $sample | grep "_R2\.|_R2_" | sort` > "{params.output_dir}/${{sample}}_merged_R2.fastq.gz"
-            find $data_dir | grep $sample | grep "_R2\.|_R2_" | sort > "{params.log_dir}/${{sample}}_merged_R2.log"
-        done
-        echo "Merging complete"
-        echo "Log directory: {params.log_dir}"
+        # sh workflow/scripts/s0_MergeSamples.sh
         """
 
 ## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
@@ -97,7 +72,7 @@ rule s1_mask_repeats:
         ngskit4b_log        = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index.log",
         adapter             = f"{config['repo_dir']}{config['params']['adapters']}",
         repeatmasker_engine = config['s1_mask_repeats']['repeatmasker_engine'],
-        species_name        = config['s1_mask_repeats']['ngskit_index_species_name'], 
+        species_name        = config['binomial_species_name'], 
         module_repeatmasker = config['modules']['repeatmasker'],
         module_kit4b        = config['modules']['kit4b']
     shell:
@@ -268,7 +243,7 @@ rule s6c_compute_GC_bias:
     params:
         outdir          = lambda w, output: os.path.split(output.freq_file)[0], 
         samtools_index  = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam.bai",
-        eff_gen_size    = config['s6b_output']['effective_genome_size'],
+        eff_gen_size    = config['effective_genome_size'],
         module_python   = config['modules']['python'],
         module_samtools = config['modules']['samtools']
     shell:
@@ -294,7 +269,7 @@ rule s6d_correct_GC_bias:
     log: "logs/s6d_correct_GC_bias.{sample}.log"
     params:
         outdir          = lambda w, output: os.path.split(output.gc_corrected)[0], 
-        eff_gen_size    = config['s6b_output']['effective_genome_size'],
+        eff_gen_size    = config['effective_genome_size'],
         module_python   = config['modules']['python'],
         module_samtools = config['modules']['samtools']
     shell:
