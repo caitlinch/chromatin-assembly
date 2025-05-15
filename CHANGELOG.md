@@ -6,7 +6,19 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
   
 ## [Unreleased] - yyyy-mm-dd
+
+### Added
+- Better template data
+
+### Changed
+- S0 read merging - BASH script with simpler input parameters and improved internal logic 
+- Moved vars for effective genome size and species binomial into Section 1 of the config file
+
+### Fixed
+
  
+## [0.2.0] - 2025-05-15
+
 ### Added
 - R script (`workflow/R/s0_merge_reads.R`) to merge reads into one R1 and one R2 
 file per sample name 
