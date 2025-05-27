@@ -52,7 +52,7 @@ merge_reads:
 #                  "SMZ3538", "SMZ3540", "SMZ3541", "SMZ3557", "SMZ3559", "SMZ3560", "SMZ3561"]
 
 input:
-  Reference_genome_id: "gecko_genome"
+  reference_genome_id: "gecko_genome"
   reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
   input_sample_ids: ["R55032", "R55025", "SMZ3557", "SMZ3559"] 
 
