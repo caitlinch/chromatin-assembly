@@ -18,60 +18,52 @@ repo_dir: "/scratch3/che318/chromatin-assembly/"
 # ref_species: Species name
 ref_species: "mouse"
 
-# binomial_species_name: user-specified species name for use with ngskit index 
+# binomial_species_name: user-specified species name for use with ngskit index e.g., "Mus musculus"
 binomial_species_name: "Mus musculus"
 
-# Effective genome size, extracted from the output of Step 6b
+## Effective genome size, extracted from the output of Step 6b
 #   The number of non-N bases in the genome i.e., {total len} - {total N}
 effective_genome_size: 12003433
 
-# Merging reads
-# See `README.md` for detailed instructions on merging reads
-# Parameters:
+## Merging reads ##
+## See `README.md` for detailed instructions on merging reads
 # read_dir: full path to directory e.g., /full/path/to/chromatin-assembly/data/yeast/reads/ 
-# merge_dict: optional filepath specifying lanes to merge and human-readable sample names
+# merge_dict: optional filepath specifying lanes to merge and human-readable sample names.
+#             see README.md for details
+# provide_merge_dict: "true" if using merge_dict, otherwise "false"
+#             see README.md for details
 merge_reads: 
   read_dir: "/scratch3/che318/chromatin-assembly/data/mouse/reads/"
   merge_dict: "/scratch3/che318/chromatin-assembly/mouse_sample_dict.txt"
+  provide_merge_dict: "true"
 
-# Input data paths and details
-# Merged reads will be in directory: /full/path/to/chromatin-assembly/results/{ref_species}/0_mergedReads/
-# Parameters:
+## Input data paths and details ##
 # reference_genome_id: human-readable identifier for reference genome
 # reference_genome_path: full path to reference genome e.g.,  /full/path/to/chromatin-assembly/data/yeast/reference_genome/ref_genome.fsa
-# input_sample_ids: The samples to be run through the pipeline. Each sample ID is a chunk of a filepath. 
-#             Dictionary of sample IDs i.e., ["sample_1", "sample_2", "sample_3"]
-#             Important - keep identation level consistent for all lines in dictionary
-#             Note - the `input_sample_ids` should be the sample IDs for the MERGED files
-#                   Given the `merge_reads` parameters:
-#                          `merge_sample_ids: ["id01", "id02", "id03"]`
-#                          `sample_names: ["id01": "name01", "id02": "name02", "id03": "name03"]`
-#                   If you used sample IDs when merging reads (`use_names: TRUE`), use the sample IDs here:
-#                         `input_sample_ids: ["id01", "id02", "id03"]`
-#                   If you used sample names when merging reads (`use_names: TRUE`), use the sample names here:
-#                         `input_sample_ids: ["name01", "name02", "name03"]`
-#             Note - the input for DANPOS (Step 8) is the output from Step 6 (GC corrected alignment)
-#                   so the `input_sample_ids` variable should include all samples you wish to use as either experimental
-#                   data OR input control for DANPOS.
+# input_samples: The samples to be run through the pipeline e.g., `input_sample_ids: ["id01", "id02", "id03", "id04"]`
+#                Each sample ID is a chunk of a filepath. 
+#                Important: If you renamed the files using a `merge_dict`, you must specify the sample names here
+#                           See README.md for details!
+#                Important: the `input_samples` variable should include all samples you wish to use as either 
+#                           experimental data or control for Step 8 (Peak analysis with DANPOS)
 input:
   reference_genome_id: "GRCm38.p6"
   reference_genome_path: "/scratch3/che318/chromatin-assembly/data/mouse/reference_genome/GCF_000001635.26_GRCm38.p6_genomic.fna"
-  input_sample_ids: ["133143", "133133"] 
+  input_samples: ["133143", "133133"] 
 
-# Input control for peak analysis with DANPOS (Step 8)
-# Parameters:
+## Input control for peak analysis with DANPOS (Step 8) ##
 # test_name: Descriptive name for test, to be used as name of output directory
-# exp_ids: The sample IDs to use as experimental/test data for DANPOS analysis, as a list i.e., e.g., ["id01", "id02", "id03"]
-#           Should be a subset of the `input_sample_ids`
-# control_ids: The sample IDs to use as input control for DANPOS analysis, as a list i.e., e.g., ["id01", "id02", "id03"]
-#              Should be a subset of the `input_sample_ids`
+# exp_ids: The sample IDs to use as experimental/test data for DANPOS analysis e.g., `exp_ids: ["id01", "id02"]`
+#           Should be a subset of `input_samples`
+# control_ids: The sample IDs to use as input control for DANPOS analysis e.g., `control_ids: ["id03", "id04"]`
+#              Should be a subset of `input_samples`
 peak_analysis: 
   test_name: "133143-133133"
   exp_ids: ["133143"] 
   control_ids: ["133133"] 
 
-# Adapters
-#   adapters: file path relative to chromatin-assembly directory i.e., resources/adapters/adap_cont_rna.fa
+## Adapters ##
+# adapters: file path relative to chromatin-assembly directory i.e., resources/adapters/adap_cont_rna.fa
 params:
   adapters: "resources/adapters/adap_cont_rna.fa"
 
@@ -82,13 +74,7 @@ params:
 #     Where:
 #         {ref_species} is specified above (Section 1: Input data and parameters)
 #         {stepX} is specified below
-# Changing the output directory here allows you to rerun steps with changed parameters
-# Unless you are changing the parameters to rerun a step, you will not need to change these variables
-#   Snakemake is smart - it will not overwrite existing files
-#   If you want to rerun a step with a different set of input parameters, you can update the output directory
-#   for that step here, which will allow you to run that step with the new settings
-#   If you want to force Snakemake to rerun a rule, use the flag `-R {rulename}` or `--forcerun {rulename}`
-#       e.g., "snakemake -R somerule" will force Snakemake to re-run all jobs of that rule and everything downstream 
+# For more details, see the section "Running Snakemake pipelines" in the repo `README.md`
 output_dir:
   step0: "0_mergedReads"
   step1: "1_repeatmasker"
@@ -106,44 +92,38 @@ output_dir:
 
 
 ##### Section 3: Program parameters #####
-# Program parameters for repeat masking with RepeatMasker (Step 1)
-#     repeatmasker_engine: user-specified engine for use with RepeatMasker
+# Refer to repo file `doco/05_advanced_use.Rmd` for details on changing program parameters
+
+## Step 1: RepeatMasker ##
+# repeatmasker_engine: user-specified engine for use with RepeatMasker
+#                      Recommended: "-engine rmblast"
 s1_mask_repeats:
   repeatmasker_engine: "-engine rmblast"
 
-# Program parameters for UMI extraction with FGBio and Picard (Step 3)
-#   FGBio_params: user-specified parameters for FGBio call (old version: "--read-structure 8M143T 8M143T --molecular-index-tags ZA ZB --single-tag RX")
+## Program parameters for UMI extraction with FGBio and Picard (Step 3) ##
+# FGBio_params: user-specified parameters for FGBio call 
+#               Recommended: "-r 8M143T 8M143T -t ZA ZB -s RX"
 s3_extract_UMI:
   FGBio_params: "-r 8M143T 8M143T -t ZA ZB -s RX"
 
-# Program parameters for aligning reads with kalign (Step 4)
-#   kalign_params: user-specified parameters for kalign call
-#       -c, --minchimeric: minimum chimeric length as a percentage of probe length
-#                             Default = 0 (to disable), otherwise 15 - 99
-#       -l, --minacceptreadlen: after any end trimming only accept read for further processing if read is at least this length (in bp)
-#                                   Default = 50, range is 15 - 2000
-#       -d, --pairminlen:  accept paired end alignments with observed insert sizes of at least this (in bp)
-#                                Default = 100, minimum = 25
-#       -U, --pemode: paired end processing mode (default = 0): 
-#                         0 - none, 
-#                         1 - paired end with recover orphan ends, 
-#                         2 - paired end no orphan recovery, 
-#                         3 - paired end with recover orphan ends treating orphan ends as SE, 
-#                         4 - paired end no orphan recovery treating orphan ends as SE
-#   kalign_id: user-specified string to be included in output filepath
+## Step 4: kalign parameters ##
+# kalign_params: user-specified parameters for kalign call
+#                Recommended: `kalign_params: "-c25 -l25 -d50 -U4"`
+# kalign_id: user-specified string to be included in output filepath
+#            Recommended: "pe_c25_l25_d50_U4"
 s4_read_alignment:
   kalign_params: "-c25 -l25 -d50 -U4"
   kalign_id: "pe_c25_l25_d50_U4"
 
-# Program parameters for removing PCR and optical duplicates from alignment with Picard (Step 5)
-#   Picard_params: user-specified parameters for Picard call
+## Step 5: Picard parameters ##
+# Picard_params: user-specified parameters for Picard call
+#                Recommended: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
 s5_alignment_deduplication:
   Picard_params: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
 
 
-##### Section 4: Modules #####
-# For use on the CSIRO HPC system Petrichor
-# Update module versions here, as required
+##### Section 4: HPC system #####
+## Modules - update module versions here if required ##
 modules:
   danpos: "danpos/3.1.1"
   fastqc: "fastqc/0.11.9"
