@@ -26,6 +26,15 @@ name_dict_file="/scratch3/che318/chromatin-assembly/data/gecko/gecko_sample_dict
 output_dir="/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads"
 log_dir="/scratch3/che318/chromatin-assembly/logs/0_mergedReads"
 sample_ID_keep_first_segment_only=true
+provide_merge_dict=true
+
+if [ "$provide_merge_dict" == "True" ] || [ "$provide_merge_dict" == "true" ]|| [ "$provide_merge_dict" == "TRUE" ] ; then echo "yes"; fi
+
+if test -f "$name_dict_file"; then
+    echo "file exists"
+else
+    echo "file doesn't exist"
+fi
 
 # ## Petrichor testing -- Pcoll ##
 # species_name="Pcoll"
