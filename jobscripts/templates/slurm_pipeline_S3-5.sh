@@ -6,7 +6,8 @@
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
 #SBATCH --job-name=CA_S345
-#SBATCH --time=100:00:00
+#SBATCH --partition=ext
+#SBATCH --time=25-00:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
@@ -25,4 +26,3 @@ module load python
 #       Step 4 - Align reads with kalign 
 #       Step 5 - Remove PCR and optical duplicates from alignment with Picard
 snakemake --slurm --profile profiles/slurm/ --until s5_alignment_deduplication --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size
-
