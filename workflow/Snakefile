@@ -9,15 +9,14 @@
 # --- Config file --- #
 configfile: "config/chromatin_assembly_config.yml"
 
+
 # --- Global Variables --- #
 # SAMPLE_IDS – unique identifiers of reads to process
 SAMPLE_IDS  = config['input']['input_sample_ids']
 
-# --- Complete pipeline run --- #
+
+# --- Rule: run_all --- #
 ## Run all rules
-# To generate files for s0_merge_samples:
-#        s0_r1      = expand("results/{species}/{step_name}/{sample}_merged_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
-#        s0_r2      = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
 rule run_all:
     input:
         s1_masked  = expand("{repo_dir}results/{species}/{step_name}/{ref_genome_id}.masked", repo_dir=config['repo_dir'], species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
@@ -38,6 +37,7 @@ rule run_all:
         s8_dpeak   = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.peaks.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name']),
         s8_dregion = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.regions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name'])
 
+
 # --- Pipeline steps --- #
 ## Step 0: Read collation (SLURM_MergeSamples.sh)
 rule s0_merge_samples:
@@ -54,7 +54,38 @@ rule s0_merge_samples:
     shell:
         """
         # s0_merge_samples
+
+        # Complex merge script:
         # sh workflow/scripts/s0_MergeSamples.sh
+
+        echo "Commence simple merge"
+        echo "Preparing directories"
+        mkdir -p {params.output_dir}
+        mkdir -p {params.log_dir}
+        
+        echo "Collecting .fastq.gz files (from directory and subdirectories)"
+        all_fastq=$(find {input.reads_dir} -type f -name "*.fastq.gz")
+        
+        echo "Collecting sample IDs"
+        declare -a samples=()
+        for file in $(echo $all_fastq); do
+            sample=$(echo "$(basename "$file")" | awk -F'_' {{'print $1'}})
+            if [[ ! " ${{samples[*]}} " =~ " ${{sample}} " ]]; then
+                echo $sample
+                samples+=("$sample")
+            fi
+        done
+        
+        echo "Merging reads per sample:"
+        for sample in "${{samples[@]}}"; do
+            echo $sample
+            cat `find {input.reads_dir}| grep $sample | grep -e "[_\.]R1[_\.]" | sort` > "{params.output_dir}/${{sample}}_merged_R1.fastq.gz"
+            find {input.reads_dir} | grep $sample | grep -e "[_\.]R1[_\.]" | sort > "{params.log_dir}/${{sample}}_merged_R1.log"
+            cat `find {input.reads_dir} | grep $sample | grep -e "[_\.]R2[_\.]" | sort` > "{params.output_dir}/${{sample}}_merged_R2.fastq.gz"
+            find {input.reads_dir} | grep $sample | grep -e "[_\.]R2[_\.]" | sort > "{params.log_dir}/${{sample}}_merged_R2.log"
+        done
+        echo "Merging complete"
+        echo "Log directory: {params.log_dir}"
         """
 
 ## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
