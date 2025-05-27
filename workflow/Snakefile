@@ -12,7 +12,7 @@ configfile: "config/chromatin_assembly_config.yml"
 
 # --- Global Variables --- #
 # SAMPLE_IDS – unique identifiers of reads to process
-SAMPLE_IDS  = config['input']['input_sample_ids']
+SAMPLE_IDS  = config['input']['input_samples']
 
 
 # --- Rule: run_all --- #
