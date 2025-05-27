@@ -8,16 +8,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased] - yyyy-mm-dd
 
 ### Added
-- Better template data
+- Better template data in 'data/template/`
 
 ### Changed
 - S0 read merging - BASH script with simpler input parameters and improved internal logic 
 - Moved vars for effective genome size and species binomial into Section 1 of the config file
 
 ### Fixed
-
+- Specify `ext` partition for long steps (S3/S4), allowing run time of up to 30 
+days
  
-## [0.2.0] - 2025-05-15
+## [0.1.1] - 2025-05-15
+
+Multi-sample input now available.
 
 ### Added
 - R script (`workflow/R/s0_merge_reads.R`) to merge reads into one R1 and one R2 
@@ -68,8 +71,7 @@ and `profiles/slurm/config.yaml`
   - Removed hard coded variables and reference from config file every time instead
   - Removed absolute paths and replaced with paths relative to the working directory
   `chromatin-assembly/`
- 
- 
+
 ## [0.1.0] - 2025-04-08
 
 First release. Both minor and major improvements still pending.
