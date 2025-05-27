@@ -45,8 +45,14 @@ merge_reads:
 #             Note - the input for DANPOS (Step 8) is the output from Step 6 (GC corrected alignment)
 #                   so the `input_sample_ids` variable should include all samples you wish to use as either experimental
 #                   data OR input control for DANPOS.
+
+# All sample IDs for gecko:
+#input_sample_ids: ["R114096", "R122595", "R122596", "R135806", "R135860", "R31499", "R31500",
+#                  "R31502", "R54899", "R55025", "R55032", "R55033", "R84119", "R87557", 
+#                  "SMZ3538", "SMZ3540", "SMZ3541", "SMZ3557", "SMZ3559", "SMZ3560", "SMZ3561"]
+
 input:
-  reference_genome_id: "gecko_genome"
+  Reference_genome_id: "gecko_genome"
   reference_genome_path: "/scratch3/che318/chromatin-assembly/data/gecko/reference_genome/gecko_genome.fsa"
   input_sample_ids: ["R55032", "R55025", "SMZ3557", "SMZ3559"] 
 
