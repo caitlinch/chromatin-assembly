@@ -19,38 +19,21 @@
 # Add module load commands if necessary
 
 # ----------------Input Variables------------------- #
-# Species name
-#species_name="gecko"
-species_name="Pcoll"
-
-# Path to the directory containing raw reads
-#data_dir="/scratch3/che318/chromatin-assembly/data/gecko/reads"
-data_dir="/scratch3/che318/chromatin-assembly/data/Pcoll/reads"
-
-# Path to the directory where the merged files will be stored
-# Should be: /path/to/chromatin-assembly/results/{species}/0_mergedReads
-#output_dir="/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads"
-output_dir="/scratch3/che318/chromatin-assembly/results/Pcoll/0_mergedReads"
-
-## Create directory for logs
-#log_dir="/Users/che318/Repos/chromatin-assembly/logs/0_mergedReads"
+## Petrichor testing -- gecko ##
+species_name="gecko"
+data_dir="/scratch3/che318/chromatin-assembly/data/gecko/reads"
+name_dict_file="/scratch3/che318/chromatin-assembly/data/gecko/gecko_sample_dict.txt"
+output_dir="/scratch3/che318/chromatin-assembly/results/gecko/0_mergedReads"
 log_dir="/scratch3/che318/chromatin-assembly/logs/0_mergedReads"
-
 sample_ID_keep_first_segment_only=true
-name_dict_file="/scratch3/che318/chromatin-assembly/dict"
 
-temp_name_dict="sample_ID|sample_name|sample_lanes
-122||8 
-111|11One|1 
-222|22Two|1,2 
-333|33Three|1,2,3 
-444|44Four|1,2,3,4 
-555|55Five|1,2,3,4,5 
-666|66Six|1,2,3,4,5,6 
-777||1,2,3,4,5,6,7 
-888||1,2,3,4,5,6,7,8 
-999|99Nine|
-"
+# ## Petrichor testing -- Pcoll ##
+# species_name="Pcoll"
+# name_dict_file="/scratch3/che318/chromatin-assembly/data/Pcoll/Pcoll_sample_dict.txt"
+# data_dir="/scratch3/che318/chromatin-assembly/data/Pcoll/reads"
+# output_dir="/scratch3/che318/chromatin-assembly/results/Pcoll/0_mergedReads"
+# log_dir="/scratch3/che318/chromatin-assembly/logs/0_mergedReads"
+# sample_ID_keep_first_segment_only=true
 
 # ----------------Your Commands------------------- #
 # Create output and log directory (if they don't already exist)
