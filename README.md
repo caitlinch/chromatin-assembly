@@ -670,7 +670,9 @@ might be missing a file or have an incorrect file path
     add the line `- s4_read_alignment:slurm_partition=ext`
     - Extend the time for the job e.g., to specify 400 hours for Step 4, edit
     the `s4_read_alignment:runtime` specified to be `- s4_read_alignment:runtime=400h`
-    - Check that the indentation is consistent
+    - **Note:** The maximum runtime for a rule will be 720 hours (30 days x 24 hours)
+    - Check that the indentation is consistent! Each line specifying rule 
+    resources should have the same indentation levels
     - Save the file and try running your jobs
 - **Names of read files don't match?**
 	- This pipeline was tested on reads with the structure: `{sample_id}_{some_text}_L00{num}_R{1|2}.fastq.gz`
