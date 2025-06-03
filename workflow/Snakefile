@@ -11,6 +11,8 @@ configfile: "config/chromatin_assembly_config.yml"
 
 
 # --- Global Variables --- #
+REF_SPECIES=species=config['ref_species']
+
 # SAMPLE_IDS – unique identifiers of reads to process
 SAMPLE_IDS  = config['input']['input_samples']
 
@@ -48,44 +50,22 @@ rule s0_merge_samples:
         r2 = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS)
     log: f"logs/s0_merge_samples.{config['ref_species']}.log"
     params:
-        output_dir = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step0']}",
-        log_dir    = f"{config['repo_dir']}logs/{config['output_dir']['step0']}",
-        merge_dict = config['merge_reads']['merge_dict']
+        ref_species        = REF_SPECIES,
+        provide_merge_dict = config['merge_reads']['provide_merge_dict'],
+        dict_file          = config['merge_reads']['merge_dict'],
+        output_dir         = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step0']}",
+        log_dir            = f"{config['repo_dir']}logs/{config['output_dir']['step0']}",
+        short_sample_id    = config['s0_merge_repeats']['short_sample_ID']
     shell:
         """
         # s0_merge_samples
-
-        # Complex merge script:
-        # sh workflow/scripts/s0_MergeSamples.sh
-
-        echo "Commence simple merge"
-        echo "Preparing directories"
-        mkdir -p {params.output_dir}
-        mkdir -p {params.log_dir}
-        
-        echo "Collecting .fastq.gz files (from directory and subdirectories)"
-        all_fastq=$(find {input.reads_dir} -type f -name "*.fastq.gz")
-        
-        echo "Collecting sample IDs"
-        declare -a samples=()
-        for file in $(echo $all_fastq); do
-            sample=$(echo "$(basename "$file")" | awk -F'_' {{'print $1'}})
-            if [[ ! " ${{samples[*]}} " =~ " ${{sample}} " ]]; then
-                echo $sample
-                samples+=("$sample")
-            fi
-        done
-        
-        echo "Merging reads per sample:"
-        for sample in "${{samples[@]}}"; do
-            echo $sample
-            cat `find {input.reads_dir}| grep $sample | grep -e "[_\.]R1[_\.]" | sort` > "{params.output_dir}/${{sample}}_merged_R1.fastq.gz"
-            find {input.reads_dir} | grep $sample | grep -e "[_\.]R1[_\.]" | sort > "{params.log_dir}/${{sample}}_merged_R1.log"
-            cat `find {input.reads_dir} | grep $sample | grep -e "[_\.]R2[_\.]" | sort` > "{params.output_dir}/${{sample}}_merged_R2.fastq.gz"
-            find {input.reads_dir} | grep $sample | grep -e "[_\.]R2[_\.]" | sort > "{params.log_dir}/${{sample}}_merged_R2.log"
-        done
-        echo "Merging complete"
-        echo "Log directory: {params.log_dir}"
+        # Usage: sh S0_MergeSamples.sh ref_species provide_merge_dict dict_file reads_dir output_dir log_dir short_sample_id
+        sh scripts/S0_MergeSamples.sh {params.ref_species} \
+            {params.provide_merge_dict} {params.dict_file} \
+            {input.reads_dir} \
+            {params.output_dir} \
+            {params.log_dir} \
+            {params.short_sample_id}
         """
 
 ## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
