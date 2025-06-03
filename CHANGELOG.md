@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
   
 ## [Unreleased] - yyyy-mm-dd
 
+Improved read merging and extended run time for long steps.
+
 ### Added
 - Better template data in 'data/template/`
 
 ### Changed
-- S0 read merging - BASH script with simpler input parameters and improved internal logic 
-- Moved vars for effective genome size and species binomial into Section 1 of the config file
+- S0 read merging - BASH script with simpler input parameters and improved 
+internal logic 
+- Moved vars for effective genome size and species binomial into Section 1 of 
+the config file
+- Improved master `README.md` file
 
 ### Fixed
 - Specify `ext` partition for long steps (S3/S4), allowing run time of up to 30 
