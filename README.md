@@ -134,6 +134,7 @@ each step on each system
 ### 6. Prepare conda environments
 - Use Snakemake to generate conda environments needed for pipeline Step 6
     - **Load python module:** `module load python`
+    - **Load miniforge3 module:** `module load miniforge3; source /apps/miniforge3/enable_miniforge.sh`
     - **Generate conda environments:** `snakemake --use-conda --conda-create-envs-only -c1`
 
 ### 7. Prepare Slurm job scripts
@@ -781,6 +782,14 @@ snakemake --forceall --dag | dot -Tpdf > dag.pdf
 
 ### Troubleshooting:
 
+- What directory are you in? You should be in the directory `chromatin-assembly`.
+Check with the command `pwd`:
+
+```
+> pwd
+/path/to/chromatin-assembly
+```
+
 - Try running a dry run with the command `snakemake -n -p -c1` - sometimes you 
 might be missing a file or have an incorrect file path
 
@@ -834,15 +843,20 @@ might be missing a file or have an incorrect file path
   - Try rerunning the Snakemake command with the additional command line. parameter `--unlock`
       - `--unlock` can be used to remove a stale lock, e.g., if the machine powered off or a job was killed while a Snakemake instance was still running
   - Not working? Delete contents of the hidden directory `.snakemake/locks/` and try again
+- **Can't generate conda environments?**
+  - Try following the instructions from the Confluence [Conda and python in HPC](https://confluence.csiro.au/display/IMT/Conda+and+python+in+HPC)
+  page:
+    - Load the miniforge module: `module load miniforge3; source /apps/miniforge3/enable_miniforge.sh`
+    - Try creating the conda environments again
+  - Try creating a test conda environment:
+      - **Load miniforge3:** `module load miniforge3; source /apps/miniforge3/enable_miniforge.sh`
+      - **Create env:** `conda create --name test_env`
+      - If you can't create any conda environments at all, that's an issue for 
+      Scientific Computing
 - **Issues generating conda environments with Snakemake?**
-  - Delete contents of the hidden directory `.snakemake/conda/` and try again
-- **Can't run Step 0 because R isn't available?**
-  - Check whether the conda environments have been created in the hidden directory `.snakemake/conda/`
-  - Try to generate the conda environments using `snakemake --use-conda --conda-create-envs-only -c1`
-  - The conda environment "merge_reads" is provided at `workflow/envs/merge_reads.yaml`
-  - If this environment isn't working, try creating the environment and manually exporting it:
-    - To manually create the environment: `conda env create --file workflow/envs/merge_reads.yaml`
-    - To re-export the environment: `conda activate merge_reads; conda env export > workflow/envs/merge_reads.yaml`
+  - If there's issues because conda environments weren't properly installed,
+  delete the contents of the hidden directory `.snakemake/conda/`
+  - Then, create conda envs with `snakemake --use-conda --conda-create-envs-only -c1`
 - **Can't run Step 6a or Step 6b because faCount and faToTwoBit aren't installed?**
   - Check whether the conda environments have been created in the hidden directory `.snakemake/conda/`
   - Try to generate the conda environments using `snakemake --use-conda --conda-create-envs-only -c1` 
