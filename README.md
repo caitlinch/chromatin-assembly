@@ -9,7 +9,8 @@ TODO DOCO Put citation here
 - [Summary](#summary)
 - [Pipeline development and testing](#pipeline-development-and-testing)
 - [Quickstart guide for the time-impaired](#quickstart-guide-for-the-time-impaired)
-- [Input samples](#input-samples)
+- [Merging reads](#merging-reads)
+- [Inputting sample IDs](#inputting-sample-ids)
 - [Updating Slurm jobscripts](#updating-slurm-jobscripts)
 - [Pipeline steps](#pipeline-steps)
 - [Running Snakemake pipelines](#running-snakemake-pipelines)
@@ -194,19 +195,17 @@ nuclear genome covert):
 
 -----
 
-## Input samples
-
-### Merging reads
+## Merging reads
 
 By default, Step 0 (Merge reads) does the following:
 
 - Read through all subdirectories in the read directory and collect sample IDs
 (defined as everything before the first underscore in the basename of each file)
 - For each sample id:
-  - Find all `R1` files, sort the list of `R1` files with [sort](https://man7.org/linux/man-pages/man1/sort.1.html)
-  and merge all `R1` files with [cat](https://man7.org/linux/man-pages/man1/cat.1.html)
-  - Find all `R2` files, sort the list of `R2` files with [sort](https://man7.org/linux/man-pages/man1/sort.1.html)
-  and merge all `R2` files with [cat](https://man7.org/linux/man-pages/man1/cat.1.html)
+  - Find all `R1` files, [sort](https://man7.org/linux/man-pages/man1/sort.1.html)
+  the list, then merge with [cat](https://man7.org/linux/man-pages/man1/cat.1.html)
+  - Find all `R2` files, [sort](https://man7.org/linux/man-pages/man1/sort.1.html)
+  the list, then merge with [cat](https://man7.org/linux/man-pages/man1/cat.1.html)
   
 By default, Snakemake will set sample IDs equal to the portion of the filepath
 before the first underscore. For example, the filename 
@@ -215,7 +214,7 @@ ID `R114096`.
 
 If you want to merge all reads for all samples 
 
-#### Controlling which lanes are merged
+### Controlling which lanes are merged
 You can control which files are merged by providing a `sample_dict.txt`:
 
 - Copy and rename the template provided at `data/template/template_sample_dict.txt`
@@ -254,7 +253,7 @@ There are three columns:
   - Only use numbers and commas e.g., `1,2,3`
   - If left empty, all lanes will be merged
 
-#### Using the `sample_dict.txt` file
+### Using the `sample_dict.txt` file
 
 The following examples use the example directory `species/data/reads/` below,
 which has:
@@ -333,7 +332,6 @@ R114096||
 R122595||
 ```
 
-
 ##### Use Case 3: I want to merge reads within subdirectories
 
 |   |   | 
@@ -368,7 +366,6 @@ Lanes to merge are specified in the third column. Use numbers and commas only i.
 | Lanes to merge | 1,2 |
 | Output files | `R114096_merged_R1.fastq.gz`, `R114096_merged_R2.fastq.gz`, `R122595_merged_R1.fastq.gz`, `R122595_merged_R2.fastq.gz` |
 
-
 `sample_dict.txt`:
 ```
 sample_ID|sample_name|lanes
@@ -396,7 +393,6 @@ R114096|Sample001|
 R1225953|Sample002|
 ```
 
-
 ##### Use Case 6: I want to rename my output files and merge specific lanes
 
 Here we combine Use Case 4 and Use Case 5 to specify sample names and lanes for
@@ -411,12 +407,158 @@ each `sample_ID`.
 | Lanes to merge | 1,2 |
 | Output files | `Sample001_merged_R1.fastq.gz`, `Sample001_merged_R2.fastq.gz`, `Sample002_merged_R1.fastq.gz`, `Sample002_merged_R2.fastq.gz` |
 
-
 `sample_dict.txt`:
 ```
 sample_ID|sample_name|lanes
 R114096|Sample001|1,2 
 R1225953|Sample002|1,2 
+```
+
+------
+
+## Inputting sample IDs
+
+The pipeline is controlled by the config file `config/chromatin-assembly-config.yml`.
+The section `## Input data paths and details ##` controls which samples are run
+through the pipeline
+
+### Key points
+
+The key points to remember when inputting sample IDs into the config file are:
+
+* Enter **all** sample IDs that you wish to use for downstream analysis. That includes:
+  * Samples you wish to use as experimental input for DANPOS
+  * Samples you wish to use as control for DANPOS
+* You **must**
+
+* Check your indentation (see code block below for example of correct indentation)
+  * The `input_samples` array can span multiple lines,
+* If you're having issues with the config file being read, check:
+  * Indentation - the program can be sensitive to the level of indentation
+  * Missing characters:
+    * Check all opened brackets `[` have a closing bracket `]`
+    * Check all strings are completed by being enclosed in quotes - there should 
+    be no hanging `"`
+  * Array formatting
+    * Check the formatting and indentation of your `input_samples` array. 
+    * Check that you have both the opening `[` and closing `]` bracket
+    * Check commas - there should one comma between each entry in the array, and 
+    no comma after the last entry
+  
+Here's some examples of formatting and indentation:
+```
+### Indenting properly ###
+# Note that the `input:` line is not indented
+# Note that the reference_genome_id, reference_genome and input_samples are 
+#     indented by two spaces 
+input:
+  reference_genome_id: "ref_genome_ID"
+  reference_genome_path: "/path/to/ref/genome.fna"
+  input_samples: ["exp001", "exp002", "exp003", "cont001", "cont002", "cont003"] 
+
+### Array formatting and indentation ###
+# Remember: the `input_samples:` line is indented by two spaces! 
+
+## Single-lane array formatting 
+  input_samples: ["exp001", "exp002", "exp003","cont001", "cont002", "cont001"]
+
+## Multi-line array formatting (you can have more lines and/or more elements in each line)
+  input_samples: [
+  "exp001", "exp002", "exp003",
+  "cont001", "cont002", "cont001"
+]
+```
+
+### Entering sample IDs to run through the pipeline
+
+To run a sample through the pipeline, the sample ID must be input into the 
+`config/chromatin-assembly-config.yml` file.
+
+The section of the file for input data looks like this:
+
+```
+## Input data paths and details ##
+# reference_genome_id: human-readable identifier for reference genome
+# reference_genome_path: full path to reference genome
+# input_samples: The samples to be run through the pipeline 
+input:
+  reference_genome_id: "ref_genome_ID"
+  reference_genome_path: "/path/to/ref_genome.fna"
+  input_samples: ["133143", "133133"] 
+```
+
+It's important that **any** samples you want to use as either control or
+analysis for DANPOS are run through the whole pipeline, so they should be
+entered in the `input_samples` array.
+
+Say you have six samples (3 experimental and 3 control) you want to use for DANPOS:
+
+- **Experimental**
+  - `exp001`
+  - `exp002`
+  - `exp003`
+- **Control**
+  - `cont001`
+  - `cont002`
+  - `cont003`
+
+Your input section would look like this:
+
+```
+input:
+  reference_genome_id: "ref_genome_ID"
+  reference_genome_path: "/path/to/ref/genome.fna"
+  input_samples: ["exp001", "exp002", "exp003", "cont001", "cont002", "cont003"] 
+```
+
+### What if I renamed my sample IDs during the merge step?
+
+If you rename your files during the merge step, you must provide the **new sample names**
+into the config file.
+
+Say you have six replicates as above: 
+
+- **Experimental**
+  - `exp001`
+  - `exp002`
+  - `exp003`
+- **Control**
+  - `cont001`
+  - `cont002`
+  - `cont003`
+
+You want to include the state where each sample was collected in the merged file 
+name, so you use the following dictionary to rename samples during the merge 
+step (S0):
+
+`sample_dict.txt`:
+```
+sample_ID|sample_name|lanes
+exp001|NSW_exp001|
+exp002|VIC_exp002| 
+exp003|TAS_exp003|
+cont001|NSW_cont001|
+cont002|VIC_cont002|
+cont003|TAS_cont003|
+```
+
+This results in the following merged files:
+
+- `NSW_exp001_merged_R1.fastq.gz`, `NSW_exp001_merged_R2.fastq.gz`
+- `VIC_exp002_merged_R1.fastq.gz`, `VIC_exp002_merged_R2.fastq.gz`
+- `TAS_exp003_merged_R1.fastq.gz`, `TAS_exp003_merged_R2.fastq.gz`
+- `NSW_cont001_merged_R1.fastq.gz`, `NSW_cont001_merged_R2.fastq.gz`
+- `VIC_cont002_merged_R1.fastq.gz`, `VIC_cont002_merged_R2.fastq.gz`
+- `TAS_cont003_merged_R1.fastq.gz`, `TAS_cont003_merged_R2.fastq.gz`
+
+You must now use the updated sample names in the 
+`config/chromatin-assembly-config.yml` file, like this:
+
+```
+input:
+  reference_genome_id: "ref_genome_ID"
+  reference_genome_path: "/path/to/ref/genome.fna"
+  input_samples: ["NSW_exp001", "VIC_exp002", "TAS_exp003", "NSW_cont001", "VIC_cont002", "TAS_cont003"] 
 ```
 
 ------
