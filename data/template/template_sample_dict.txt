@@ -1,0 +1,5 @@
+sample_ID|sample_name|lanes
+R98765|Sample01|1,2,3
+S12345|Sample02|1
+templateREF|REF|
+

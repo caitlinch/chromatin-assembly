@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# Usage: sbatch slurm_pipeline_S1_S6a_S6b.sh
+# Usage: sbatch slurm_run_all_part1.sh
 
 # NOTE: Depending on your data, you may need to update the resources in this job script or
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
-#SBATCH --job-name=CA_S16a6b
-#SBATCH --time=100:00:00
+#SBATCH --job-name=CA_1
+#SBATCH --time=30-00:00:00
+#SBATCH --partition=ext
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
@@ -28,3 +29,12 @@ snakemake --slurm --profile profiles/slurm/ --until s1_mask_repeats
 snakemake --slurm --profile profiles/slurm/ --use-conda --until s6a_two_bit_genome --omit s0_merge_samples
 snakemake --slurm --profile profiles/slurm/ --use-conda --until s6b_effective_genome_size --omit s0_merge_samples
 
+# Run:
+#       Step 2 - Quality control using FastQC
+snakemake --slurm --profile profiles/slurm/ --until s2_raw_read_QC --omit s1_mask_repeats,s3_extract_UMI
+
+# Run:
+#       Step 3 - UMI extraction with FGBio and Picard
+#       Step 4 - Align reads with kalign 
+#       Step 5 - Remove PCR and optical duplicates from alignment with Picard
+snakemake --slurm --profile profiles/slurm/ --until s5_alignment_deduplication --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size

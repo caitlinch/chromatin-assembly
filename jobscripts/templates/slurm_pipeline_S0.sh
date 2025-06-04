@@ -13,8 +13,8 @@
 #SBATCH --mail-user=caitlin.cherryh@csiro.au
 #SBATCH --mail-type=END,FAIL,TIME_LIMIT
 #SBATCH --account=OD-233464
-#SBATCH --error=/scratch3/che318/chromatin-assembly/log/slurm_%j_%x.err
-#SBATCH --out=/scratch3/che318/chromatin-assembly/log/slurm_%j_%x.out
+#SBATCH --error=/scratch3/che318/chromatin-assembly/logs/slurm_%j_%x.err
+#SBATCH --out=/scratch3/che318/chromatin-assembly/logs/slurm_%j_%x.out
 
 # ----------------Modules------------------------- #
 module load python
@@ -24,4 +24,4 @@ source /apps/miniforge3/enable_miniforge.sh
 # ---------------- Pipeline Steps ------------------- #
 # Run:
 #       Step 0 - Merge reads
-snakemake --slurm --profile profiles/slurm/ --use-conda --until s0_merge_samples --omit s1_mask_repeats,s2_raw_read_QC,s3_extract_UMI
+snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples --omit s1_mask_repeats,s2_raw_read_QC,s3_extract_UMI
