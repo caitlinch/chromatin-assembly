@@ -1,8 +1,8 @@
 #!/bin/bash
 
-## Usage: sh S0_MergeSamples.sh {species_name} {provide_merge_dict} {name_dict_file} {data_dir} {output_dir} {log_dir} {sample_ID_keep_first_segment_only}
-#   provide_merge_dict: Whether merging dictionary has been provided to defined which lanes/samples to merge (true or false)
-#   sample_ID_keep_first_segment_only: true (Sample ID is everything before first underscore) or false (Sample ID is everything before second underscore)
+## Usage: sh S0_MergeSamples.sh {species_name} {use_merge_dict} {name_dict_file} {data_dir} {output_dir} {log_dir} {sample_ID_keep_first_segment_only}
+#   use_merge_dict: Whether merging dictionary has been provided to defined which lanes/samples to merge ("yes" or "no")
+#   sample_ID_keep_first_segment_only: "yes" (Sample ID is everything before first underscore) or "no" (Sample ID is everything before second underscore)
 
 ## Example usage:
 # repo_dir=/scratch3/che318/chromatin-assembly
@@ -11,7 +11,7 @@
 # Collect input parameters from command line args
 script_name=$0
 species_name=$1
-provide_merge_dict=$2
+use_merge_dict=$2
 name_dict_file=$3
 data_dir=$4
 output_dir=$5
@@ -23,11 +23,12 @@ sample_ID_keep_first_segment_only=$7
 echo "Running script ${script_name}"
 echo ""
 echo "Species name: ${species_name}"
-echo "Provide merge dict: ${provide_merge_dict}"
+echo "Use merge dict: ${use_merge_dict}"
 echo "Species dictionary: ${name_dict_file}"
 echo "Reads dir: ${data_dir}"
 echo "Output dir: ${output_dir}"
 echo "Log dir: ${log_dir}"
+echo "Short sample name: ${sample_ID_keep_first_segment_only}"
 echo ""
 
 
@@ -39,9 +40,11 @@ mkdir -p $log_dir
 
 # Collect sample IDs
 echo "Collecting sample IDs"
-if [ "$sample_ID_keep_first_segment_only" == "true" ] ||
-    [ "$sample_ID_keep_first_segment_only" == "True" ] ||
-    [ "$sample_ID_keep_first_segment_only" == "TRUE" ]; then
+if [ "$sample_ID_keep_first_segment_only" == "yes" ] ||
+    [ "$sample_ID_keep_first_segment_only" == "Yes" ] ||
+    [ "$sample_ID_keep_first_segment_only" == "YES" ] ||
+    [ "$sample_ID_keep_first_segment_only" == "y" ]||
+    [ "$sample_ID_keep_first_segment_only" == "Y" ]; then
     echo "Sample ID selection: anything before the first underscore"
     echo "e.g., sample ID is '111' for file 111_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L005_R1.fastq.gz"
     echo "e.g., sample ID is 'PCollREF' for file PCollREF_R2.fastq.gz"
@@ -74,14 +77,18 @@ echo ""
 
 
 # Output whether sample dictionary is provided
-if [ "$provide_merge_dict" == "True" ] || \
-    [ "$provide_merge_dict" == "true" ]|| \
-    [ "$provide_merge_dict" == "TRUE" ] && \
+if [ "$use_merge_dict" == "yes" ] || \
+    [ "$use_merge_dict" == "Yes" ]|| \
+    [ "$use_merge_dict" == "YES" ] ||
+    [ "$use_merge_dict" == "y" ] ||
+    [ "$use_merge_dict" == "Y" ]&& \
     test -f "$name_dict_file" ; then 
     echo "Merge dictionary provided: TRUE"
     echo "Merge dictionary file: ${name_dict_file}"
+    check_dict=true
 else
-        echo "Merge dictionary provided: FALSE"
+    echo "Merge dictionary provided: FALSE"
+    check_dict=false
 fi
 echo ""
 
@@ -96,10 +103,7 @@ for s_id in ${samples}; do
     echo "Sample ID: ${s_id}"
     declare -a R1_files=()
     declare -a R2_files=()
-    if [ "$provide_merge_dict" == "True" ] || \
-    [ "$provide_merge_dict" == "true" ]|| \
-    [ "$provide_merge_dict" == "TRUE" ] && \
-    test -f "$name_dict_file" ; then 
+    if [ "$check_dict" == "true" ] ; then 
         echo "Checking merge dictionary for sample ${s_id}"
         if grep "${s_id}" -q $name_dict_file; then 
             s_name_str=$(grep "^${s_id}|" $name_dict_file | awk -F '|' '{print $2}')
