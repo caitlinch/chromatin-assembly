@@ -18,6 +18,8 @@
 
 # ----------------Modules------------------------- #
 module load python
+module load miniforge3
+source /apps/miniforge3/enable_miniforge.sh
 
 # ---------------- Entire Pipeline ------------------- #
 # To perform the entire pipeline in one run (Steps 0 - 8)
