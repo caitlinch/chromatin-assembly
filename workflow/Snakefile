@@ -60,7 +60,7 @@ rule s0_merge_samples:
         """
         # s0_merge_samples
         # Usage: sh S0_MergeSamples.sh ref_species provide_merge_dict dict_file reads_dir output_dir log_dir short_sample_id
-        sh scripts/S0_MergeSamples.sh {params.ref_species} \
+        sh workflow/scripts/S0_MergeSamples.sh {params.ref_species} \
             {params.provide_merge_dict} {params.dict_file} \
             {input.reads_dir} \
             {params.output_dir} \
