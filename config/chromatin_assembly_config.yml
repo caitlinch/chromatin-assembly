@@ -95,16 +95,6 @@ output_dir:
 ##### Section 3: Program parameters #####
 # Refer to repo file `doco/05_advanced_use.Rmd` for details on changing program parameters
 
-## Step 0: Merge Reads ##
-# short_sample_ID: Defines sample IDs extracted from file paths. Accepted values: "yes" or "no"
-#                  If "yes", will define sample ID as anything before first underscore 
-#                     (i.e., sample ID is '111' for file 111_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L005_R1.fastq.gz")
-#                  If "no", will define sample ID as anything before first underscore 
-#                     (i.e., sample ID is '111_22W5TWLT3' for file 111_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L005_R1.fastq.gz")
-#                  Recommended: "yes" (especially for merging reads across directories)
-s0_merge_repeats:
-  short_sample_ID: "true"
-
 ## Step 1: RepeatMasker ##
 # repeatmasker_engine: user-specified engine for use with RepeatMasker
 #                      Recommended: "-engine rmblast"
