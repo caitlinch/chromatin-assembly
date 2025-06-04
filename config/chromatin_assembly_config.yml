@@ -30,12 +30,14 @@ effective_genome_size: 12003433
 # read_dir: full path to directory e.g., /full/path/to/chromatin-assembly/data/yeast/reads/ 
 # merge_dict: optional filepath specifying lanes to merge and human-readable sample names.
 #             see README.md for details
-# provide_merge_dict: "true" if using merge_dict, otherwise "false"
+#             To use: specify filepath e.g., "/scratch3/che318/chromatin-assembly/mouse_sample_dict.txt"
+#             Otherwise "NA"
+# use_merge_dict: "yes" if using merge_dict, otherwise "no"
 #             see README.md for details
 merge_reads: 
   read_dir: "/scratch3/che318/chromatin-assembly/data/mouse/reads/"
   merge_dict: "/scratch3/che318/chromatin-assembly/mouse_sample_dict.txt"
-  provide_merge_dict: "true"
+  use_merge_dict: "no"
 
 ## Input data paths and details ##
 # reference_genome_id: human-readable identifier for reference genome
@@ -46,10 +48,9 @@ merge_reads:
 #                           See README.md for details!
 #                Important: the `input_samples` variable should include all samples you wish to use as either 
 #                           experimental data or control for Step 8 (Peak analysis with DANPOS)
-input:
-  reference_genome_id: "GRCm38.p6"
-  reference_genome_path: "/scratch3/che318/chromatin-assembly/data/mouse/reference_genome/GCF_000001635.26_GRCm38.p6_genomic.fna"
-  input_samples: ["133143", "133133"] 
+reference_genome_id: "GRCm38.p6"
+reference_genome_path: "/scratch3/che318/chromatin-assembly/data/mouse/reference_genome/GCF_000001635.26_GRCm38.p6_genomic.fna"
+input_samples: ["133143", "133133"] 
 
 ## Input control for peak analysis with DANPOS (Step 8) ##
 # test_name: Descriptive name for test, to be used as name of output directory
@@ -95,12 +96,12 @@ output_dir:
 # Refer to repo file `doco/05_advanced_use.Rmd` for details on changing program parameters
 
 ## Step 0: Merge Reads ##
-# short_sample_ID: Defines sample IDs extracted from file paths. Accepted values: "true" or "false"
-#                  If "true", will define sample ID as anything before first underscore 
+# short_sample_ID: Defines sample IDs extracted from file paths. Accepted values: "yes" or "no"
+#                  If "yes", will define sample ID as anything before first underscore 
 #                     (i.e., sample ID is '111' for file 111_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L005_R1.fastq.gz")
-#                  If "false", will define sample ID as anything before first underscore 
+#                  If "no", will define sample ID as anything before first underscore 
 #                     (i.e., sample ID is '111_22W5TWLT3' for file 111_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L005_R1.fastq.gz")
-#                  Recommended: "true" (especially for merging reads across directories)
+#                  Recommended: "yes" (especially for merging reads across directories)
 s0_merge_repeats:
   short_sample_ID: "true"
 

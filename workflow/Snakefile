@@ -14,23 +14,23 @@ configfile: "config/chromatin_assembly_config.yml"
 REF_SPECIES=species=config['ref_species']
 
 # SAMPLE_IDS – unique identifiers of reads to process
-SAMPLE_IDS  = config['input']['input_samples']
+SAMPLE_IDS  = config['input_samples']
 
 
 # --- Rule: run_all --- #
 ## Run all rules
 rule run_all:
     input:
-        s1_masked  = expand("{repo_dir}results/{species}/{step_name}/{ref_genome_id}.masked", repo_dir=config['repo_dir'], species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
-        s1_index   = expand("{repo_dir}results/{species}/{step_name}/{ref_genome_id}.masked.index", repo_dir=config['repo_dir'], species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['input']['reference_genome_id']),
+        s1_masked  = expand("{repo_dir}results/{species}/{step_name}/{ref_genome_id}.masked", repo_dir=config['repo_dir'], species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['reference_genome_id']),
+        s1_index   = expand("{repo_dir}results/{species}/{step_name}/{ref_genome_id}.masked.index", repo_dir=config['repo_dir'], species=config['ref_species'], step_name=config['output_dir']['step1'], ref_genome_id=config['reference_genome_id']),
         s2_r1      = expand("results/{species}/{step_name}/{sample}_merged_R1_fastqc.html", species=config['ref_species'], step_name=config['output_dir']['step2'], sample=SAMPLE_IDS),
         s2_r2      = expand("results/{species}/{step_name}/{sample}_merged_R2_fastqc.html", species=config['ref_species'], step_name=config['output_dir']['step2'], sample=SAMPLE_IDS),
         s3_r1      = expand("results/{species}/{step_name}/{sample}_merged_withUMI_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step3'], sample=SAMPLE_IDS),
         s3_r2      = expand("results/{species}/{step_name}/{sample}_merged_withUMI_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step3'], sample=SAMPLE_IDS),
         s4_algnmt  = expand("results/{species}/{step_name}/{sample}_kalign_{kalign_id}_alignment.sam", species=config['ref_species'], step_name=config['output_dir']['step4'], sample=SAMPLE_IDS, kalign_id=config['s4_read_alignment']['kalign_id']),
         s5_dedup   = expand("results/{species}/{step_name}/{sample}_alignment_dedup.bam", species=config['ref_species'], step_name=config['output_dir']['step5'], sample=SAMPLE_IDS),
-        s6a_2bit   = expand("results/{species}/{step_name}/{ref_genome_id}_alignment_dedup.2bit", species=config['ref_species'], step_name=config['output_dir']['step6a'], ref_genome_id=config['input']['reference_genome_id']),
-        s6b_gSize  = expand("results/{species}/{step_name}/{ref_genome_id}_effGenSize.txt", species=config['ref_species'], step_name=config['output_dir']['step6b'], ref_genome_id=config['input']['reference_genome_id']),
+        s6a_2bit   = expand("results/{species}/{step_name}/{ref_genome_id}_alignment_dedup.2bit", species=config['ref_species'], step_name=config['output_dir']['step6a'], ref_genome_id=config['reference_genome_id']),
+        s6b_gSize  = expand("results/{species}/{step_name}/{ref_genome_id}_effGenSize.txt", species=config['ref_species'], step_name=config['output_dir']['step6b'], ref_genome_id=config['reference_genome_id']),
         s6c_GCfreq = expand("results/{species}/{step_name}/{sample}_computeGCbias.txt", species=config['ref_species'], step_name=config['output_dir']['step6c'], sample=SAMPLE_IDS),
         s6d_GCbias = expand("results/{species}/{step_name}/{sample}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], sample=SAMPLE_IDS),
         s7a_metric = expand("results/{species}/{step_name}/{ref_species}_{sample}_insert_size_metrics.txt", species=config['ref_species'], step_name=config['output_dir']['step7a'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
@@ -51,7 +51,7 @@ rule s0_merge_samples:
     log: f"logs/s0_merge_samples.{config['ref_species']}.log"
     params:
         ref_species        = REF_SPECIES,
-        provide_merge_dict = config['merge_reads']['provide_merge_dict'],
+        provide_merge_dict = config['merge_reads']['use_merge_dict'],
         dict_file          = config['merge_reads']['merge_dict'],
         output_dir         = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step0']}",
         log_dir            = f"{config['repo_dir']}logs/{config['output_dir']['step0']}",
@@ -72,15 +72,15 @@ rule s0_merge_samples:
 # Original suffix array command:  ngskit4b index -i EWD_hifiasm_HiC.fasta.masked -o EWD_hifiasm_HiC.fasta.masked.index -r waterdragon
 rule s1_mask_repeats:
     input:
-        ref_genome = config['input']['reference_genome_path']
+        ref_genome = config['reference_genome_path']
     output:
-        masked = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked",
-        index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index"
+        masked = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked",
+        index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked.index"
     log: f"{config['repo_dir']}logs/s1_mask_repeats.{config['ref_species']}.log"
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
         ref_genome_basename = lambda w, input: os.path.split(input.ref_genome)[1],
-        ngskit4b_log        = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['input']['reference_genome_id']}.masked.index.log",
+        ngskit4b_log        = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked.index.log",
         adapter             = f"{config['repo_dir']}{config['params']['adapters']}",
         repeatmasker_engine = config['s1_mask_repeats']['repeatmasker_engine'],
         species_name        = config['binomial_species_name'], 
@@ -207,11 +207,11 @@ rule s6a_two_bit_genome:
     input:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
-        twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_alignment_dedup.2bit"
+        twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_alignment_dedup.2bit"
     log: f"logs/s6a_two_bit_genome.{config['ref_species']}.log"
     params:
         outdir            = lambda w, output: os.path.split(output.twobit_genome)[0],
-        info              = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['input']['reference_genome_id']}_info.tab"
+        info              = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_info.tab"
     conda:
         "envs/Step6.yaml"
     shell:
@@ -228,7 +228,7 @@ rule s6b_effective_genome_size:
     input:
         masked_ref_genome = rules.s1_mask_repeats.output.masked
     output:
-        eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['input']['reference_genome_id']}_effGenSize.txt"
+        eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['reference_genome_id']}_effGenSize.txt"
     log: f"logs/s6b_effective_genome_size.{config['ref_species']}.log"
     params:
         outdir = lambda w, output: os.path.split(output.eff_gen_size)[0]
