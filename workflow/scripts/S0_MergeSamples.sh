@@ -1,34 +1,29 @@
 #!/bin/bash
 
-## Usage: sh S0_MergeSamples.sh {species_name} {use_merge_dict} {name_dict_file} {data_dir} {output_dir} {log_dir} {sample_ID_keep_first_segment_only}
+## Usage: sh S0_MergeSamples.sh {species_name} {samples_txt} {use_merge_dict} {name_dict_file} {data_dir} {output_dir} {log_dir}
 #   use_merge_dict: Whether merging dictionary has been provided to defined which lanes/samples to merge ("yes" or "no")
-#   sample_ID_keep_first_segment_only: "yes" (Sample ID is everything before first underscore) or "no" (Sample ID is everything before second underscore)
-
-## Example usage:
-# repo_dir=/scratch3/che318/chromatin-assembly
-# sh S0_MergeSamples.sh "gecko" true "${repo_dir}/data/gecko/gecko_sample_dict.txt" "${repo_dir}/data/gecko/reads" "${repo_dir}/results/gecko/0_merged_reads" "${repo_dir}/logs" true
 
 # Collect input parameters from command line args
 script_name=$0
 species_name=$1
-use_merge_dict=$2
-name_dict_file=$3
-data_dir=$4
-output_dir=$5
-log_dir=$6
-sample_ID_keep_first_segment_only=$7
+samples_txt=$2
+use_merge_dict=$3
+name_dict_file=$4
+data_dir=$5
+output_dir=$6
+log_dir=$7
 
 
 # Print input parameters
 echo "Running script ${script_name}"
 echo ""
 echo "Species name: ${species_name}"
+echo "Samples record: ${samples_txt}"
 echo "Use merge dict: ${use_merge_dict}"
 echo "Species dictionary: ${name_dict_file}"
 echo "Reads dir: ${data_dir}"
 echo "Output dir: ${output_dir}"
 echo "Log dir: ${log_dir}"
-echo "Short sample name: ${sample_ID_keep_first_segment_only}"
 echo ""
 
 
@@ -40,39 +35,12 @@ mkdir -p $log_dir
 
 # Collect sample IDs
 echo "Collecting sample IDs"
-if [ "$sample_ID_keep_first_segment_only" == "yes" ] ||
-    [ "$sample_ID_keep_first_segment_only" == "Yes" ] ||
-    [ "$sample_ID_keep_first_segment_only" == "YES" ] ||
-    [ "$sample_ID_keep_first_segment_only" == "y" ]||
-    [ "$sample_ID_keep_first_segment_only" == "Y" ]; then
-    echo "Sample ID selection: anything before the first underscore"
-    echo "e.g., sample ID is '111' for file 111_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L005_R1.fastq.gz"
-    echo "e.g., sample ID is 'PCollREF' for file PCollREF_R2.fastq.gz"
-    samples=$(find $data_dir -type f -name "*gz" -exec basename {} \; | \
-        grep -i -e "_R1_" -e "_R1\." -e "\.R1\." -e "\.R1_" | \
-        awk -F '_' '{print $1}' | \
-        sort | \
-        uniq )
-else
-    echo "Sample ID selection: anything before the second underscore"
-    echo "e.g., sample ID is '111_22W5TWLT3' for file 111_22W5TWLT3_TCACACGTGG-TGTATAGGTC_L005_R1.fastq.gz"
-    echo "e.g., sample ID is 'PCollREF' for file PCollREF_R2.fastq.gz"
-    echo "Note: the following strings are removed from sample IDs: '_R1', '.R1.', '.fastq.gz' "
-    echo ""
-     samples=$(find $data_dir -type f -name "*gz" -exec basename {} \; | \
-        grep -i -e "_R1_" -e "_R1\." -e "\.R1\." -e "\.R1_" | \
-        awk -F '_' '{print $1"_"$2}' | \
-        sort | \
-        uniq | \
-        sed 's/\.fastq\.gz//' | \
-        sed 's/\_R1//' | \
-        sed 's/\.R1//' )   
-fi
+mapfile -t samples < $samples_txt
 
 
 # Print each sample ID
 echo "Sample IDs:"
-for s_id in ${samples}; do echo $s_id; done
+for s_id in ${samples[@]}; do echo $s_id; done
 echo "" 
 
 
@@ -99,7 +67,7 @@ declare -a problem_samples=()
 
 
 # Merge reads
-for s_id in ${samples}; do 
+for s_id in ${samples[@]}; do 
     echo "Sample ID: ${s_id}"
     declare -a R1_files=()
     declare -a R2_files=()

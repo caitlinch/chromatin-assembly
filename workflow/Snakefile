@@ -51,21 +51,33 @@ rule s0_merge_samples:
     log: f"logs/s0_merge_samples.{config['ref_species']}.log"
     params:
         ref_species        = REF_SPECIES,
-        provide_merge_dict = config['merge_reads']['use_merge_dict'],
+        use_merge_dict     = config['merge_reads']['use_merge_dict'],
         dict_file          = config['merge_reads']['merge_dict'],
         output_dir         = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step0']}",
         log_dir            = f"{config['repo_dir']}logs/{config['output_dir']['step0']}",
-        short_sample_id    = config['s0_merge_repeats']['short_sample_ID']
+        samples            = expand("{sample}", sample=SAMPLE_IDS),
+        samples_file       = f"results/{config['ref_species']}/{config['output_dir']['step0']}/sample_names.txt"
     shell:
         """
         # s0_merge_samples
-        # Usage: sh S0_MergeSamples.sh ref_species provide_merge_dict dict_file reads_dir output_dir log_dir short_sample_id
+
+        # Delete existing samples file (if present)
+        if test -f {params.samples_file}; then 
+            rm {params.samples_file}
+        fi
+
+        # Write input samples to file
+        for s in {params.samples}; do
+            echo "$s" >> {params.samples_file}
+        done
+
+        ## Usage:sh S0_MergeSamples.sh species_name samples_file use_merge_dict dict_file reads_dir output_dir log_dir
         sh workflow/scripts/S0_MergeSamples.sh {params.ref_species} \
-            {params.provide_merge_dict} {params.dict_file} \
+            {params.samples_file} \
+            {params.use_merge_dict} {params.dict_file} \
             {input.reads_dir} \
             {params.output_dir} \
-            {params.log_dir} \
-            {params.short_sample_id}
+            {params.log_dir}
         """
 
 ## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
