@@ -149,7 +149,7 @@ each step on each system
 - Perform a dry run of the full pipeline:
     - Load Python module to access Snakemake: `module load python`
     - **In terminal**: `snakemake -n -p -c1`
-    - **By job script**: `sbatch jobscripts/pipeline_dry_run.sh`
+    - **By job script**: `sbatch jobscripts/slurm_pipeline_dry_run.sh`
 
 ### 9. Merge reads
 - Perform Step 0 (Merge reads):
@@ -449,22 +449,17 @@ The key points to remember when inputting sample IDs into the config file are:
 Here's some examples of formatting and indentation:
 ```
 ### Indenting properly ###
-# Note that the `input:` line is not indented
-# Note that the reference_genome_id, reference_genome and input_samples are 
-#     indented by two spaces 
-input:
-  reference_genome_id: "ref_genome_ID"
-  reference_genome_path: "/path/to/ref/genome.fna"
-  input_samples: ["exp001", "exp002", "exp003", "cont001", "cont002", "cont003"] 
+reference_genome_id: "ref_genome_ID"
+reference_genome_path: "/path/to/ref/genome.fna"
+input_samples: ["exp001", "exp002", "exp003", "cont001", "cont002", "cont003"] 
 
 ### Array formatting and indentation ###
-# Remember: the `input_samples:` line is indented by two spaces! 
 
 ## Single-lane array formatting 
-  input_samples: ["exp001", "exp002", "exp003","cont001", "cont002", "cont001"]
+input_samples: ["exp001", "exp002", "exp003","cont001", "cont002", "cont001"]
 
 ## Multi-line array formatting (you can have more lines and/or more elements in each line)
-  input_samples: [
+input_samples: [
   "exp001", "exp002", "exp003",
   "cont001", "cont002", "cont001"
 ]
@@ -482,10 +477,9 @@ The section of the file for input data looks like this:
 # reference_genome_id: human-readable identifier for reference genome
 # reference_genome_path: full path to reference genome
 # input_samples: The samples to be run through the pipeline 
-input:
-  reference_genome_id: "ref_genome_ID"
-  reference_genome_path: "/path/to/ref_genome.fna"
-  input_samples: ["133143", "133133"] 
+reference_genome_id: "ref_genome_ID"
+reference_genome_path: "/path/to/ref_genome.fna"
+input_samples: ["133143", "133133"] 
 ```
 
 It's important that **any** samples you want to use as either control or
@@ -506,10 +500,9 @@ Say you have six samples (3 experimental and 3 control) you want to use for DANP
 Your input section would look like this:
 
 ```
-input:
-  reference_genome_id: "ref_genome_ID"
-  reference_genome_path: "/path/to/ref/genome.fna"
-  input_samples: ["exp001", "exp002", "exp003", "cont001", "cont002", "cont003"] 
+reference_genome_id: "ref_genome_ID"
+reference_genome_path: "/path/to/ref/genome.fna"
+input_samples: ["exp001", "exp002", "exp003", "cont001", "cont002", "cont003"] 
 ```
 
 ### What if I renamed my sample IDs during the merge step?
@@ -556,10 +549,9 @@ You must now use the updated sample names in the
 `config/chromatin-assembly-config.yml` file, like this:
 
 ```
-input:
-  reference_genome_id: "ref_genome_ID"
-  reference_genome_path: "/path/to/ref/genome.fna"
-  input_samples: ["NSW_exp001", "VIC_exp002", "TAS_exp003", "NSW_cont001", "VIC_cont002", "TAS_cont003"] 
+reference_genome_id: "ref_genome_ID"
+reference_genome_path: "/path/to/ref/genome.fna"
+input_samples: ["NSW_exp001", "VIC_exp002", "TAS_exp003", "NSW_cont001", "VIC_cont002", "TAS_cont003"] 
 ```
 
 ------
