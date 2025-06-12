@@ -10,6 +10,7 @@
 # If you have data with a different file name structure, you may have issues running the pipeline.
 
 
+
 ##### Section 1: Input data and parameters #####
 # repo_dir: path to the chromatin-assembly directory (including trailing slash) e.g., /path/to/chromatin-assembly/
 #           Remember to include trailing slash!
@@ -23,34 +24,36 @@ binomial_species_name: "Mus musculus"
 
 ## Effective genome size, extracted from the output of Step 6b
 #   The number of non-N bases in the genome i.e., {total len} - {total N}
+#   Update this parameter after running Step 6b
 effective_genome_size: 12003433
-
-## Merging reads ##
-## See `README.md` for detailed instructions on merging reads
-# read_dir: full path to directory e.g., /full/path/to/chromatin-assembly/data/yeast/reads/ 
-# merge_dict: optional filepath specifying lanes to merge and human-readable sample names.
-#             see README.md for details
-#             To use: specify filepath e.g., "/scratch3/che318/chromatin-assembly/mouse_sample_dict.txt"
-#             Otherwise "NA"
-# use_merge_dict: "yes" if using merge_dict, otherwise "no"
-#             see README.md for details
-merge_reads: 
-  read_dir: "/scratch3/che318/chromatin-assembly/data/mouse/reads/"
-  merge_dict: "NA"
-  use_merge_dict: "no"
 
 ## Input data paths and details ##
 # reference_genome_id: human-readable identifier for reference genome
+reference_genome_id: "GRCm38.p6"
 # reference_genome_path: full path to reference genome e.g.,  /full/path/to/chromatin-assembly/data/yeast/reference_genome/ref_genome.fsa
+reference_genome_path: "/scratch3/che318/chromatin-assembly/data/mouse/reference_genome/GCF_000001635.26_GRCm38.p6_genomic.fna"
 # input_samples: The samples to be run through the pipeline e.g., `input_sample_ids: ["id01", "id02", "id03", "id04"]`
 #                Each sample ID is a chunk of a filepath. 
 #                Important: If you renamed the files using a `merge_dict`, you must specify the sample names here
 #                           See README.md for details!
 #                Important: the `input_samples` variable should include all samples you wish to use as either 
 #                           experimental data or control for Step 8 (Peak analysis with DANPOS)
-reference_genome_id: "GRCm38.p6"
-reference_genome_path: "/scratch3/che318/chromatin-assembly/data/mouse/reference_genome/GCF_000001635.26_GRCm38.p6_genomic.fna"
 input_samples: ["133143", "133133"] 
+
+## Merging reads ##
+## See `README.md` for detailed instructions on merging reads
+## All reads specified in `input_samples` will be merged
+# read_dir: full path to directory e.g., /full/path/to/chromatin-assembly/data/yeast/reads/ 
+# merge_dict: optional filepath specifying lanes to merge and human-readable sample names.
+#             see `README.md` for details, see `data/template/template_sample_dict.txt` for template
+#             To use: specify filepath e.g., "/scratch3/che318/chromatin-assembly/mouse_sample_dict.txt"
+#             If not using: specify "NA"
+# use_merge_dict: "yes" if using merge_dict, otherwise "no"
+#             see README.md for details
+merge_reads: 
+  read_dir: "/scratch3/che318/chromatin-assembly/data/mouse/reads/"
+  merge_dict: "NA"
+  use_merge_dict: "no"
 
 ## Input control for peak analysis with DANPOS (Step 8) ##
 # test_name: Descriptive name for test, to be used as name of output directory
@@ -64,17 +67,20 @@ peak_analysis:
   control_ids: ["133133"] 
 
 ## Adapters ##
-# adapters: file path relative to chromatin-assembly directory i.e., resources/adapters/adap_cont_rna.fa
+# adapters: File of adapters for use with Repeat Masker in Step 1 Mask Repeats
+#           File path relative to chromatin-assembly directory
+#           Provided at file path `resources/adapters/adap_cont_rna.fa`
 params:
   adapters: "resources/adapters/adap_cont_rna.fa"
 
 
+
 ##### Section 2: Output names #####
 # Names of the output directory generated for each step
-# The relative path to each of these directories is: chromatin-assembly/results/{ref_species}/{stepX}
+# The path to each of these output directories will be: `chromatin-assembly/results/{ref_species}/{stepX}/`
 #     Where:
-#         {ref_species} is specified above (Section 1: Input data and parameters)
-#         {stepX} is specified below
+#         `{ref_species}` is specified above (Section 1: Input data and parameters)
+#         `{stepX}` is specified below
 # For more details, see the section "Running Snakemake pipelines" in the repo `README.md`
 output_dir:
   step0: "0_mergedReads"
@@ -90,6 +96,7 @@ output_dir:
   step7a: "7a_alignmentStatistics"
   step7b: "7b_genomeCoverage"
   step8:  "8_dtriple"
+
 
 
 ##### Section 3: Program parameters #####
@@ -121,6 +128,7 @@ s4_read_alignment:
 #                Recommended: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
 s5_alignment_deduplication:
   Picard_params: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
+
 
 
 ##### Section 4: HPC system #####
