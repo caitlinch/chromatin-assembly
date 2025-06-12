@@ -49,6 +49,8 @@ rule s0_merge_samples:
         r1 = expand("results/{species}/{step_name}/{sample}_merged_R1.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS),
         r2 = expand("results/{species}/{step_name}/{sample}_merged_R2.fastq.gz", species=config['ref_species'], step_name=config['output_dir']['step0'], sample=SAMPLE_IDS)
     log: f"logs/s0_merge_samples.{config['ref_species']}.log"
+    benchmark: f"benchmarks/s0_merge_samples.{config['ref_species']}.benchmark.txt"
+    message: f"Executing s0_merge_samples with {threads} threads for species {config['ref_species']}."
     params:
         ref_species        = REF_SPECIES,
         use_merge_dict     = config['merge_reads']['use_merge_dict'],
@@ -60,7 +62,6 @@ rule s0_merge_samples:
     shell:
         """
         # s0_merge_samples
-
         # Delete existing samples file (if present)
         if test -f {params.samples_file}; then 
             rm {params.samples_file}
@@ -89,6 +90,8 @@ rule s1_mask_repeats:
         masked = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked",
         index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked.index"
     log: f"{config['repo_dir']}logs/s1_mask_repeats.{config['ref_species']}.log"
+    benchmark: f"benchmarks/s1_mask_repeats.{config['ref_species']}.benchmark.txt"
+    message: "Executing s1_mask_repeats with {threads} threads for file {input.ref_genome}."
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
         ref_genome_basename = lambda w, input: os.path.split(input.ref_genome)[1],
@@ -123,6 +126,8 @@ rule s2_raw_read_QC:
         r1 = f"results/{config['ref_species']}/{config['output_dir']['step2']}/{{sample}}_merged_R1_fastqc.html",
         r2 = f"results/{config['ref_species']}/{config['output_dir']['step2']}/{{sample}}_merged_R2_fastqc.html"
     log: "logs/s2_raw_read_QC.{sample}.log"
+    benchmark: "benchmarks/s2_raw_read_QC.{sample}.benchmark.txt"
+    message: "Executing s2_raw_read_QC with {threads} threads for sample {wildcards.sample}."
     params:
         outdir        = lambda w, output: os.path.split(output.r1)[0],
         module_fastqc = config['modules']['fastqc']
@@ -144,6 +149,8 @@ rule s3_extract_UMI:
         r1 = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_merged_withUMI_R1.fastq.gz",
         r2 = f"results/{config['ref_species']}/{config['output_dir']['step3']}/{{sample}}_merged_withUMI_R2.fastq.gz"
     log: "logs/s3_extract_UMI.{sample}.log"
+    benchmark: "benchmarks/s3_extract_UMI.{sample}.benchmark.txt"
+    message: "Executing s3_extract_UMI with {threads} threads for sample {wildcards.sample}."
     params:
         basename             = "{sample}",
         outdir               = lambda w, output: os.path.split(output.r1)[0],
@@ -178,6 +185,8 @@ rule s4_read_alignment:
     output:
         alignment = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.sam"
     log: "logs/s4_read_alignment.{sample}.log"
+    benchmark: "benchmarks/s4_read_alignment.{sample}.benchmark.txt"
+    message: "Executing s4_read_alignment with {threads} threads for sample {wildcards.sample}."
     params:
         outdir        = lambda w, output: os.path.split(output.alignment)[0],
         log_file      = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.log",
@@ -199,6 +208,8 @@ rule s5_alignment_deduplication:
     output:
         dedup_alignment = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam"
     log: "logs/s5_alignment_deduplication.{sample}.log"
+    benchmark: "benchmarks/s5_alignment_deduplication.{sample}.benchmark.txt"
+    message: "Executing s5_alignment_deduplication with {threads} threads for sample {wildcards.sample}."
     params:
         outdir        = lambda w, output: os.path.split(output.dedup_alignment)[0],
         metrics       = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_removeduplicates.metrics.txt",
@@ -221,6 +232,8 @@ rule s6a_two_bit_genome:
     output:
         twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_alignment_dedup.2bit"
     log: f"logs/s6a_two_bit_genome.{config['ref_species']}.log"
+    benchmark: f"benchmarks/s6a_two_bit_genome.{config['ref_species']}.benchmark.txt"
+    message: "Executing s6a_two_bit_genome with {threads} threads for file {input.masked_ref_genome}."
     params:
         outdir            = lambda w, output: os.path.split(output.twobit_genome)[0],
         info              = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_info.tab"
@@ -242,6 +255,8 @@ rule s6b_effective_genome_size:
     output:
         eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['reference_genome_id']}_effGenSize.txt"
     log: f"logs/s6b_effective_genome_size.{config['ref_species']}.log"
+    benchmark: f"benchmarks/s6b_effective_genome_size.{config['ref_species']}.benchmark.txt"
+    message: "Executing s6b_effective_genome_size with {threads} threads for file {input.masked_ref_genome}."
     params:
         outdir = lambda w, output: os.path.split(output.eff_gen_size)[0]
     conda:
@@ -263,6 +278,8 @@ rule s6c_compute_GC_bias:
     output:
         freq_file = f"results/{config['ref_species']}/{config['output_dir']['step6c']}/{{sample}}_computeGCbias.txt"
     log: "logs/s6c_compute_GC_bias.{sample}.log"
+    benchmark: "benchmarks/s6c_compute_GC_bias.{sample}.benchmark.txt"
+    message: "Executing s6c_compute_GC_bias with {threads} threads for sample {wildcards.sample}."
     params:
         outdir          = lambda w, output: os.path.split(output.freq_file)[0], 
         samtools_index  = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam.bai",
@@ -290,6 +307,8 @@ rule s6d_correct_GC_bias:
     output:
         gc_corrected = f"results/{config['ref_species']}/{config['output_dir']['step6d']}/{{sample}}_alignment_dedup_gcCorrected.bam"
     log: "logs/s6d_correct_GC_bias.{sample}.log"
+    benchmark: "benchmarks/s6d_correct_GC_bias.{sample}.benchmark.txt"
+    message: "Executing s6d_correct_GC_bias with {threads} threads for sample {wildcards.sample}."
     params:
         outdir          = lambda w, output: os.path.split(output.gc_corrected)[0], 
         eff_gen_size    = config['effective_genome_size'],
@@ -314,6 +333,8 @@ rule s7a_size_metrics:
         size_metrics = f"results/{config['ref_species']}/{config['output_dir']['step7a']}/{config['ref_species']}_{{sample}}_insert_size_metrics.txt",
         histogram    = f"results/{config['ref_species']}/{config['output_dir']['step7a']}/{config['ref_species']}_{{sample}}_insert_size_histogram.pdf"
     log: "logs/s7a_size_metrics.{sample}.log"
+    benchmark: "benchmarks/s7a_size_metrics.{sample}.benchmark.txt"
+    message: "Executing s7a_size_metrics with {threads} threads for sample {wildcards.sample}."
     params:
         outdir        = lambda w, output: os.path.split(output.size_metrics)[0], 
         module_picard = config['modules']['picard'],
@@ -336,6 +357,8 @@ rule s7b_read_count:
     output:
         read_count = f"results/{config['ref_species']}/{config['output_dir']['step7b']}/{config['ref_species']}_{{sample}}_count.txt"
     log: "logs/s7b_read_count.{sample}.log"
+    benchmark: "benchmarks/s7b_read_count.{sample}.benchmark.txt"
+    message: "Executing s7b_read_count with {threads} threads for sample {wildcards.sample}."
     params:
         outdir          = lambda w, output: os.path.split(output.read_count)[0], 
         module_samtools = config['modules']['samtools']
@@ -360,6 +383,8 @@ rule s8_peak_analysis:
         dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.peaks.integrative.xls",
         dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.regions.integrative.xls"
     log: f"logs/s8_peak_analysis.{config['peak_analysis']['test_name']}.log"
+    benchmark: f"benchmarks/s8_peak_analysis.{config['peak_analysis']['test_name']}.benchmark.txt"
+    message: f"Executing s8_peak_analysis with {threads} threads for {config['peak_analysis']['test_name']}."
     params:
         test_indexes    = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
         control_indexes = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids']),
