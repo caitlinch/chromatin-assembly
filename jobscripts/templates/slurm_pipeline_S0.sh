@@ -6,7 +6,7 @@
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
 #SBATCH --job-name=CA_S0
-#SBATCH --time=01:00:00
+#SBATCH --time=05:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
@@ -20,6 +20,9 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Run:
-#       Step 0 - Merge reads
-snakemake --slurm --profile profiles/slurm/ --until s0_merge_samples --omit s1_mask_repeats,s2_raw_read_QC,s3_extract_UMI
+## Run:
+# Step 0 - Merge reads
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s0_merge_samples \
+    --omit s1_mask_repeats,s2_raw_read_QC,s3_extract_UMI
