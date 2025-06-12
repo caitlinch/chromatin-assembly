@@ -1,0 +1,95 @@
+---
+title: "Input samples"
+author: "Caitlin Cherryh"
+date: "2025-06-12"
+output: html_document
+---
+
+## Entering sample IDs to run through the pipeline
+
+To run a sample through the pipeline, the sample ID must be input into the 
+`config/chromatin-assembly-config.yml` file.
+
+The section of the file for input data looks like this:
+
+```
+## Input data paths and details ##
+# reference_genome_id: human-readable identifier for reference genome
+reference_genome_id: "ref_genome_ID"
+# reference_genome_path: full path to reference genome
+reference_genome_path: "/path/to/ref_genome.fna"
+# input_samples: The samples to be run through the pipeline 
+input_samples: ["133143", "133133"] 
+```
+
+It's important that **any** samples you want to use as either control or
+analysis for DANPOS are run through the whole pipeline, so they should be
+entered in the `input_samples` array.
+
+Say you have six samples (3 experimental and 3 control) you want to use for DANPOS:
+
+- **Experimental**
+  - `exp001`
+  - `exp002`
+  - `exp003`
+- **Control**
+  - `cont001`
+  - `cont002`
+  - `cont003`
+
+Your input section would look like this:
+
+```
+reference_genome_id: "ref_genome_ID"
+reference_genome_path: "/path/to/ref/genome.fna"
+input_samples: ["exp001", "exp002", "exp003", "cont001", "cont002", "cont003"] 
+```
+
+### What if I renamed my sample IDs during the merge step?
+
+If you rename your files during the merge step, you must provide the **new sample names**
+into the config file.
+
+Say you have six replicates as above: 
+
+- **Experimental**
+  - `exp001`
+  - `exp002`
+  - `exp003`
+- **Control**
+  - `cont001`
+  - `cont002`
+  - `cont003`
+
+You want to include the state where each sample was collected in the merged file 
+name, so you use the following dictionary to rename samples during the merge 
+step (S0):
+
+`sample_dict.txt`:
+```
+sample_ID|sample_name|lanes
+exp001|NSW_exp001|
+exp002|VIC_exp002| 
+exp003|TAS_exp003|
+cont001|NSW_cont001|
+cont002|VIC_cont002|
+cont003|TAS_cont003|
+```
+
+This results in the following merged files:
+
+- `NSW_exp001_merged_R1.fastq.gz`, `NSW_exp001_merged_R2.fastq.gz`
+- `VIC_exp002_merged_R1.fastq.gz`, `VIC_exp002_merged_R2.fastq.gz`
+- `TAS_exp003_merged_R1.fastq.gz`, `TAS_exp003_merged_R2.fastq.gz`
+- `NSW_cont001_merged_R1.fastq.gz`, `NSW_cont001_merged_R2.fastq.gz`
+- `VIC_cont002_merged_R1.fastq.gz`, `VIC_cont002_merged_R2.fastq.gz`
+- `TAS_cont003_merged_R1.fastq.gz`, `TAS_cont003_merged_R2.fastq.gz`
+
+You must now use the updated sample names in the 
+`config/chromatin-assembly-config.yml` file, like this:
+
+```
+reference_genome_id: "ref_genome_ID"
+reference_genome_path: "/path/to/ref/genome.fna"
+input_samples: ["NSW_exp001", "VIC_exp002", "TAS_exp003", "NSW_cont001", "VIC_cont002", "TAS_cont003"] 
+```

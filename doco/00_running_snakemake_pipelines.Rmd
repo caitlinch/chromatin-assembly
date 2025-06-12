@@ -1,0 +1,150 @@
+---
+title: "Running Snakemake pipelines"
+author: "Caitlin Cherryh"
+date: "2025-06-12"
+output: html_document
+---
+
+## Snakemake command lines
+
+*See the Snakemake documentation for v7.24.0 (Petrichor version as of 16/04/2025) here:* 
+[Command line interface](https://snakemake.readthedocs.io/en/v7.24.0/executing/cli.html)
+
+*See the latest version of the Snakemake documentation here:*
+[Command line interface](https://snakemake.readthedocs.io/en/stable/executing/cli.html)
+
+Note: These commands must be run with the `chromatin-assembly/` directory as the working directory
+
+**Load the python module, which is required by Snakemake:**
+
+```
+module load python
+```
+
+**Perform a dry run:**
+
+A dry run is a fast way to check the pipeline. Snakemake parses the pipeline and 
+determines what would happen if the pipeline was to be run. Then, Snakemake 
+outputs a snapshot of what would be executed and what files would be created.
+
+There are different command line options depending on your desired output.
+
+To output a table listing the steps to be executed:
+
+```
+snakemake -c1 -n --quiet
+```
+
+To output table listing steps to be executed, plus each rule that would be 
+executed and a list of all output files:
+
+```
+snakemake -c1 -n
+```
+
+To output table of steps to be executed, plus each rule that would be executed 
+(including shell command for each rule) and a list of all output files:
+
+```
+snakemake -c1 -n -p
+```
+
+**Print a summary table showing status of all files created by the workflow:**
+
+```
+snakemake --summary
+```
+
+**List all output files for which the rule body (run or shell) have changed in the Snakefile:**
+
+```
+snakemake --list-code-changes
+```
+
+**Output a graph of the relationships/dependencies between rules:**
+
+```
+module load graphviz
+snakemake --forceall --rulegraph | dot -Tpdf > rulegraph.pdf
+```
+
+**Output a graph showing the path each input sample takes through the pipeline:**
+
+Note: this is most useful for around 1-5 samples. Each additional sample adds ~9
+nodes to the graph, so the graph becomes visually cluttered quickly.
+
+```
+module load graphviz
+snakemake --forceall --dag | dot -Tpdf > dag.pdf
+```
+
+-----
+
+## Rerunning steps in a pipeline
+
+The output for each step is saved in a directory titled by the name of that step.
+These names are provided in the `config/chromatin_assembly_config.yml` file in
+"Section 2: Output names".
+
+The relative path to each of these directories is: `chromatin-assembly/results/{ref_species}/{stepX}/`, 
+where `{ref_species}` is the species name and `{StepX}` is the name of the step.
+
+Unless you are changing program parameters or input data, you **should not** need
+to change these output names.
+
+Snakemake is smart - it checks to see whether the desired output files exist. If 
+they do, it won't overwrite them by running that step (unless the step has changed in
+some way).
+
+If you want to rerun a step with a different set of input parameters, you can 
+update the output directory for that step in the config file, which will allow 
+you to run that step with the new settings.
+
+To force Snakemake to rerun a rule, use the flag `-R {rulename}` or 
+`--forcerun {rulename}` (where `{rulename}` is the name of the rule - see 
+[Pipeline steps](#pipeline-steps) for all rule names).
+
+For example, to force Snakemake to rerun all jobs of rule `somerule` plus
+everything downstream:
+
+```
+snakemake -R somerule
+```
+
+Other parameters can be added to the Snakemake command as required. For example, 
+to use Slurm to force the rerun of `somerule` and everything downstream:
+
+```
+snakemake --slurm --profile profiles/slurm/ -R somerule
+```
+
+## Running multiple Snakemake instances
+*See the documentation: [How does Snakemake lock the working directory?](https://snakemake.readthedocs.io/en/stable/project_info/faq.html#how-does-snakemake-lock-the-working-directory)*
+
+Snakemake locks a working directory by input and output files. It's not possible
+to run multiple instances that want to create the same output files. 
+
+However, you can run two instances that generate separate and disjoint sets of 
+output files.
+
+For example, you may wish to run at the same time:
+
+- Step 2 (Raw read QC) using `jobscripts/slurm_pipeline_S2.sh`
+- Steps 1, 6a, and 6b (reference genome processing) using `jobscripts/slurm_pipeline_S2.sh`
+
+You can do this at your own risk by adding the command line option `--nolock`
+
+e.g., to run Step 1 (mask repeats) without locking:
+
+```
+snakemake --slurm --profile profiles/slurm/ --until s1_mask_repeats --nolock
+```
+
+If you use the `--nolock` option, be very careful that there are no rules running
+in both instances of Snakemake. 
+
+To test this, you can do a dry run and compare the list of rules that will be 
+run in each instance. Also check the input/output files and make sure there are 
+no overlapping files between the two instances.
+
+-----
