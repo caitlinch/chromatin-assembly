@@ -16,6 +16,10 @@
 #SBATCH --error=/scratch3/che318/chromatin-assembly/logs/slurm_%j_%x.err
 #SBATCH --out=/scratch3/che318/chromatin-assembly/logs/slurm_%j_%x.out
 
+# ----------------Params------------------------- #
+# Set maximum number of jobs to submit to the cluster at the same time
+num_jobs=10
+
 # ----------------Modules------------------------- #
 module load python
 
@@ -24,8 +28,10 @@ module load python
 # Step 7a - Calculate alignment statistics with Picard 
 snakemake \
     --slurm --profile profiles/slurm/ \
-    --until s7a_size_metrics
+    --until s7a_size_metrics \
+    --jobs $num_jobs
 # Step 7b - Estimate mean nuclear genome cover with Picard 
 snakemake \
     --slurm --profile profiles/slurm/ \
-    --until s7b_read_count
+    --until s7b_read_count \
+    --jobs $num_jobs
