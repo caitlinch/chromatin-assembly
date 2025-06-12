@@ -18,10 +18,13 @@ internal logic
 - Moved vars for effective genome size and species binomial into Section 1 of 
 the config file
 - Improved master `README.md` file
+- Updated all documentation
 
 ### Fixed
-- Specify `ext` partition for long steps (S3/S4), allowing run time of up to 30 
-days
+- Specify `ext` partition for long steps (S3/S4/S5), allowing run time of up to 
+30 days
+- Hardcoded number of threads in Snakefile (due to known issue with setting
+threads in profile `.yaml` file)
  
 ## [0.1.1] - 2025-05-15
 
