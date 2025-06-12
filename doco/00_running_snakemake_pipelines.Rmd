@@ -130,7 +130,7 @@ output files.
 For example, you may wish to run at the same time:
 
 - Step 2 (Raw read QC) using `jobscripts/slurm_pipeline_S2.sh`
-- Steps 1, 6a, and 6b (reference genome processing) using `jobscripts/slurm_pipeline_S2.sh`
+- Steps 1, 6a, and 6b (reference genome processing) using `jobscripts/slurm_pipeline_S1_6a_6b.sh`
 
 You can do this at your own risk by adding the command line option `--nolock`
 
