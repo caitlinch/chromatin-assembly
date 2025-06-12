@@ -23,10 +23,15 @@ might be missing a file or have an incorrect file path
 - **Snakemake not found?**
   - Check Python module is loaded: `module load python`
   - Check job script includes the line `module load python`
+- **Need to specify more threads?**
+  - The number of threads for each rule are specified within the Snakefile at 
+  `workflow/Snakefile`
+  - To update the number of threads, go to the desired rule and change the number
+  next to `threads: `
 - **Not enough resources supplied in job scripts?**
   - Update resources in SBATCH lines
 - **Not enough resources supplied to Snakemake?**
-  - Update resources in the `profiles/slurm/config.yaml` file
+  - Update resources in the `profiles/slurm/config.yaml` file for the problem rule
 - **SLURM jobs repeatedly timing out**
   - The default queue on Petrichor has a time limit of 160 hours. You can submit 
   long jobs to the `ext` queue (see 
