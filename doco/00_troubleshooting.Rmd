@@ -46,7 +46,6 @@ might be missing a file or have an incorrect file path
   - Fix rules timing out:
     - Open the `profiles/slurm/config.yaml`
     - Go to the section specifying resources for the step that needs more time 
-    (see [Pipeline steps](#pipeline-steps) above for step names)
     - Specify the partition to be used: e.g., for Step 4, to use the`ext` partition
     add the line `- s4_read_alignment:slurm_partition=ext`
     - Extend the time for the job e.g., to specify 400 hours for Step 4, edit
