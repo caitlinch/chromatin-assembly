@@ -1,7 +1,7 @@
 ---
 title: "Input and output"
 author: "Caitlin Cherryh"
-date: "2025-05-02"
+date: "2025-06-12"
 output: html_document
 ---
 
@@ -119,28 +119,25 @@ This file consists of five sections:
   - Information about the study species
   - Sample IDs
   - Preferences for read merging
+  - Effective genome size (calculated from the output of Step 6b)
 - **Section 2: Output names**
   - Names of the output directory generated for each step
 - **Section 3: Program parameters**
   - Command line arguments to be used with RepeatMasker, kalign, or Picard
-- **Section 4: Intermediate output**
-  - Specify the effective genome size (calculated from the output of Step 6b)
-- **Section 5: Modules**
+- **Section 4: HPC system**
   - Names of HPC environment modules used in the Snakemake pipeline
   - Version numbers for modules can be updated here, as the HPC environment modules are updated
 
 ## iv. Profiles
 Snakemake uses profiles to determine what computational resources to use for each step on each system.
 
-We provide three profiles:
+We provide two profiles:
 
-- `hpc_test/config.yaml` -- for server (Petrichor) testing/development or dry runs
 - `local/config.yaml` -- for local (not server) testing/development or dry runs
 - `slurm/config.yaml` -- for pipeline runs with Slurm on Petrichor
 
-Before running the pipeline, update the account ID for Slurm within the following profiles:
+Before running the pipeline, update the account ID for Slurm within the following profile:
 
-- `chromatin-assembly/profiles/hpc_test/config.yaml`
 - `chromatin-assembly/profiles/slurm/config.yaml`
 
 -----

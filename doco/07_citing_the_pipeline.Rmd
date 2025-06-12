@@ -1,15 +1,11 @@
 ---
 title: "Citing the pipeline"
 author: "Caitlin Cherryh"
-date: "2025-05-02"
+date: "2025-06-12"
 output: html_document
 ---
 
-TODO DOCO add authors 
-
-TODO DOCO publish release when pipeline complete and tested
-
-TODO DOCO reference specific release 
+TODO DOCO add citation
 
 If you use this pipeline, please cite it:
 
