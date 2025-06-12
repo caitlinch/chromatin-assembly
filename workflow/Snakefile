@@ -79,7 +79,8 @@ rule s0_merge_samples:
             {params.use_merge_dict} {params.dict_file} \
             {input.reads_dir} \
             {params.output_dir} \
-            {params.log_dir}
+            {params.log_dir} \
+            >> {log} 2>&1
         """
 
 ## Step 1: Repeat masking with RepeatMasker and suffix array (slurm_waterdragon_RM.sh)
@@ -91,12 +92,13 @@ rule s1_mask_repeats:
         masked = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked",
         index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked.index"
     threads: 20
-    log: f"{config['repo_dir']}logs/s1_mask_repeats.{config['ref_species']}.log"
+    log: 
+        rm_log       = f"{config['repo_dir']}logs/s1_mask_repeats.RepeatMasker.{config['ref_species']}.log"
+        ngskit4b_log = f"{config['repo_dir']}logs/s1_mask_repeats.ngskit4b.{config['ref_species']}.log"
     benchmark: f"benchmarks/s1_mask_repeats.{config['ref_species']}.benchmark.txt"
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
         ref_genome_basename = lambda w, input: os.path.split(input.ref_genome)[1],
-        ngskit4b_log        = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked.index.log",
         adapter             = f"{config['repo_dir']}{config['params']['adapters']}",
         repeatmasker_engine = config['s1_mask_repeats']['repeatmasker_engine'],
         species_name        = config['binomial_species_name'], 
@@ -111,12 +113,25 @@ rule s1_mask_repeats:
         mkdir -p {params.outdir}
         cd {params.outdir}
 
-        RepeatMasker -pa {threads} -dir {params.outdir} -qq -lib {params.adapter} {input.ref_genome} {params.repeatmasker_engine}
+        RepeatMasker -pa {threads} \
+            -dir {params.outdir} \
+            -qq -lib {params.adapter} \
+            {input.ref_genome} \
+            {params.repeatmasker_engine} \
+            >> {log.rm_log} 2>&1
 
         # Copy and rename RepeatMasker output with human-readable name
-        cp {params.ref_genome_basename}.masked {output.masked}
+        mv {params.ref_genome_basename}.masked {output.masked}
 
-        ngskit4b index -i {output.masked} -o {output.index} -r '{params.species_name}' -T {threads} -F {params.ngskit4b_log}
+        ngskit4b index \
+            -i {output.masked} \
+            -o {output.index} \
+            -r '{params.species_name}' \
+            -T {threads} \
+            -F {log.ngskit4b_log} 
+
+        module list >> {log.rm_log}
+        module list >> {log.ngskit4b_log}
         """
 
 ## Step 2: Perform quality control using FastQC (slurm_fastqc.sh)
@@ -140,7 +155,9 @@ rule s2_raw_read_QC:
         module load {params.module_fastqc}
         mkdir -p {params.outdir}
 
-        fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}
+        fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir} >> {log} 2>&1
+
+        module list >> {log}
         """
 
 ## Step 3: UMI extraction with FGBio and Picard (slurm_extractUMI.sh)
@@ -171,13 +188,15 @@ rule s3_extract_UMI:
         mkdir -p {params.outdir}
 
         CMD1="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam -F1 {input.r1} -F2 {input.r2} -O {params.unmapped_bam} -SM {params.basename}"
-        eval $CMD1
+        eval $CMD1 >> {log} 2>&1
 
         CMD2="java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam -i {params.unmapped_bam} -o {params.unmapped_bam_withUMI} {params.fgbio_params}"
-        eval $CMD2
+        eval $CMD2 >> {log} 2>&1
 
         CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq -I {params.unmapped_bam_withUMI} -F {output.r1} -F2 {output.r2}" 
-        eval $CMD3
+        eval $CMD3 >> {log} 2>&1
+
+        module list >> {log}
         """
 
 ## Step 4: Align reads with kalign (slurm_kalign_umi.sh)
@@ -193,7 +212,6 @@ rule s4_read_alignment:
     benchmark: "benchmarks/s4_read_alignment.{sample}.benchmark.txt"
     params:
         outdir        = lambda w, output: os.path.split(output.alignment)[0],
-        log_file      = f"results/{config['ref_species']}/{config['output_dir']['step4']}/{{sample}}_kalign_{config['s4_read_alignment']['kalign_id']}_alignment.log",
         kalign_params = config['s4_read_alignment']['kalign_params'],
         module_kit4b  = config['modules']['kit4b']
     message: "Executing s4_read_alignment with {threads} threads for sample {wildcards.sample}."
@@ -203,7 +221,9 @@ rule s4_read_alignment:
         module load {params.module_kit4b}
         mkdir -p {params.outdir}
 
-        ngskit4b kalign {params.kalign_params} -i {input.r1} -u {input.r2} -I {input.index} -o {output.alignment} -T {threads} -F {params.log_file}
+        ngskit4b kalign {params.kalign_params} -i {input.r1} -u {input.r2} -I {input.index} -o {output.alignment} -T {threads} -F {log}
+        
+        module list >> {log}
         """
 
 ## Step 5: Remove PCR and optical duplicates from alignment with Picard (slurm_depup.sh)
@@ -228,7 +248,9 @@ rule s5_alignment_deduplication:
         mkdir -p {params.outdir}
 
         CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates --INPUT {input.alignment} --OUTPUT {output.dedup_alignment} --METRICS_FILE {params.metrics} {params.picard_params}"
-        eval $CMD
+        eval $CMD >> {log} 2>&1
+ 
+        module list >> {log}
         """
 
 ## Step 6a: Generate 2Bit genome with faToTwoBit
@@ -251,8 +273,8 @@ rule s6a_two_bit_genome:
         # s6a_two_bit_genome
         mkdir -p {params.outdir}
 
-        faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
-        twoBitInfo {output.twobit_genome} {params.info}
+        faToTwoBit {input.masked_ref_genome} {output.twobit_genome} >> {log} 2>&1
+        twoBitInfo {output.twobit_genome} {params.info} >> {log} 2>&1
         """
 
 ## Step 6b:  Calculate effective genome size with faCount
@@ -262,7 +284,6 @@ rule s6b_effective_genome_size:
     output:
         eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['reference_genome_id']}_effGenSize.txt"
     threads: 2
-    log: f"logs/s6b_effective_genome_size.{config['ref_species']}.log"
     benchmark: f"benchmarks/s6b_effective_genome_size.{config['ref_species']}.benchmark.txt"
     params:
         outdir = lambda w, output: os.path.split(output.eff_gen_size)[0]
@@ -302,8 +323,10 @@ rule s6c_compute_GC_bias:
         module load {params.module_samtools}
         mkdir -p {params.outdir}
 
-        samtools index {input.dedup_alignment}
-        computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file}
+        samtools index {input.dedup_alignment} >> {log} 2>&1
+        computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file} >> {log} 2>&1
+        
+        module list >> {log}
         """
 
 ## Step 6d: Correct GC bias with deeptools (slurm_correctGCBias.sh)
@@ -331,8 +354,10 @@ rule s6d_correct_GC_bias:
         module load {params.module_samtools}
         mkdir -p {params.outdir}
 
-        correctGCBias_kalign --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads}
-        samtools index {output.gc_corrected}
+        correctGCBias_kalign --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads} >> {log} 2>&1
+        samtools index {output.gc_corrected} >> {log} 2>&1
+
+        module list >> {log}
         """
 
 ## Step 7a: Calculate alignment statistics with Picard (slurm_sizemetrics.sh)
@@ -358,7 +383,9 @@ rule s7a_size_metrics:
         mkdir -p {params.outdir}
 
         CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics -I {input.gc_corrected} -O {output.size_metrics} -H {output.histogram}"
-        eval "$CMD"
+        eval "$CMD" >> {log} 2>&1
+
+        module list >> {log}
         """
 
 ## Step 7b: Estimate mean nuclear genome coverage (slurm_read_count_GCcorrect.sh)
@@ -381,7 +408,9 @@ rule s7b_read_count:
         mkdir -p {params.outdir}
 
         CMD="samtools view -c {input.gc_corrected} -o {output.read_count}"
-        eval "$CMD"
+        eval "$CMD" >> {log} 2>&1
+
+        module list >> {log}
         """
 
 ## Step 8: Peak analysis using DANPOS3
@@ -426,6 +455,8 @@ rule s8_peak_analysis:
         cp {params.control_indexes} {params.control_dir}
 
         CMD="python danpos.py dtriple {params.test_dir}:{params.control_dir} -o {params.danpos_op_dir}"
-        eval "$CMD"
+        eval "$CMD" >> {log} 2>&1
+
+        module list >> {log}
         """
 
