@@ -13,21 +13,6 @@ keep-going: True
 rerun-incomplete: True
 printshellcmds: True
 
-set-threads:
-  - s0_merge_samples=8
-  - s1_mask_repeats=20
-  - s2_raw_read_QC=4
-  - s3_extract_UMI=64
-  - s4_read_alignment=64
-  - s5_alignment_deduplication=64
-  - s6a_two_bit_genome=2
-  - s6b_effective_genome_size=2
-  - s6c_compute_GC_bias=2
-  - s6d_correct_GC_bias=10
-  - s7a_size_metrics=2
-  - s7b_read_count=2
-  - s8_peak_analysis=10
-
 set-resources:
   - s0_merge_samples:runtime=5h
   - s0_merge_samples:mem_mb=20000
