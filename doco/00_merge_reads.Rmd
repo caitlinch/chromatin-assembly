@@ -15,10 +15,7 @@ By default, Step 0 (Merge reads) does the following:
   - Find all `R2` files, [sort](https://man7.org/linux/man-pages/man1/sort.1.html)
   the list, then merge with [cat](https://man7.org/linux/man-pages/man1/cat.1.html)
   
-By default, Snakemake will set sample IDs equal to the portion of the filepath
-before the first underscore. For example, the filename 
-`R114096_22W5TWLT2_TTCTGCGTCG-TTCGTACACC_L001_R1.fastq.gz` will have the sample
-ID `R114096`.
+Snakemake will use the sample IDs you specify in the config file.
 
 ### Controlling which lanes are merged
 You can control which files are merged by providing a `sample_dict.txt`:
@@ -35,6 +32,10 @@ the `sample_dict.txt` file when you want control over:
 - the output filename
 - merging within/across directories
 - specifying certain lanes to merge
+
+**Note:** The Snakemake rule will only process sample IDs provided in the config
+file. Including a sample ID in the dictionary file is not sufficient to merge reads
+for that sample.
 
 This is an example `sample_dict.txt` file:
 
