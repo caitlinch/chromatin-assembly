@@ -93,7 +93,7 @@ rule s1_mask_repeats:
         index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked.index"
     threads: 20
     log: 
-        rm_log       = f"{config['repo_dir']}logs/s1_mask_repeats.RepeatMasker.{config['ref_species']}.log"
+        rm_log       = f"{config['repo_dir']}logs/s1_mask_repeats.RepeatMasker.{config['ref_species']}.log",
         ngskit4b_log = f"{config['repo_dir']}logs/s1_mask_repeats.ngskit4b.{config['ref_species']}.log"
     benchmark: f"benchmarks/s1_mask_repeats.{config['ref_species']}.benchmark.txt"
     params:
@@ -324,7 +324,7 @@ rule s6c_compute_GC_bias:
         mkdir -p {params.outdir}
 
         samtools index {input.dedup_alignment} >> {log} 2>&1
-        computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file} >> {log} 2>&1
+        computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file} -p {threads} >> {log} 2>&1
         
         module list >> {log}
         """
