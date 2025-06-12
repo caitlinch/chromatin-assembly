@@ -21,6 +21,9 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Assuming that output from Steps 0, 1, 3 and 4 is present, run:
-#       Step 5 - Remove PCR and optical duplicates from alignment with Picard
-snakemake --slurm --profile profiles/slurm/ --until s5_alignment_deduplication --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size
+## Assuming that output from Steps 0, 1, 3 and 4 is present, run:
+# Step 5 - Remove PCR and optical duplicates from alignment with Picard
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s5_alignment_deduplication \
+    --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size

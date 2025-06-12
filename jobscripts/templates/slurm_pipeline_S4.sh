@@ -21,6 +21,9 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Assuming that output from Steps 0, 1 and 3 is present, run:
-#       Step 4 - Align reads with kalign 
-snakemake --slurm --profile profiles/slurm/ --until s4_read_alignment --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size
+## Assuming that output from Steps 0, 1 and 3 is present, run:
+# Step 4 - Align reads with kalign 
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s4_read_alignment \
+    --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size

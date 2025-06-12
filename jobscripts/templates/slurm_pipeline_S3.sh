@@ -21,6 +21,9 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Assuming that output from Steps 0 and 1 is present, run:
-#       Step 3 - UMI extraction with FGBio and Picard
-snakemake --slurm --profile profiles/slurm/ --until s3_extract_UMI --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size
+## Assuming that output from Steps 0 and 1 is present, run:
+# Step 3 - UMI extraction with FGBio and Picard
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s3_extract_UMI \
+    --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size

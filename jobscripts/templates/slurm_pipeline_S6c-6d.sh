@@ -23,8 +23,9 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Assuming that output from Steps 1-6b is present, run:
-#       Step 6c - Compute GC bias with deeptools
-#       Step 6d - Correct GC bias with deeptools
-snakemake --slurm --profile profiles/slurm/ --until s6d_correct_GC_bias
-
+## Assuming that output from Steps 1-6b is present, run:
+# Step 6c - Compute GC bias with deeptools
+# Step 6d - Correct GC bias with deeptools
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s6d_correct_GC_bias

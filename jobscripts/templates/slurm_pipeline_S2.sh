@@ -20,7 +20,10 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Assuming that output from Step 0 is present, run:
-#       Step 2 - Quality control using FastQC
-snakemake --slurm --profile profiles/slurm/ --until s2_raw_read_QC --omit s1_mask_repeats,s3_extract_UMI
+## Assuming that output from Step 0 is present, run:
+# Step 2 - Quality control using FastQC
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s2_raw_read_QC \
+    --omit s1_mask_repeats,s3_extract_UMI
 
