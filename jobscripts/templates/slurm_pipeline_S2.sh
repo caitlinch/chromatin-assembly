@@ -16,10 +16,6 @@
 #SBATCH --error=/scratch3/che318/chromatin-assembly/logs/slurm_%j_%x.err
 #SBATCH --out=/scratch3/che318/chromatin-assembly/logs/slurm_%j_%x.out
 
-# ----------------Params------------------------- #
-# Set maximum number of jobs to submit to the cluster at the same time
-num_jobs=10
-
 # ----------------Modules------------------------- #
 module load python
 
@@ -29,6 +25,4 @@ module load python
 snakemake \
     --slurm --profile profiles/slurm/ \
     --until s2_raw_read_QC \
-    --omit s1_mask_repeats,s3_extract_UMI \
-    --jobs $num_jobs
-
+    --omit s1_mask_repeats,s3_extract_UMI
