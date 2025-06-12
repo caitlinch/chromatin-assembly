@@ -36,7 +36,7 @@ effective_genome_size: 12003433
 #             see README.md for details
 merge_reads: 
   read_dir: "/scratch3/che318/chromatin-assembly/data/mouse/reads/"
-  merge_dict: "/scratch3/che318/chromatin-assembly/mouse_sample_dict.txt"
+  merge_dict: "NA"
   use_merge_dict: "no"
 
 ## Input data paths and details ##
