@@ -19,11 +19,11 @@ set-resources:
   - s0_merge_samples:nodes=1
   - s0_merge_samples:cpus_per_task=8
   - s3_extract_UMI:slurm_partition=ext
-  - s1_mask_repeats:runtime=200h
+  - s1_mask_repeats:runtime=50h
   - s1_mask_repeats:mem_mb=80000
   - s1_mask_repeats:nodes=1
   - s1_mask_repeats:cpus_per_task=20
-  - s2_raw_read_QC:runtime=48h
+  - s2_raw_read_QC:runtime=50h
   - s2_raw_read_QC:mem_mb=12000
   - s2_raw_read_QC:nodes=1
   - s2_raw_read_QC:cpus_per_task=4
