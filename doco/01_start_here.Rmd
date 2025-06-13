@@ -1,40 +1,47 @@
 ---
 title: "The `chromatin-assembly` pipeline"
 author: "Caitlin Cherryh"
-date: "2025-05-02"
+date: "2025-06-12"
 output: html_document
 ---
-
-## Background
-TODO DOCO add introductory paragraph
-
------
 
 ## Repository Structure
 The `caitlinch/chromatin-assembly` GitHub repository has the following structure:
 
+- `alternative_HPCs/`
+  - Version of the pipeline that uses conda environments only (no environment
+    modules), designed to be used on other HPC systems
+  - Untested!
+- `benchmarks/`
+  - Benchmarks of each completed step (time and memory usage)
 - `CHANGELOG.md`
   - Record of changes and modifications
 - `config/`
-  - Includes the `chromatin_assembly_config.yml` file, which is used to specify file paths and input parameters
+  - Includes the `chromatin_assembly_config.yml` file, which is used to specify 
+  file paths and input parameters
 - `data/`
-  - Input data (one folder per species), with a separate folder for:
-  - `reads/` 
+  - Input data (one folder per species), including:
+    - `reads/` 
       - Raw reads (in `fastq.gz` format)
-      - Includes both experimental reads and those used for peak analysis with DANPOS (Step 8)
-  - `reference_genome/`
-    - Reference genome for your species (in `.fasta`, `.fna`, `.fsa` etc. format)
+      - Includes both experimental reads and those used for peak analysis with 
+      DANPOS (Step 8)
+    - `reference_genome/`
+      - Reference genome for your species (in `.fasta`, `.fna`, `.fsa` etc. format)
+    - `sample_dict.txt` 
+      - Optional file that controls read merging (for specifying certain lanes to 
+      merge or for renaming samples)
 - `doco/`
   - Includes documentation on pipeline use and modifying input parameters
 - `jobscripts/`
   - For Slurm jobscripts.
-  - The `templates/` folder contains template jobscripts for running the pipeline. These templates must be updated with your desired Slurm parameters for email address, email delivery, and account ID. See `README.md` for details.
-- `log/`
+  - The `templates/` folder contains template jobscripts for running the 
+  pipeline. These templates must be updated with your desired Slurm parameters 
+  for email address, email delivery, and account ID. See `README.md` for details.
+- `logs/`
   - For output logs
 - `profiles/`
-  - Snakemake uses profiles to determine what computational resources to use for each step on each system
-    - `hpc_test/config.yaml`
-      - For server dry runs
+  - Snakemake uses profiles to determine what computational resources to use for 
+  each step on each system
     - `local/config.yaml`
       - For local (not server) testing/development or dry runs
     - `slurm/config.yaml`
@@ -48,25 +55,23 @@ The `caitlinch/chromatin-assembly` GitHub repository has the following structure
     - Description of files included in this directory
   - `slurm_snakemake_conda.yaml`
     - Conda environment to be used with Snakemake v8+ 
-    - Not needed if running pipeline on Petrichor (which uses Snakemake v7.24.0 as of April 2025)
+    - Not needed if running pipeline on Petrichor (which uses Snakemake v7.24.0 
+    as of April 2025)
   - `slurm_snakemake_modules.txt`
     - Record of modules used (on Petrichor) for 
   developing and testing the pipeline.
   - `user_update_jobscripts.R`
-    - A script to update the template jobscripts for use with your preferred SLURM details
+    - A script to update the template jobscripts for use with your preferred 
+    SLURM details
 - `results/`
   - For storing output
 - `workflow/`
-  - `conda_only_version/`
-    - Version of the pipeline that uses conda environments only (no environment
-    modules), designed to be used on other HPC systems
-    - Untested!
+  - `archived_scripts/`
+    - The BASH scripts from which this Snakemake pipeline was developed
   - `envs/`
     - Conda environments used during pipeline runs
-  - `R/s0_merge_reads.R`
-    - The R script for merging reads
   - `scripts/`
-    - The BASH scripts from which this Snakemake pipeline was developed
+    - Scripts used in the pipeline
   - `Snakefile`
     - Makes the whole pipeline go
 

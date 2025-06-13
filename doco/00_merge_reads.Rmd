@@ -1,0 +1,236 @@
+---
+title: "Merging reads"
+author: "Caitlin Cherryh"
+date: "2025-06-12"
+output: html_document
+---
+
+By default, Step 0 (Merge reads) does the following:
+
+- Read through all subdirectories in the read directory and collect sample IDs
+(defined as everything before the first underscore in the basename of each file)
+- For each sample id:
+  - Find all `R1` files, [sort](https://man7.org/linux/man-pages/man1/sort.1.html)
+  the list, then merge with [cat](https://man7.org/linux/man-pages/man1/cat.1.html)
+  - Find all `R2` files, [sort](https://man7.org/linux/man-pages/man1/sort.1.html)
+  the list, then merge with [cat](https://man7.org/linux/man-pages/man1/cat.1.html)
+  
+Snakemake will use the sample IDs you specify in the config file.
+
+### Controlling which lanes are merged
+You can control which files are merged by providing a `sample_dict.txt`:
+
+- Copy and rename the template provided at `data/template/template_sample_dict.txt`
+- In the config file `config/chromatin_assembly_config.yml`, edit the parameter
+`merge_dict` to be the full path to your version of the `sample_dict.txt`
+- Update your version of the `sample_dict.txt`
+
+**Important:** You do not need to provide a `sample_dict.txt` file. By default, 
+the pipeline will merge all reads as described above. Only include samples in 
+the `sample_dict.txt` file when you want control over:
+
+- the output filename
+- merging within/across directories
+- specifying certain lanes to merge
+
+**Note:** The Snakemake rule will only process sample IDs provided in the config
+file. Including a sample ID in the dictionary file is not sufficient to merge reads
+for that sample.
+
+This is an example `sample_dict.txt` file:
+
+```
+sample_ID|sample_name|lanes
+R98765|Sample01|1,2,3
+S12345|Sample02|1
+templateREF|REF|
+```
+
+There are three columns:
+
+- `sample_ID`: chunk of a filename used for file identification
+  - a unique identifier for each sample
+  - e.g., for the filename `R114096_22W5TWLT2_TTCTGCGTCG-TTCGTACACC_L001_R1.fastq.gz`,
+  the sample ID could be `R114096`, `R114096_22W5TWLT2`, or 
+  `R114096_22W5TWLT2_TTCTGCGTCG-TTCGTACACC`
+- `sample_name` : *(optional)* name of output file
+  - If specified, `R1` output file will be named `{sample_name}_merged_R1.fastq.gz`
+  - If left empty, `R1` output file will be named `{sample_ID}_merged_R1.fastq.gz`
+- `lanes` : *(optional)* which lanes to merge. 
+  - Only use numbers and commas e.g., `1,2,3`
+  - If left empty, all lanes will be merged
+
+### Using the `sample_dict.txt` file
+
+The following examples use the example directory `species/data/reads/` below,
+which has:
+
+- two samples (`R114096` and `R122595`)
+- reads for each sample spread across both subdirectories `22W5TWLT2/` and 
+`33W5V5LT3/`
+- Each sample has `R1` and `R2` files for three lanes (`L001`, `L002`, `L003`). 
+
+```
+species/data/reads/
+  │
+  └───22W5TWLT2
+  │   │   R114096_22W5TWLT2_TTCTGCGTCG-TTCGTACACC_L001_R1.fastq.gz
+  │   │   R114096_22W5TWLT2_TTCTGCGTCG-TTCGTACACC_L001_R2.fastq.gz
+  │   │   R114096_22W5TWLT2_TTCTGCGTCG-TTCGTACACC_L002_R1.fastq.gz
+  │   │   R114096_22W5TWLT2_TTCTGCGTCG-TTCGTACACC_L002_R2.fastq.gz
+  │   │   R114096_22W5TWLT2_TTCTGCGTCG-TTCGTACACC_L003_R1.fastq.gz
+  │   │   R114096_22W5TWLT2_TTCTGCGTCG-TTCGTACACC_L003_R2.fastq.gz
+  |   |   R122595_22W5TWLT2_ACGCATACTT-AAGTACGAGA_L001_R1.fastq.gz 
+  |   |   R122595_22W5TWLT2_ACGCATACTT-AAGTACGAGA_L001_R2.fastq.gz 
+  |   |   R122595_22W5TWLT2_ACGCATACTT-AAGTACGAGA_L002_R1.fastq.gz
+  |   |   R122595_22W5TWLT2_ACGCATACTT-AAGTACGAGA_L002_R2.fastq.gz 
+  |   |   R122595_22W5TWLT2_ACGCATACTT-AAGTACGAGA_L003_R1.fastq.gz
+  |   |   R122595_22W5TWLT2_ACGCATACTT-AAGTACGAGA_L003_R2.fastq.gz 
+  │   
+  └───33W5V5LT3
+      │   R114096_33W5V5LT3_TTCTGCGTCG-TTCGTACACC_L001_R1.fastq.gz
+      │   R114096_33W5V5LT3_TTCTGCGTCG-TTCGTACACC_L001_R2.fastq.gz
+      │   R114096_33W5V5LT3_TTCTGCGTCG-TTCGTACACC_L002_R1.fastq.gz
+      │   R114096_33W5V5LT3_TTCTGCGTCG-TTCGTACACC_L002_R2.fastq.gz
+      │   R114096_33W5V5LT3_TTCTGCGTCG-TTCGTACACC_L003_R1.fastq.gz
+      │   R114096_33W5V5LT3_TTCTGCGTCG-TTCGTACACC_L003_R2.fastq.gz
+      |   R122595_33W5V5LT3_ACGCATACTT-AAGTACGAGA_L001_R1.fastq.gz
+      |   R122595_33W5V5LT3_ACGCATACTT-AAGTACGAGA_L001_R2.fastq.gz
+      |   R122595_33W5V5LT3_ACGCATACTT-AAGTACGAGA_L002_R1.fastq.gz
+      |   R122595_33W5V5LT3_ACGCATACTT-AAGTACGAGA_L002_R2.fastq.gz
+      |   R122595_33W5V5LT3_ACGCATACTT-AAGTACGAGA_L003_R1.fastq.gz
+      |   R122595_33W5V5LT3_ACGCATACTT-AAGTACGAGA_L003_R2.fastq.gz
+```
+
+-----
+
+##### Use Case 1: I want to merge all reads for all samples
+In this case, we want to merge all lanes for all samples across all directories
+(the default behaviour) - so we do **not** need to supply a `sample_dict.txt` file.
+
+|   |   | 
+|----|----|
+| Input | A read directory containing multiple subdirectories, with samples spread across subdirectories |
+| Desired output | One `R1` and one `R2` file per sample |
+| Sample IDs | All   |
+| Rename output files | False |
+| Lanes to merge | All |
+| Output files | `R114096_merged_R1.fastq.gz`, `R114096_merged_R2.fastq.gz`, `R122595_merged_R1.fastq.gz`, `R122595_merged_R2.fastq.gz` |
+
+`sample_dict.txt`:
+
+```
+sample_ID|sample_name|lanes
+```
+
+-----
+
+##### Use Case 2: I want to merge reads across subdirectories, using a `sample_dict.txt`
+|   |   | 
+|----|----|
+| Input | A read directory containing multiple subdirectories, with samples spread across subdirectories |
+| Desired output | One `R1` and one `R2` file per sample |
+| Sample IDs | `R114096`, `R122595`   |
+| Rename output files | False |
+| Lanes to merge | All |
+| Output files | `R114096_merged_R1.fastq.gz`, `R114096_merged_R2.fastq.gz`, `R122595_merged_R1.fastq.gz`, `R122595_merged_R2.fastq.gz` |
+
+
+`sample_dict.txt`:
+```
+sample_ID|sample_name|lanes
+R114096||
+R122595||
+```
+
+-----
+
+##### Use Case 3: I want to merge reads within subdirectories
+
+|   |   | 
+|----|----|
+| Input | A read directory containing multiple subdirectories, with samples spread across subdirectories |
+| Desired output | One `R1` and one `R2` file per sample per directory |
+| Sample IDs | `R114096`, `R122595`   |
+| Rename output files | False |
+| Lanes to merge | All |
+| Output files | `R114096_22W5TWLT2_merged_R1.fastq.gz`, `R114096_22W5TWLT2_merged_R2.fastq.gz`, `R114096_33W5V5LT3_merged_R1.fastq.gz`, `R114096_33W5V5LT3_merged_R2.fastq.gz`, `R122595_22W5TWLT2_merged_R1.fastq.gz`, `R122595_22W5TWLT2_merged_R2.fastq.gz`, `R122595_33W5V5LT3_merged_R1.fastq.gz`, `R122595_33W5V5LT3_merged_R2.fastq.gz` |
+
+`sample_dict.txt`:
+```
+sample_ID|sample_name|lanes
+R114096_22W5TWLT2|| 
+R114096_33W5V5LT3|| 
+R122595_22W5TWLT2|| 
+R122595_33W5V5LT3|| 
+```
+
+-----
+
+##### Use Case 4: I want to merge only specific lanes
+
+Lanes to merge are specified in the third column. Use numbers and commas only i.e.,
+`1,2`
+
+|   |   | 
+|----|----|
+| Input | A read directory containing multiple subdirectories, with samples spread across subdirectories |
+| Desired output | One `R1` and one `R2` file per sample |
+| Sample IDs | `R114096`, `R122595`   |
+| Rename output files | False |
+| Lanes to merge | 1,2 |
+| Output files | `R114096_merged_R1.fastq.gz`, `R114096_merged_R2.fastq.gz`, `R122595_merged_R1.fastq.gz`, `R122595_merged_R2.fastq.gz` |
+
+`sample_dict.txt`:
+```
+sample_ID|sample_name|lanes
+R114096||1,2
+R1225953||1,2
+```
+
+-----
+
+##### Use Case 5: I want to rename my output files
+
+Sample names are specified in the second column.
+
+|   |   | 
+|----|----|
+| Input | A read directory containing multiple subdirectories, with samples spread across subdirectories |
+| Desired output | One `R1` and one `R2` file per sample |
+| Sample IDs | `R114096`, `R122595`   |
+| Rename output files | True |
+| Lanes to merge | All |
+| Output files | `Sample001_merged_R1.fastq.gz`, `Sample001_merged_R2.fastq.gz`, `Sample002_merged_R1.fastq.gz`, `Sample002_merged_R2.fastq.gz` |
+
+`sample_dict.txt`:
+```
+sample_ID|sample_name|lanes
+R114096|Sample001|
+R1225953|Sample002|
+```
+
+-----
+
+##### Use Case 6: I want to rename my output files and merge specific lanes
+
+Here we combine Use Case 4 and Use Case 5 to specify sample names and lanes for
+each `sample_ID`.
+
+|   |   | 
+|----|----|
+| Input | A read directory containing multiple subdirectories, with samples spread across subdirectories |
+| Desired output | One `R1` and one `R2` file per sample |
+| Sample IDs | `R114096`, `R122595`   |
+| Rename output files | True |
+| Lanes to merge | 1,2 |
+| Output files | `Sample001_merged_R1.fastq.gz`, `Sample001_merged_R2.fastq.gz`, `Sample002_merged_R1.fastq.gz`, `Sample002_merged_R2.fastq.gz` |
+
+`sample_dict.txt`:
+```
+sample_ID|sample_name|lanes
+R114096|Sample001|1,2 
+R1225953|Sample002|1,2 
+```
+
+-----

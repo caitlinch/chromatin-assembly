@@ -1,12 +1,13 @@
 #!/bin/bash
 
-# Usage: sbatch slurm_pipeline_S2.sh
+# Usage: sbatch slurm_pipeline_S3.sh
 
 # NOTE: Depending on your data, you may need to update the resources in this job script or
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
-#SBATCH --job-name=CA_S2
-#SBATCH --time=100:00:00
+#SBATCH --job-name=CA_S3
+#SBATCH --partition=ext
+#SBATCH --time=25-00:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
@@ -20,9 +21,9 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-## Assuming that output from Step 0 is present, run:
-# Step 2 - Quality control using FastQC
+## Assuming that output from Steps 0 and 1 is present, run:
+# Step 3 - UMI extraction with FGBio and Picard
 snakemake \
     --slurm --profile profiles/slurm/ \
-    --until s2_raw_read_QC \
-    --omit s1_mask_repeats,s3_extract_UMI
+    --until s3_extract_UMI \
+    --omit s2_raw_read_QC,s6a_two_bit_genome,s6b_effective_genome_size

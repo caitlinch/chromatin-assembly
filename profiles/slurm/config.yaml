@@ -5,6 +5,7 @@ default-resources:
   - nodes="1"
   - cpus_per_task="10"
 
+restart-times: 3
 max-jobs-per-second: 10
 max-status-checks-per-second: 1
 jobs: 10
@@ -18,14 +19,14 @@ set-resources:
   - s0_merge_samples:nodes=1
   - s0_merge_samples:cpus_per_task=8
   - s3_extract_UMI:slurm_partition=ext
-  - s1_mask_repeats:runtime=200h
+  - s1_mask_repeats:runtime=50h
   - s1_mask_repeats:mem_mb=80000
   - s1_mask_repeats:nodes=1
   - s1_mask_repeats:cpus_per_task=20
-  - s2_raw_read_QC:runtime=48h
+  - s2_raw_read_QC:runtime=50h
   - s2_raw_read_QC:mem_mb=12000
   - s2_raw_read_QC:nodes=1
-  - s2_raw_read_QC:cpus_per_task=3
+  - s2_raw_read_QC:cpus_per_task=4
   - s3_extract_UMI:slurm_partition=ext
   - s3_extract_UMI:runtime=700h
   - s3_extract_UMI:mem_mb=512000
@@ -35,12 +36,12 @@ set-resources:
   - s4_read_alignment:runtime=700h
   - s4_read_alignment:mem_mb=512000
   - s4_read_alignment:nodes=1
-  - s4_read_alignment:cpus_per_task=6
+  - s4_read_alignment:cpus_per_task=64
   - s5_alignment_deduplication:slurm_partition=ext
   - s5_alignment_deduplication:runtime=700h
   - s5_alignment_deduplication:mem_mb=48000
   - s5_alignment_deduplication:nodes=1
-  - s5_alignment_deduplication:cpus_per_task=5
+  - s5_alignment_deduplication:cpus_per_task=64
   - s6a_two_bit_genome:runtime=24h
   - s6a_two_bit_genome:mem_mb=48000
   - s6a_two_bit_genome:nodes=1
@@ -68,4 +69,4 @@ set-resources:
   - s8_peak_analysis:runtime=400h
   - s8_peak_analysis:mem_mb=48000
   - s8_peak_analysis:nodes=1
-  - s8_peak_analysis:cpus_per_task=2
+  - s8_peak_analysis:cpus_per_task=10

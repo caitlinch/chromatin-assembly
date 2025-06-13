@@ -20,8 +20,12 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Assuming that output from Steps 1-6d is present, run:
-#       Step 7a - Calculate alignment statistics with Picard 
-#       Step 7b - Estimate mean nuclear genome cover with Picard 
-snakemake --slurm --profile profiles/slurm/ --until s7a_size_metrics
-snakemake --slurm --profile profiles/slurm/ --until s7b_read_count
+## Assuming that output from Steps 1-6d is present, run:
+# Step 7a - Calculate alignment statistics with Picard 
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s7a_size_metrics
+# Step 7b - Estimate mean nuclear genome cover with Picard 
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s7b_read_count

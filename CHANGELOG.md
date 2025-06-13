@@ -4,10 +4,18 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
-  
+
 ## [Unreleased] - yyyy-mm-dd
 
-Improved read merging and extended run time for long steps.
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.1.2] - 2025-06-13
+
+Improved read merging. Fixed multi-threading and extended run time for long steps.
 
 ### Added
 - Better template data in 'data/template/`
@@ -18,10 +26,14 @@ internal logic
 - Moved vars for effective genome size and species binomial into Section 1 of 
 the config file
 - Improved master `README.md` file
+- Updated all documentation
 
 ### Fixed
-- Specify `ext` partition for long steps (S3/S4), allowing run time of up to 30 
-days
+- Specify `ext` partition for long steps (S3/S4/S5), allowing run time of up to 
+30 days
+- Hardcoded number of threads in Snakefile (due to known issue with setting
+threads in profile `.yaml` file)
+- Updated conda-only version (`alternative_HPCS/`)
  
 ## [0.1.1] - 2025-05-15
 

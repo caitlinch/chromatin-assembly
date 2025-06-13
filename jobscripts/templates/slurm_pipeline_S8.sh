@@ -22,6 +22,8 @@
 module load python
 
 # ---------------- Pipeline Steps ------------------- #
-# Assuming that output from Steps 1-7b is present, run:
-#       Step 8 - Peak analysis with DANPOS
-snakemake --slurm --profile profiles/slurm/ --until s8_peak_analysis
+## Assuming that output from Steps 1-7b is present, run:
+# Step 8 - Peak analysis with DANPOS
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s8_peak_analysis

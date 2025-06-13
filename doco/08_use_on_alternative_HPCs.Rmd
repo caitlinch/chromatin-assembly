@@ -1,7 +1,7 @@
 ---
 title: "Adapting the pipeline for other HPC systems"
 author: "Caitlin Cherryh"
-date: "2025-05-02"
+date: "2025-06-12"
 output: html_document
 ---
 
@@ -58,6 +58,14 @@ using the provided conda environment `workflow/envs/Step6_utils.yaml`. Provided
 the HPC system you are using has conda environments, you will not need to do
 anything to make this work.
 
+Remember to create the conda environments prior to running Step 6 with:
+```
+snakemake
+  --use-conda \
+  --conda-create-envs-only \
+  -c1
+```
+
 -----
 
 ## Using conda environments
@@ -101,21 +109,21 @@ You may need to:
 
 
 ### Running the conda-only version
-There is a separate Snakefile and config file for this version.
+There is a separate Snakefile for this version of the pipeline.
 
-The config file is at `workflow/conda_only_version/chromatin_assembly_config.yml`.
-Follow the instructions in the quick-start guide `README.md` to enter parameters
-for your dataset.
+The Snakefile is at `alternative_HPCs/Snakefile`
 
-The Snakefile is at `workflow/conda_only_version/Snakefile`
+You will use the same config file `config/chromatin_assembly_config.yml` 
+(although ignore any references to modules, as they are not used for the
+conda-only version). Follow the instructions in the quick-start guide 
+`README.md` to enter parameters for your dataset.
 
 Before running Snakemake with this version of the pipeline, you will
 need to generate the conda environments using Snakemake:
 
 ```
 snakemake
-  --snakefile workflow/conda_only_version/Snakefile \
-  --configfile workflow/conda_only_version/chromatin_assembly_config.yml \
+  --snakefile alternative_HPCs/Snakefile \
   --use-conda \
   --conda-create-envs-only \
   -c1
@@ -126,13 +134,11 @@ calls:
 
 - Tell Snakemake to use conda environments with `--use-conda`
 - Specify the conda-only version of the Snakefile with `--snakefile`
-- Specify the conda-only version of the config file with `--configfile`
 
 ```
 snakemake \
   --use-conda  \
-  --snakefile workflow/conda_only_version/Snakefile \
-  --configfile workflow/conda_only_version/chromatin_assembly_config.yml 
+  --snakefile alternative_HPCs/Snakefile \
 ```
 
 Other arguments are added as usual.
@@ -140,9 +146,16 @@ e.g., to perform a dry run:
 ```
 snakemake \
   --use-conda \
-  --snakefile workflow/conda_only_version/Snakefile \
-  --configfile workflow/conda_only_version/chromatin_assembly_config.yml \
+  --snakefile alternative_HPCs/Snakefile \
   -c1 -n -p
+```
+
+e.g., to use the Slurm profile:
+```
+snakemake \
+  --slurm --profile profiles/slurm/ \
+  --use-conda \
+  --snakefile alternative_HPCs/Snakefile
 ```
 
 If you are using the provided jobscripts, remember to update the Snakemake call 

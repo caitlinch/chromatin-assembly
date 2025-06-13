@@ -22,11 +22,21 @@ module load miniforge3
 source /apps/miniforge3/enable_miniforge.sh
 
 # ---------------- Pipeline Steps ------------------- #
-# Run:
-#       Step 1 - Repeat masking with RepeatMasker and suffix array
-#       Step 6a - Generate 2Bit genome with faToTwoBit
-#       Step 6b - Calculate effective genome size with faCount
-snakemake --slurm --profile profiles/slurm/ --until s1_mask_repeats
-snakemake --slurm --profile profiles/slurm/ --use-conda --until s6a_two_bit_genome --omit s0_merge_samples
-snakemake --slurm --profile profiles/slurm/ --use-conda --until s6b_effective_genome_size --omit s0_merge_samples
+## Run:
+# Step 1 - Repeat masking with RepeatMasker and suffix array
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --until s1_mask_repeats
+# Step 6a - Generate 2Bit genome with faToTwoBit
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --use-conda \
+    --until s6a_two_bit_genome \
+    --omit s0_merge_samples
+# Step 6b - Calculate effective genome size with faCount
+snakemake \
+    --slurm --profile profiles/slurm/ \
+    --use-conda \
+    --until s6b_effective_genome_size \
+    --omit s0_merge_samples
 

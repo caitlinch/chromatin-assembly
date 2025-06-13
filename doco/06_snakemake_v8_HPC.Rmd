@@ -1,7 +1,7 @@
 ---
 title: "HPC use for Snakemake Version 8+"
 author: "Caitlin Cherryh"
-date: "2025-05-02"
+date: "2025-06-12"
 output: html_document
 ---
 
@@ -57,9 +57,9 @@ snakemake --executor slurm --workflow-profile profiles/slurm/config.yaml
 
 Some notes on [Running Snakemake on a cluster](https://docs.s3it.uzh.ch/how-to_articles/how_to_run_snakemake/#resources):
 
-- Resources can be referenced within a rule's `shell` and `run` sections e.g., `{resources.mem_mb}`, `{resources.threads}`
+- Resources can be referenced within a rule's `shell` and `run` sections e.g., `{threads}`
   - This is useful for applications that accept memory or thread parameters in the command line
-  - For example, in rule `s2_raw_read_QC`: `fastqc -t {resources.threads} {input.r1} {input.r2} -o {params.outdir}` 
+  - For example, in rule `s2_raw_read_QC`: `fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir}` 
 - Snakefiles and configuration profiles can specify both `threads` and `cpus_per_task`
   - `cpus_per_task` is specific to Slurm.
   - `threads` is independent of environment and always available, even when not explicitly set for a rule. 
