@@ -4,10 +4,18 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
-  
+
 ## [Unreleased] - yyyy-mm-dd
 
-Improved read merging and extended run time for long steps.
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.1.2] - 2025-06-13
+
+Improved read merging. Fixed multi-threading and extended run time for long steps.
 
 ### Added
 - Better template data in 'data/template/`
@@ -25,6 +33,7 @@ the config file
 30 days
 - Hardcoded number of threads in Snakefile (due to known issue with setting
 threads in profile `.yaml` file)
+- Updated conda-only version (`alternative_HPCS/`)
  
 ## [0.1.1] - 2025-05-15
 
