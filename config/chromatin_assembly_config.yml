@@ -25,7 +25,7 @@ binomial_species_name: "Mus musculus"
 ## Effective genome size, extracted from the output of Step 6b
 #   The number of non-N bases in the genome i.e., {total len} - {total N}
 #   Update this parameter after running Step 6b
-effective_genome_size: 12003433
+effective_genome_size: 2625861047
 
 ## Input data paths and details ##
 # reference_genome_id: human-readable identifier for reference genome
