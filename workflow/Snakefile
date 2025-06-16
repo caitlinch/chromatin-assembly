@@ -247,7 +247,7 @@ rule s5_alignment_deduplication:
         module load {params.module_picard}
         mkdir -p {params.outdir}
 
-        CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar MarkDuplicates --INPUT {input.alignment} --OUTPUT {output.dedup_alignment} --METRICS_FILE {params.metrics} {params.picard_params}"
+        CMD="java -Xmx10g -jar $PICARD_HOME/picard.jar MarkDuplicates --INPUT {input.alignment} --OUTPUT {output.dedup_alignment} --METRICS_FILE {params.metrics} {params.picard_params}"
         eval $CMD >> {log} 2>&1
  
         module list >> {log}
