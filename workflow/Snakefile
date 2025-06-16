@@ -16,6 +16,17 @@ REF_SPECIES=species=config['ref_species']
 # SAMPLE_IDS – unique identifiers of reads to process
 SAMPLE_IDS  = config['input_samples']
 
+# --- Functions --- #
+def get_java_mem(wildcards, attempt):
+    """Increase memory provided to Java in Step 5 with each subsequent attempt.
+    Starting value is 10GB, and value increase by 5GB each attempt."""
+    return  (5 + (attempt * 5))
+
+def get_mem_mb(wildcards, attempt):
+    """Increase resource mem_mb provided in Step 5 with each subsequent attempt.
+    Starting value is 48000 mb, and value increase by 5000 mb with each attempt."""
+    return  (43000 + (attempt * 5000))
+
 
 # --- Rule: run_all --- #
 ## Run all rules
@@ -233,13 +244,16 @@ rule s5_alignment_deduplication:
     output:
         dedup_alignment = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_alignment_dedup.bam"
     threads: 64
+    resources:
+        mem_mb=get_mem_mb
     log: "logs/s5_alignment_deduplication.{sample}.log"
     benchmark: "benchmarks/s5_alignment_deduplication.{sample}.benchmark.txt"
     params:
         outdir        = lambda w, output: os.path.split(output.dedup_alignment)[0],
         metrics       = f"results/{config['ref_species']}/{config['output_dir']['step5']}/{{sample}}_removeduplicates.metrics.txt",
         picard_params = config['s5_alignment_deduplication']['Picard_params'],
-        module_picard = config['modules']['picard']
+        module_picard = config['modules']['picard'],
+        java_mem = get_java_mem
     message: "Executing s5_alignment_deduplication with {threads} threads for sample {wildcards.sample}."
     shell:
         """
@@ -247,7 +261,7 @@ rule s5_alignment_deduplication:
         module load {params.module_picard}
         mkdir -p {params.outdir}
 
-        CMD="java -Xmx10g -jar $PICARD_HOME/picard.jar MarkDuplicates --INPUT {input.alignment} --OUTPUT {output.dedup_alignment} --METRICS_FILE {params.metrics} {params.picard_params}"
+        CMD="java -Xmx{params.java_mem}g -jar $PICARD_HOME/picard.jar MarkDuplicates --INPUT {input.alignment} --OUTPUT {output.dedup_alignment} --METRICS_FILE {params.metrics} {params.picard_params}"
         eval $CMD >> {log} 2>&1
  
         module list >> {log}

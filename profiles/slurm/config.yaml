@@ -39,7 +39,6 @@ set-resources:
   - s4_read_alignment:cpus_per_task=64
   - s5_alignment_deduplication:slurm_partition=ext
   - s5_alignment_deduplication:runtime=700h
-  - s5_alignment_deduplication:mem_mb=48000
   - s5_alignment_deduplication:nodes=1
   - s5_alignment_deduplication:cpus_per_task=64
   - s6a_two_bit_genome:runtime=24h
