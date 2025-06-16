@@ -126,8 +126,11 @@ s4_read_alignment:
 ## Step 5: Picard parameters ##
 # Picard_params: user-specified parameters for Picard call
 #                Recommended: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
+# java_mem: Memory required for Java, in GB.
+#           Recommended: "20"
 s5_alignment_deduplication:
   Picard_params: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
+  java_mem: "20"
 
 
 

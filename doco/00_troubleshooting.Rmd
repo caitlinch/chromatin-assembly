@@ -86,6 +86,19 @@ might be missing a file or have an incorrect file path
   - If there's issues because conda environments weren't properly installed,
   delete the contents of the hidden directory `.snakemake/conda/`
   - Then, create conda envs with `snakemake --use-conda --conda-create-envs-only -c1`
+- **Step 5 failed with `exit code 1`?**
+  - Increase the computational resources provided
+  - In the `profiles/slurm/config.yaml` file, go to the following line and increase
+  the `mem_mb` provided (default is 50000 mb, try increasing by 5000 mb at a time):
+    - `  - s5_alignment_deduplication:mem_mb=50000`
+  - In the `config/chromatin-assembly-config.yml` file, go to the following 
+  section and increase the memory provided to Java in the `java_mem` var 
+  (default is 20GB, try increasing by 5GB at a time):
+  ```
+  s5_alignment_deduplication:
+    Picard_params: "--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX"
+    java_mem: "20"
+  ```
 - **Can't run Step 6a or Step 6b because faCount and faToTwoBit aren't installed?**
   - Check whether the conda environments have been created in the hidden directory `.snakemake/conda/`
   - Try to generate the conda environments using `snakemake --use-conda --conda-create-envs-only -c1` 

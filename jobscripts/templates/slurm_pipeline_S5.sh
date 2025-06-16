@@ -6,8 +6,7 @@
 #       in the Snakemake slurm profile (chromatin-assembly/profiles/slurm/config.yaml)
 
 #SBATCH --job-name=CA_S5
-#SBATCH --partition=ext
-#SBATCH --time=25-00:00:00
+#SBATCH --time=3-00:00:00
 #SBATCH --mem=5MB # memory for Snakemake - not memory required for individual pipeline steps
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1

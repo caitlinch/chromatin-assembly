@@ -13,12 +13,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.1.3] - 2025-06-16
+
+Updating Step 5 memory requirements for large datasets.
+
+### Fixed
+- Memory requirements for large datasets (e.g., mouse control test data)
+for Step 5 - Deduplication with Picard
+- Resources required and jobscript for for Step 5 - Deduplication with Picard
+
 ## [0.1.2] - 2025-06-13
 
 Improved read merging. Fixed multi-threading and extended run time for long steps.
 
 ### Added
-- Better template data in 'data/template/`
+- Better template data in `data/template/`
 
 ### Changed
 - S0 read merging - BASH script with simpler input parameters and improved 
