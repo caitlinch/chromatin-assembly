@@ -261,11 +261,10 @@ rule s6a_two_bit_genome:
     output:
         twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_alignment_dedup.2bit"
     threads: 2
-    log: f"logs/s6a_two_bit_genome.{config['ref_species']}.log"
     benchmark: f"benchmarks/s6a_two_bit_genome.{config['ref_species']}.benchmark.txt"
     params:
-        outdir            = lambda w, output: os.path.split(output.twobit_genome)[0],
-        info              = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_info.tab"
+        outdir = lambda w, output: os.path.split(output.twobit_genome)[0],
+        info   = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_info.tab"
     conda:
         "envs/Step6.yaml"
     message: "Executing s6a_two_bit_genome with {threads} threads for file {input.masked_ref_genome}."
@@ -274,8 +273,8 @@ rule s6a_two_bit_genome:
         # s6a_two_bit_genome
         mkdir -p {params.outdir}
 
-        faToTwoBit {input.masked_ref_genome} {output.twobit_genome} >> {log} 2>&1
-        twoBitInfo {output.twobit_genome} {params.info} >> {log} 2>&1
+        faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
+        twoBitInfo {output.twobit_genome} {params.info}
         """
 
 ## Step 6b:  Calculate effective genome size with faCount
@@ -323,8 +322,11 @@ rule s6c_compute_GC_bias:
         module load {params.module_python}
         module load {params.module_samtools}
         mkdir -p {params.outdir}
-
+        
+        echo "Run samtools index" >> {log} 2>&1
         samtools index {input.dedup_alignment} >> {log} 2>&1
+
+        echo "Run computeGCBias" >> {log} 2>&1
         computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file} -p {threads} >> {log} 2>&1
         
         module list >> {log}
