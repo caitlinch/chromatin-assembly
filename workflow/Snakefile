@@ -529,12 +529,14 @@ rule s8_peak_analysis:
         dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.peaks.integrative.xls",
         dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.regions.integrative.xls"
     threads: 10
-    log: f"logs/s8_peak_analysis.{config['peak_analysis']['test_name']}.log"
+    log: 
+        log    = f"logs/s8_peak_analysis.{config['peak_analysis']['test_name']}.log"
+        danpos = f"logs/s8_peak_analysis.{config['peak_analysis']['test_name']}.danpos.log"
     benchmark: f"benchmarks/s8_peak_analysis.{config['peak_analysis']['test_name']}.benchmark.txt"
     params:
         test_name        = config['peak_analysis']['test_name'],
-        test_indexes     = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
-        control_indexes  = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids']),
+        test_indexes     = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam.bai", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
+        control_indexes  = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam.bai", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids']),
         analysis_dir     = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
         danpos_op_dir    = lambda w, output: os.path.split(output.dpos_op)[0],
         test_dir         = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/test/",
@@ -545,38 +547,39 @@ rule s8_peak_analysis:
     message: "Executing s8_peak_analysis with {threads} threads for comparison {params.test_name}."
     shell:
         """
-        echo "Rule: s8_peak_analysis" >> {log}
-        echo "Test name: {params.test_name}" >> {log}
-        echo "Output: peak analysis" >> {log}
-        echo "dpos output file: {output.dpos_op}" >> {log}
-        echo "dpeak output file: {output.dpeak_op}" >> {log}
-        echo "dregion output file: {output.dregion_op}" >> {log}
+        echo "Rule: s8_peak_analysis" >> {log.log}
+        echo "Test name: {params.test_name}" >> {log.log}
+        echo "Output: peak analysis" >> {log.log}
+        echo "dpos output file: {output.dpos_op}" >> {log.log}
+        echo "dpeak output file: {output.dpeak_op}" >> {log.log}
+        echo "dregion output file: {output.dregion_op}" >> {log.log}
 
-        echo "[ $(date) ] Load modules" >> {log}
+        echo "[ $(date) ] Load modules" >> {log.log}
         module load {params.module_python}
         module load {params.module_danpos}
 
-        echo "[ $(date) ] Create directories" >> {log}
+        echo "[ $(date) ] Create directories" >> {log.log}
         mkdir -p {params.analysis_dir}
         mkdir -p {params.danpos_op_dir}
         mkdir -p {params.test_dir}
         mkdir -p {params.control_dir}
         
-        echo "[ $(date) ] Copy input files" >> {log}
-        echo "DANPOS input directory: {params.test_dir}" >> {log}
+        echo "[ $(date) ] Copy input files" >> {log.log}
+        echo "DANPOS input directory: {params.test_dir}" >> {log.log}
         cp {input.test_als} {params.test_dir}
         cp {params.test_indexes} {params.test_dir}
 
-        echo "[ $(date) ] Copy control files" >> {log}
-        echo "DANPOS control directory: {params.control_dir}" >> {log}
+        echo "[ $(date) ] Copy control files" >> {log.log}
+        echo "DANPOS control directory: {params.control_dir}" >> {log.log}
         cp {input.control_als} {params.control_dir}
         cp {params.control_indexes} {params.control_dir}
 
-        echo "[ $(date) ] Run danpos dtriple" >> {log}
+        echo "[ $(date) ] Run danpos dtriple" >> {log.log}
+        echo "DANPOS log: {log.danpos}" >> {log.log}
         CMD="python {params.module_danpos_py} dtriple {params.test_dir}:{params.control_dir} -o {params.danpos_op_dir}"
-        eval "$CMD" >> {log} 2>&1
+        eval "$CMD" >> {log.danpos} 2>&1
 
-        echo "[ $(date) ] Record loaded modules" >> {log}
-        module list >> {log}
+        echo "[ $(date) ] Record loaded modules" >> {log.log}
+        module list >> {log.log}
         """
 
