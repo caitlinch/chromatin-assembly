@@ -134,10 +134,23 @@ s5_alignment_deduplication:
 
 
 
-##### Section 4: HPC system #####
-## Modules - update module versions here if required ##
+##### Section 4: Module versions #####
+## Update module versions here if required
+## These module versions taken from scripts in the `workflow/archived_scripts/` directory
+## IMPORTANT: If updating these modules, check that the command syntax is identical!
+# danpos: DANPOS3 (https://github.com/sklasfeld/DANPOS3)
+# danpos_py_file: location of `danpos.py` file -- find with BASH command `type -a -P danpos.py`
+# fastqc: FastQC (https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+# fgbio: fgbio (http://fulcrumgenomics.github.io/fgbio/)
+# kit4b: ngskit4b
+# picard: Picard (https://broadinstitute.github.io/picard/)
+# python: Python3 (https://www.python.org/)
+# R: R (https://www.r-project.org)
+# repeatmasker: RepeatMasker (https://repeatmasker.org)
+# samtools: Samtools (https://www.htslib.org/)
 modules:
   danpos: "danpos/3.1.1"
+  danpos_py_file: "/apps/danpos/3.1.1/bin/danpos.py"
   fastqc: "fastqc/0.11.9"
   fgbio: "fgbio/2.0.2"
   kit4b: "kit4b/200218"
