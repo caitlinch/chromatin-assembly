@@ -13,6 +13,7 @@ Completed full test run. Handing over project.
 - Handover document `HANDOVER.md`
 - Overview of all rules (including programs used and commands) in 
 `doco/05_rule_overview.Rmd`.
+- Version of DANPOS3 with typos in function names corrected - see `software/danpos3.md` for details.
 
 ### Changed
 - Improved logging for all steps.
