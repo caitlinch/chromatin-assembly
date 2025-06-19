@@ -542,7 +542,7 @@ rule s8_peak_analysis:
         test_dir         = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/test/",
         control_dir      = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/control/",
         module_danpos    = config['modules']['danpos'],
-        module_danpos_py = config['modules']['danpos_py_file'],
+        module_danpos_py = f"{config['repo_dir']}/software/danpos_3.1.1/danpos.py",
         module_python    = config['modules']['python']    
     message: "Executing s8_peak_analysis with {threads} threads for comparison {params.test_name}."
     shell:
