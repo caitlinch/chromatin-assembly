@@ -56,14 +56,16 @@ merge_reads:
   use_merge_dict: "no"
 
 ## Input control for peak analysis with DANPOS (Step 8) ##
-# test_name: Descriptive name for test, to be used as name of output directory
+# exp_name: Descriptive name for experimental data
 # exp_ids: The sample IDs to use as experimental/test data for DANPOS analysis e.g., `exp_ids: ["id01", "id02"]`
 #           Should be a subset of `input_samples`
+# control_name: Descriptive name for control data
 # control_ids: The sample IDs to use as input control for DANPOS analysis e.g., `control_ids: ["id03", "id04"]`
 #              Should be a subset of `input_samples`
 peak_analysis: 
-  test_name: "133143-133133"
+  exp_name: "133143"
   exp_ids: ["133143"] 
+  control_name: "133133"
   control_ids: ["133133"] 
 
 ## Adapters ##

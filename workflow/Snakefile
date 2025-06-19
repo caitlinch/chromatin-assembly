@@ -35,11 +35,10 @@ rule run_all:
         s6d_GCbias = expand("results/{species}/{step_name}/{sample}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], sample=SAMPLE_IDS),
         s7a_metric = expand("results/{species}/{step_name}/{ref_species}_{sample}_insert_size_metrics.txt", species=config['ref_species'], step_name=config['output_dir']['step7a'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
         s7b_stats  = expand("results/{species}/{step_name}/{ref_species}_{sample}_count.txt", species=config['ref_species'], step_name=config['output_dir']['step7b'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
-        s8_dpos    = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.positions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name']),
-        s8_dpeak   = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.peaks.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name']),
-        s8_dregion = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.regions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name'])
-
-
+        s8_dpos    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.positions.integrative.xls",
+        s8_dpeak   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.peaks.integrative.xls",
+        s8_dregion = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.regions.integrative.xls"
+    
 # --- Pipeline steps --- #
 ## Step 0: Read collation (SLURM_MergeSamples.sh)
 rule s0_merge_samples:
@@ -522,64 +521,74 @@ rule s7b_read_count:
 # Original Slurm script: slurm_dtriple_1_vs_27-29.sh
 rule s8_peak_analysis:
     input:
-        test_als    = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
+        exp_als     = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
         control_als = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids'])
     output:
-        dpos_op    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.positions.integrative.xls",
-        dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.peaks.integrative.xls",
-        dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.regions.integrative.xls"
+        dpos_op    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.positions.integrative.xls",
+        dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.peaks.integrative.xls",
+        dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.regions.integrative.xls"
     threads: 10
     log: 
-        log    = f"logs/s8_peak_analysis.{config['peak_analysis']['test_name']}.log"
-        danpos = f"logs/s8_peak_analysis.{config['peak_analysis']['test_name']}.danpos.log"
-    benchmark: f"benchmarks/s8_peak_analysis.{config['peak_analysis']['test_name']}.benchmark.txt"
+        log    = f"{config['repo_dir']}logs/s8_peak_analysis.{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.log",
+        danpos = f"{config['repo_dir']}logs/s8_peak_analysis.{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.danpos.log"
+    benchmark: f"benchmarks/s8_peak_analysis.{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.benchmark.txt"
     params:
-        test_name        = config['peak_analysis']['test_name'],
-        test_indexes     = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam.bai", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
+        exp_name         = config['peak_analysis']['exp_name'],
+        exp_dir          = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}/",
+        exp_indexes      = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam.bai", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
+        control_name     = config['peak_analysis']['control_name'],
+        control_dir      = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['control_name']}/",
         control_indexes  = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam.bai", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids']),
-        analysis_dir     = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
-        danpos_op_dir    = lambda w, output: os.path.split(output.dpos_op)[0],
-        test_dir         = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/test/",
-        control_dir      = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/control/",
+        test_name        = f"{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}",
+        test_dir         = lambda w, output: os.path.split(output.dpos_op)[0],
+        step8_dir        = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
         module_danpos    = config['modules']['danpos'],
-        module_danpos_py = f"{config['repo_dir']}/software/danpos_3.1.1/danpos.py",
+        module_danpos_py = f"{config['repo_dir']}software/danpos_3.1.1/danpos.py",
         module_python    = config['modules']['python']    
-    message: "Executing s8_peak_analysis with {threads} threads for comparison {params.test_name}."
+    message: "Executing s8_peak_analysis with {threads} threads for comparison {params.exp_name}-{params.control_name}."
     shell:
         """
         echo "Rule: s8_peak_analysis" >> {log.log}
         echo "Test name: {params.test_name}" >> {log.log}
+        echo "Experimental data: {params.exp_dir}" >> {log.log}
+        echo "Control data: {params.control_dir}" >> {log.log}
+        echo "" >> {log.log}
         echo "Output: peak analysis" >> {log.log}
         echo "dpos output file: {output.dpos_op}" >> {log.log}
         echo "dpeak output file: {output.dpeak_op}" >> {log.log}
         echo "dregion output file: {output.dregion_op}" >> {log.log}
+        echo "" >> {log.log}
 
         echo "[ $(date) ] Load modules" >> {log.log}
         module load {params.module_python}
         module load {params.module_danpos}
 
         echo "[ $(date) ] Create directories" >> {log.log}
-        mkdir -p {params.analysis_dir}
-        mkdir -p {params.danpos_op_dir}
+        mkdir -p {params.step8_dir}
         mkdir -p {params.test_dir}
+        mkdir -p {params.exp_dir}
         mkdir -p {params.control_dir}
         
         echo "[ $(date) ] Copy input files" >> {log.log}
-        echo "DANPOS input directory: {params.test_dir}" >> {log.log}
-        cp {input.test_als} {params.test_dir}
-        cp {params.test_indexes} {params.test_dir}
+        echo "DANPOS input directory: {params.exp_dir}" >> {log.log}
+        cp {input.exp_als} {params.exp_dir}
+        cp {params.exp_indexes} {params.exp_dir}
 
         echo "[ $(date) ] Copy control files" >> {log.log}
         echo "DANPOS control directory: {params.control_dir}" >> {log.log}
         cp {input.control_als} {params.control_dir}
         cp {params.control_indexes} {params.control_dir}
 
+        echo "[ $(date) ] Move to results directory" >> {log.log}
+        echo "Working directory: {params.step8_dir}" >> {log.log}
+
         echo "[ $(date) ] Run danpos dtriple" >> {log.log}
         echo "DANPOS log: {log.danpos}" >> {log.log}
-        CMD="python {params.module_danpos_py} dtriple {params.test_dir}:{params.control_dir} -o {params.danpos_op_dir}"
+        CMD="python {params.module_danpos_py} dtriple {params.exp_name}/:{params.control_name}/ -o {params.test_name}/"
         eval "$CMD" >> {log.danpos} 2>&1
 
         echo "[ $(date) ] Record loaded modules" >> {log.log}
         module list >> {log.log}
         """
+
 
