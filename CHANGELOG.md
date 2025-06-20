@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased] - yyyy-mm-dd
 
+### Added
+
+### Changed
+
+### Fixed
+
+## [0.1.4] - 2025-06-20
+
 Completed full test run. Handing over project.
 
 ### Added
@@ -17,10 +25,12 @@ Completed full test run. Handing over project.
 
 ### Changed
 - Improved logging for all steps.
+- Simplified DANPOS output file names.
 
 ### Fixed
-- DANPOS rule syntax (now calls file `danpos.py` within `/apps/danpos/3.1.1/bin/`,
-although user can specify location for other HPC systems.)
+- DANPOS rule improved
+	- DANPOS rule syntax (now calls file `danpos.py` within repo, although user can specify location for other HPC systems).
+	- Simplified DANPOS output file names
 
 ## [0.1.3] - 2025-06-16
 
