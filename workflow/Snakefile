@@ -35,10 +35,11 @@ rule run_all:
         s6d_GCbias = expand("results/{species}/{step_name}/{sample}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], sample=SAMPLE_IDS),
         s7a_metric = expand("results/{species}/{step_name}/{ref_species}_{sample}_insert_size_metrics.txt", species=config['ref_species'], step_name=config['output_dir']['step7a'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
         s7b_stats  = expand("results/{species}/{step_name}/{ref_species}_{sample}_count.txt", species=config['ref_species'], step_name=config['output_dir']['step7b'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
-        s8_dpos    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.positions.integrative.xls",
-        s8_dpeak   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.peaks.integrative.xls",
-        s8_dregion = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.regions.integrative.xls"
+        s8_dpos    = expand("results/{species}/{step_name}/{exp_name}-{control_name}/{exp_name}-{control_name}.positions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], exp_name=config['peak_analysis']['exp_name'], control_name=config['peak_analysis']['control_name']),
+        s8_dpeak   = expand("results/{species}/{step_name}/{exp_name}-{control_name}/{exp_name}-{control_name}.peaks.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], exp_name=config['peak_analysis']['exp_name'], control_name=config['peak_analysis']['control_name']),
+        s8_dregion = expand("results/{species}/{step_name}/{exp_name}-{control_name}/{exp_name}-{control_name}.regions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], exp_name=config['peak_analysis']['exp_name'], control_name=config['peak_analysis']['control_name'])
     
+
 # --- Pipeline steps --- #
 ## Step 0: Read collation (SLURM_MergeSamples.sh)
 rule s0_merge_samples:
