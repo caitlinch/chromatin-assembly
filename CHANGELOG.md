@@ -13,14 +13,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+## [0.1.4] - 2025-06-20
+
+Completed full test run. Handing over project.
+
+### Added
+- Handover document `HANDOVER.md`
+- Overview of all rules (including programs used and commands) in 
+`doco/05_rule_overview.Rmd`.
+- Version of DANPOS3 with typos in function names corrected - see `software/danpos3.md` for details.
+
+### Changed
+- Improved logging for all steps.
+- Simplified DANPOS output file names.
+
+### Fixed
+- DANPOS rule improved
+	- DANPOS rule syntax (now calls file `danpos.py` within repo, although user can specify location for other HPC systems).
+	- Simplified DANPOS output file names
+
 ## [0.1.3] - 2025-06-16
 
-Updating Step 5 memory requirements for large datasets.
+Fixing threads and memory requirements.
 
 ### Fixed
 - Memory requirements for large datasets (e.g., mouse control test data)
 for Step 5 - Deduplication with Picard
 - Resources required and jobscript for for Step 5 - Deduplication with Picard
+
+### Added
+- Benchmarking (computational resources) for all steps
 
 ## [0.1.2] - 2025-06-13
 

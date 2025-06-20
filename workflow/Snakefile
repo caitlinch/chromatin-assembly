@@ -35,10 +35,10 @@ rule run_all:
         s6d_GCbias = expand("results/{species}/{step_name}/{sample}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], sample=SAMPLE_IDS),
         s7a_metric = expand("results/{species}/{step_name}/{ref_species}_{sample}_insert_size_metrics.txt", species=config['ref_species'], step_name=config['output_dir']['step7a'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
         s7b_stats  = expand("results/{species}/{step_name}/{ref_species}_{sample}_count.txt", species=config['ref_species'], step_name=config['output_dir']['step7b'], ref_species=config['ref_species'], sample=SAMPLE_IDS),
-        s8_dpos    = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.positions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name']),
-        s8_dpeak   = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.peaks.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name']),
-        s8_dregion = expand("results/{species}/{step_name}/{test_name}/dtriple/test-control.regions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], test_name=config['peak_analysis']['test_name'])
-
+        s8_dpos    = expand("results/{species}/{step_name}/{exp_name}-{control_name}/{exp_name}-{control_name}.positions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], exp_name=config['peak_analysis']['exp_name'], control_name=config['peak_analysis']['control_name']),
+        s8_dpeak   = expand("results/{species}/{step_name}/{exp_name}-{control_name}/{exp_name}-{control_name}.peaks.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], exp_name=config['peak_analysis']['exp_name'], control_name=config['peak_analysis']['control_name']),
+        s8_dregion = expand("results/{species}/{step_name}/{exp_name}-{control_name}/{exp_name}-{control_name}.regions.integrative.xls", species=config['ref_species'], step_name=config['output_dir']['step8'], exp_name=config['peak_analysis']['exp_name'], control_name=config['peak_analysis']['control_name'])
+    
 
 # --- Pipeline steps --- #
 ## Step 0: Read collation (SLURM_MergeSamples.sh)
@@ -62,18 +62,18 @@ rule s0_merge_samples:
     message: "Executing s0_merge_samples with {threads} threads for species {params.ref_species}."
     shell:
         """
-        # s0_merge_samples
-        # Delete existing samples file (if present)
+        echo "Rule: s0_merge_samples" >> {log}
+
+        echo "[ $(date) ] Check input samples" >> {log}
         if test -f {params.samples_file}; then 
             rm {params.samples_file}
         fi
-
-        # Write input samples to file
         for s in {params.samples}; do
             echo "$s" >> {params.samples_file}
         done
 
         ## Usage:sh S0_MergeSamples.sh species_name samples_file use_merge_dict dict_file reads_dir output_dir log_dir
+        echo "[ $(date) ] Call script S0_MergeSamples.sh" >> {log}
         sh workflow/scripts/S0_MergeSamples.sh {params.ref_species} \
             {params.samples_file} \
             {params.use_merge_dict} {params.dict_file} \
@@ -93,8 +93,9 @@ rule s1_mask_repeats:
         index = f"{config['repo_dir']}results/{config['ref_species']}/{config['output_dir']['step1']}/{config['reference_genome_id']}.masked.index"
     threads: 20
     log: 
-        rm_log       = f"{config['repo_dir']}logs/s1_mask_repeats.RepeatMasker.{config['ref_species']}.log",
-        ngskit4b_log = f"{config['repo_dir']}logs/s1_mask_repeats.ngskit4b.{config['ref_species']}.log"
+        log          = f"{config['repo_dir']}logs/s1_mask_repeats.{config['ref_species']}.log",
+        rm_log       = f"{config['repo_dir']}logs/s1_mask_repeats.{config['ref_species']}.RepeatMasker.log",
+        ngskit4b_log = f"{config['repo_dir']}logs/s1_mask_repeats.{config['ref_species']}.ngskit4b.log"
     benchmark: f"benchmarks/s1_mask_repeats.{config['ref_species']}.benchmark.txt"
     params:
         outdir              = lambda w, output: os.path.split(output.masked)[0],
@@ -107,12 +108,18 @@ rule s1_mask_repeats:
     message: "Executing s1_mask_repeats with {threads} threads for file {input.ref_genome}."
     shell:
         """
-        # s1_mask_repeats
+        echo "Rule: s1_mask_repeats" >> {log.log}
+
+        echo "[ $(date) ] Load modules" >> {log.log}
         module load {params.module_repeatmasker}
         module load {params.module_kit4b}
+
+        echo "[ $(date) ] Create directories" >> {log.log}
         mkdir -p {params.outdir}
         cd {params.outdir}
 
+        echo "[ $(date) ] Call RepeatMasker" >> {log.log}
+        echo "RepeatMasker log: {log.rm_log}
         RepeatMasker -pa {threads} \
             -dir {params.outdir} \
             -qq -lib {params.adapter} \
@@ -120,9 +127,12 @@ rule s1_mask_repeats:
             {params.repeatmasker_engine} \
             >> {log.rm_log} 2>&1
 
-        # Copy and rename RepeatMasker output with human-readable name
+        echo "[ $(date) ] Rename RepeatMasker output" >> {log.log}
+        echo "New file name: {output.masked}" >> {log.log}
         mv {params.ref_genome_basename}.masked {output.masked}
 
+        echo "[ $(date) ] Call ngskit4b index" >> {log.log}
+        echo "ngskit4b log: {log.ngskit4b_log}
         ngskit4b index \
             -i {output.masked} \
             -o {output.index} \
@@ -130,8 +140,8 @@ rule s1_mask_repeats:
             -T {threads} \
             -F {log.ngskit4b_log} 
 
-        module list >> {log.rm_log}
-        module list >> {log.ngskit4b_log}
+        echo "[ $(date) ] Record loaded modules" >> {log.log}
+        module list >> {log.log}
         """
 
 ## Step 2: Perform quality control using FastQC (slurm_fastqc.sh)
@@ -151,12 +161,22 @@ rule s2_raw_read_QC:
     message: "Executing s2_raw_read_QC with {threads} threads for sample {wildcards.sample}."
     shell:
         """
-        # s2_raw_read_QC
+        echo "Rule: s2_raw_read_QC" >> {log}
+        echo "Sample: {wildcards.sample}" >> {log}
+        echo "Output: quality control checks" >> {log}
+        echo "Output R1 html file: {output.r1}" >> {log}
+        echo "Output R2 html file: {output.r2}" >> {log}
+
+        echo "[ $(date) ] Load modules" >> {log}
         module load {params.module_fastqc}
+
+        echo "[ $(date) ] Create directories" >> {log}
         mkdir -p {params.outdir}
 
+        echo "[ $(date) ] Call fastqc" >> {log}
         fastqc -t {threads} {input.r1} {input.r2} -o {params.outdir} >> {log} 2>&1
 
+        echo "[ $(date) ] Record loaded modules" >> {log}
         module list >> {log}
         """
 
@@ -182,20 +202,32 @@ rule s3_extract_UMI:
     message: "Executing s3_extract_UMI with {threads} threads for sample {wildcards.sample}."
     shell:
         """
-        # s3_extract_UMI
+        echo "Rule: s3_extract_UMI" >> {log}
+        echo "Sample: {wildcards.sample}" >> {log}
+        echo "Output: unique molecular indexes from reads in a BAM file" >> {log}
+        echo "Output R1 file: {output.r1}" >> {log}
+        echo "Output R2 file: {output.r2}" >> {log}
+        
+        echo "[ $(date) ] Load modules" >> {log}
         module load {params.module_picard}
         module load {params.module_fgbio}
+
+        echo "[ $(date) ] Create directories" >> {log}
         mkdir -p {params.outdir}
 
+        echo "[ $(date) ] Call picard FastqToSam" >> {log}
         CMD1="java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam -F1 {input.r1} -F2 {input.r2} -O {params.unmapped_bam} -SM {params.basename}"
         eval $CMD1 >> {log} 2>&1
 
+        echo "[ $(date) ] Call fgbio ExtractUmisFromBam" >> {log}
         CMD2="java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam -i {params.unmapped_bam} -o {params.unmapped_bam_withUMI} {params.fgbio_params}"
         eval $CMD2 >> {log} 2>&1
 
+        echo "[ $(date) ] Call picard SamToFastq" >> {log}
         CMD3="java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq -I {params.unmapped_bam_withUMI} -F {output.r1} -F2 {output.r2}" 
         eval $CMD3 >> {log} 2>&1
 
+        echo "[ $(date) ] Record loaded modules" >> {log}
         module list >> {log}
         """
 
@@ -217,12 +249,21 @@ rule s4_read_alignment:
     message: "Executing s4_read_alignment with {threads} threads for sample {wildcards.sample}."
     shell:
         """
-        # s4_read_alignment
+        echo "Rule: s4_read_alignment" >> {log}
+        echo "Sample: {wildcards.sample}" >> {log}
+        echo "Output: alignment" >> {log}
+        echo "Output file: {output.alignment}" >> {log}
+
+        echo "[ $(date) ] Load modules" >> {log}
         module load {params.module_kit4b}
+
+        echo "[ $(date) ] Create directories" >> {log}
         mkdir -p {params.outdir}
 
+        echo "[ $(date) ] Call ngskit4b kalign" >> {log}
         ngskit4b kalign {params.kalign_params} -i {input.r1} -u {input.r2} -I {input.index} -o {output.alignment} -T {threads} -F {log}
         
+        echo "[ $(date) ] Record loaded modules" >> {log}
         module list >> {log}
         """
 
@@ -244,13 +285,22 @@ rule s5_alignment_deduplication:
     message: "Executing s5_alignment_deduplication with {threads} threads for sample {wildcards.sample}."
     shell:
         """
-        # s5_alignment_deduplication
+        echo "Rule: s5_alignment_deduplication" >> {log}
+        echo "Sample: {wildcards.sample}" >> {log}
+        echo "Output: de-duplicated alignment" >> {log}
+        echo "Output file: {output.dedup_alignment}" >> {log}
+
+        echo "[ $(date) ] Load modules" >> {log}
         module load {params.module_picard}
+
+        echo "[ $(date) ] Create directories" >> {log}
         mkdir -p {params.outdir}
 
+        echo "[ $(date) ] Call picard MarkDuplicates" >> {log}
         CMD="java -Xmx{params.java_mem}g -jar $PICARD_HOME/picard.jar MarkDuplicates --INPUT {input.alignment} --OUTPUT {output.dedup_alignment} --METRICS_FILE {params.metrics} {params.picard_params}"
         eval $CMD >> {log} 2>&1
  
+        echo "[ $(date) ] Record loaded modules" >> {log}
         module list >> {log}
         """
 
@@ -261,21 +311,28 @@ rule s6a_two_bit_genome:
     output:
         twobit_genome = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_alignment_dedup.2bit"
     threads: 2
-    log: f"logs/s6a_two_bit_genome.{config['ref_species']}.log"
     benchmark: f"benchmarks/s6a_two_bit_genome.{config['ref_species']}.benchmark.txt"
+    log: f"logs/s6a_two_bit_genome.{config['ref_species']}.log"
     params:
-        outdir            = lambda w, output: os.path.split(output.twobit_genome)[0],
-        info              = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_info.tab"
+        outdir = lambda w, output: os.path.split(output.twobit_genome)[0],
+        info   = f"results/{config['ref_species']}/{config['output_dir']['step6a']}/{config['reference_genome_id']}_info.tab"
     conda:
         "envs/Step6.yaml"
     message: "Executing s6a_two_bit_genome with {threads} threads for file {input.masked_ref_genome}."
     shell:
         """
-        # s6a_two_bit_genome
+        echo "Rule: s6a_two_bit_genome" >> {log}
+        echo "Output: two-bit genome" >> {log}
+        echo "Output file: {output.twobit_genome}" >> {log}
+
+        echo "[ $(date) ] Create directories" >> {log}
         mkdir -p {params.outdir}
 
-        faToTwoBit {input.masked_ref_genome} {output.twobit_genome} >> {log} 2>&1
-        twoBitInfo {output.twobit_genome} {params.info} >> {log} 2>&1
+        echo "[ $(date) ] Call faToTwoBit" >> {log}
+        faToTwoBit {input.masked_ref_genome} {output.twobit_genome}
+
+        echo "[ $(date) ] Call twoBitInfo" >> {log}
+        twoBitInfo {output.twobit_genome} {params.info}
         """
 
 ## Step 6b:  Calculate effective genome size with faCount
@@ -286,6 +343,7 @@ rule s6b_effective_genome_size:
         eff_gen_size = f"results/{config['ref_species']}/{config['output_dir']['step6b']}/{config['reference_genome_id']}_effGenSize.txt"
     threads: 2
     benchmark: f"benchmarks/s6b_effective_genome_size.{config['ref_species']}.benchmark.txt"
+    log: f"logs/s6b_effective_genome_size.{config['ref_species']}.log"
     params:
         outdir = lambda w, output: os.path.split(output.eff_gen_size)[0]
     conda:
@@ -293,9 +351,14 @@ rule s6b_effective_genome_size:
     message: "Executing s6b_effective_genome_size with {threads} threads for file {input.masked_ref_genome}."
     shell:
         """
-        # s6b_effective_genome_size
+        echo "Rule: s6b_effective_genome_size" >> {log}
+        echo "Output: base statistics" >> {log}
+        echo "Output file: {output.eff_gen_size}" >> {log}
+
+        echo "[ $(date) ] Create directories" >> {log}
         mkdir -p {params.outdir}
 
+        echo "[ $(date) ] Call faCount" >> {log}
         faCount {input.masked_ref_genome} > {output.eff_gen_size}
         """
 
@@ -319,14 +382,25 @@ rule s6c_compute_GC_bias:
     message: "Executing s6c_compute_GC_bias with {threads} threads for sample {wildcards.sample}."
     shell:
         """
-        # s6c_compute_GC_bias
+        echo "Rule: s6c_compute_GC_bias" >> {log}
+        echo "Sample: {wildcards.sample}" >> {log}
+        echo "Output: GC profile" >> {log}
+        echo "Output file: {output.freq_file}" >> {log}
+
+        echo "[ $(date) ] Load modules" >> {log}
         module load {params.module_python}
         module load {params.module_samtools}
-        mkdir -p {params.outdir}
 
+        echo "[ $(date) ] Create directories" >> {log}
+        mkdir -p {params.outdir}
+        
+        echo "[ $(date) ] Call samtools index" >> {log}
         samtools index {input.dedup_alignment} >> {log} 2>&1
+
+        echo "[ $(date) ]  Call computeGCBias" >> {log}
         computeGCBias -b {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} -g {input.twobit_genome} --GCbiasFrequenciesFile {output.freq_file} -p {threads} >> {log} 2>&1
         
+        echo "[ $(date) ] Record loaded modules" >> {log}
         module list >> {log}
         """
 
@@ -350,14 +424,25 @@ rule s6d_correct_GC_bias:
     message: "Executing s6d_correct_GC_bias with {threads} threads for sample {wildcards.sample}."
     shell:
         """
-        # s6d_correct_GC_bias
+        echo "Rule: s6d_correct_GC_bias" >> {log}
+        echo "Sample: {wildcards.sample}" >> {log}
+        echo "Output: GC-corrected alignment" >> {log}
+        echo "Output file: {output.gc_corrected}" >> {log}
+
+        echo "[ $(date) ] Load modules" >> {log}
         module load {params.module_python}
         module load {params.module_samtools}
+
+        echo "[ $(date) ] Create directories" >> {log}
         mkdir -p {params.outdir}
 
+        echo "[ $(date) ] Call correctGCBias_kalign" >> {log}
         correctGCBias_kalign --bamfile {input.dedup_alignment} --effectiveGenomeSize {params.eff_gen_size} --genome {input.twobit_genome} --GCbiasFrequenciesFile {input.freq_file} -o {output.gc_corrected} -p {threads} >> {log} 2>&1
+        
+        echo "[ $(date) ] Call samtools index" >> {log}
         samtools index {output.gc_corrected} >> {log} 2>&1
 
+        echo "[ $(date) ] Record loaded modules" >> {log}
         module list >> {log}
         """
 
@@ -378,14 +463,24 @@ rule s7a_size_metrics:
     message: "Executing s7a_size_metrics with {threads} threads for sample {wildcards.sample}."
     shell:
         """
-        # s7a_size_metrics
+        echo "Rule: s7a_size_metrics" >> {log}
+        echo "Sample: {wildcards.sample}" >> {log}
+        echo "Output: insert size metrics" >> {log}
+        echo "Output file: {output.size_metrics}" >> {log}
+        echo "Output plot: {output.histogram}" >> {log}
+
+        echo "[ $(date) ] Load modules" >> {log}
         module load {params.module_picard}
         module load {params.module_R}
+
+        echo "[ $(date) ] Create directories" >> {log}
         mkdir -p {params.outdir}
 
+        echo "[ $(date) ] Call picard CollectInsertSizeMetrics" >> {log}
         CMD="java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics -I {input.gc_corrected} -O {output.size_metrics} -H {output.histogram}"
         eval "$CMD" >> {log} 2>&1
 
+        echo "[ $(date) ] Record loaded modules" >> {log}
         module list >> {log}
         """
 
@@ -404,13 +499,22 @@ rule s7b_read_count:
     message: "Executing s7b_read_count with {threads} threads for sample {wildcards.sample}."
     shell:
         """
-        # s7b_read_count
+        echo "Rule: s7b_read_count" >> {log}
+        echo "Sample: {wildcards.sample}" >> {log}
+        echo "Output: read count" >> {log}
+        echo "Output file: {output.read_count}" >> {log}
+
+        echo "[ $(date) ] Load modules" >> {log}
         module load {params.module_samtools}
+
+        echo "[ $(date) ] Create directories" >> {log}
         mkdir -p {params.outdir}
 
+        echo "[ $(date) ] Call samtools view" >> {log}
         CMD="samtools view -c {input.gc_corrected} -o {output.read_count}"
         eval "$CMD" >> {log} 2>&1
 
+        echo "[ $(date) ] Record loaded modules" >> {log}
         module list >> {log}
         """
 
@@ -418,46 +522,74 @@ rule s7b_read_count:
 # Original Slurm script: slurm_dtriple_1_vs_27-29.sh
 rule s8_peak_analysis:
     input:
-        test_als    = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
+        exp_als     = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
         control_als = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids'])
     output:
-        dpos_op    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.positions.integrative.xls",
-        dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.peaks.integrative.xls",
-        dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/dtriple/test-control.regions.integrative.xls"
+        dpos_op    = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.positions.integrative.xls",
+        dpeak_op   = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.peaks.integrative.xls",
+        dregion_op = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}/{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.regions.integrative.xls"
     threads: 10
-    log: f"logs/s8_peak_analysis.{config['peak_analysis']['test_name']}.log"
-    benchmark: f"benchmarks/s8_peak_analysis.{config['peak_analysis']['test_name']}.benchmark.txt"
+    log: 
+        log    = f"{config['repo_dir']}logs/s8_peak_analysis.{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.log",
+        danpos = f"{config['repo_dir']}logs/s8_peak_analysis.{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.danpos.log"
+    benchmark: f"benchmarks/s8_peak_analysis.{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}.benchmark.txt"
     params:
-        test_name       = config['peak_analysis']['test_name'],
-        test_indexes    = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
-        control_indexes = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids']),
-        analysis_dir    = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
-        danpos_op_dir   = lambda w, output: os.path.split(output.dpos_op)[0],
-        test_dir        = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/test/",
-        control_dir     = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['test_name']}/control/",
-        module_danpos   = config['modules']['danpos'],
-        module_python   = config['modules']['python']    
-    message: "Executing s8_peak_analysis with {threads} threads for comparison {params.test_name}."
+        exp_name         = config['peak_analysis']['exp_name'],
+        exp_dir          = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['exp_name']}/",
+        exp_indexes      = expand("results/{species}/{step_name}/{exp_samples}_alignment_dedup_gcCorrected.bam.bai", species=config['ref_species'], step_name=config['output_dir']['step6d'], exp_samples=config['peak_analysis']['exp_ids']),
+        control_name     = config['peak_analysis']['control_name'],
+        control_dir      = f"results/{config['ref_species']}/{config['output_dir']['step8']}/{config['peak_analysis']['control_name']}/",
+        control_indexes  = expand("results/{species}/{step_name}/{control_samples}_alignment_dedup_gcCorrected.bam.bai", species=config['ref_species'], step_name=config['output_dir']['step6d'], control_samples=config['peak_analysis']['control_ids']),
+        test_name        = f"{config['peak_analysis']['exp_name']}-{config['peak_analysis']['control_name']}",
+        test_dir         = lambda w, output: os.path.split(output.dpos_op)[0],
+        step8_dir        = lambda w, output: os.path.split(os.path.split(output.dpos_op)[0])[0], 
+        module_danpos    = config['modules']['danpos'],
+        module_danpos_py = f"{config['repo_dir']}software/danpos_3.1.1/danpos.py",
+        module_python    = config['modules']['python']    
+    message: "Executing s8_peak_analysis with {threads} threads for comparison {params.exp_name}-{params.control_name}."
     shell:
         """
-        # s8_peak_analysis
+        echo "Rule: s8_peak_analysis" >> {log.log}
+        echo "Test name: {params.test_name}" >> {log.log}
+        echo "Experimental data: {params.exp_dir}" >> {log.log}
+        echo "Control data: {params.control_dir}" >> {log.log}
+        echo "" >> {log.log}
+        echo "Output: peak analysis" >> {log.log}
+        echo "dpos output file: {output.dpos_op}" >> {log.log}
+        echo "dpeak output file: {output.dpeak_op}" >> {log.log}
+        echo "dregion output file: {output.dregion_op}" >> {log.log}
+        echo "" >> {log.log}
+
+        echo "[ $(date) ] Load modules" >> {log.log}
         module load {params.module_python}
         module load {params.module_danpos}
 
-        mkdir -p {params.analysis_dir}
-        mkdir -p {params.danpos_op_dir}
+        echo "[ $(date) ] Create directories" >> {log.log}
+        mkdir -p {params.step8_dir}
         mkdir -p {params.test_dir}
+        mkdir -p {params.exp_dir}
         mkdir -p {params.control_dir}
         
-        cp {input.test_als} {params.test_dir}
-        cp {params.test_indexes} {params.test_dir}
+        echo "[ $(date) ] Copy input files" >> {log.log}
+        echo "DANPOS input directory: {params.exp_dir}" >> {log.log}
+        cp {input.exp_als} {params.exp_dir}
+        cp {params.exp_indexes} {params.exp_dir}
 
+        echo "[ $(date) ] Copy control files" >> {log.log}
+        echo "DANPOS control directory: {params.control_dir}" >> {log.log}
         cp {input.control_als} {params.control_dir}
         cp {params.control_indexes} {params.control_dir}
 
-        CMD="python danpos.py dtriple {params.test_dir}:{params.control_dir} -o {params.danpos_op_dir}"
-        eval "$CMD" >> {log} 2>&1
+        echo "[ $(date) ] Move to results directory" >> {log.log}
+        echo "Working directory: {params.step8_dir}" >> {log.log}
 
-        module list >> {log}
+        echo "[ $(date) ] Run danpos dtriple" >> {log.log}
+        echo "DANPOS log: {log.danpos}" >> {log.log}
+        CMD="python {params.module_danpos_py} dtriple {params.exp_name}/:{params.control_name}/ -o {params.test_name}/"
+        eval "$CMD" >> {log.danpos} 2>&1
+
+        echo "[ $(date) ] Record loaded modules" >> {log.log}
+        module list >> {log.log}
         """
+
 

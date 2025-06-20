@@ -65,7 +65,7 @@ set-resources:
   - s7b_read_count:mem_mb=6000
   - s7b_read_count:nodes=1
   - s7b_read_count:cpus_per_task=2
-  - s8_peak_analysis:runtime=400h
+  - s8_peak_analysis:runtime=100h
   - s8_peak_analysis:mem_mb=48000
   - s8_peak_analysis:nodes=1
   - s8_peak_analysis:cpus_per_task=10

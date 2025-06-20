@@ -1,0 +1,275 @@
+---
+title: "Rule overview"
+author: "Caitlin Cherryh"
+date: "2025-06-18"
+output: html_document
+---
+
+## Pipeline steps
+
+- `s0_merge_samples`: Read collation (**Step 0**)
+- `s1_mask_repeats`: Repeat masking and suffix array creation (**Step 1**)
+- `s2_raw_read_QC`: Perform quality control using FastQC (**Step 2**)
+- `s3_extract_UMI`: UMI extraction with FGBio and Picard (**Step 3**)
+- `s4_read_alignment`: Align reads with kalign (**Step 4**)
+- `s5_alignment_deduplication`: Remove PCR and optical duplicates from alignment with Picard (**Step 5**)
+- `s6a_two_bit_genome`: Generate 2Bit genome with faToTwoBit (**Step 6a**)
+- `s6b_effective_genome_size`: Calculate effective genome size with faCount (**Step 6b**)
+- `s6c_compute_GC_bias`: Compute GC bias with deeptools (**Step 6c**)
+- `s6d_correct_GC_bias`: Correct GC bias with deeptools (**Step 6d**)
+- `s7a_size_metrics`: Calculate alignment statistics with Picard (**Step 7a**)
+- `s7b_read_count`: Estimate mean nuclear genome coverage (**Step 7b**)
+- `s8_peak_analysis`: Peak analysis using DANPOS3 (**Step 8**)
+
+
+## Individual steps
+
+-----
+
+#### Step 0: Read collation
+
+- Rule name: `s0_merge_samples` 
+- Programs: BASH
+- Scripts: `workflow/scripts/S0_MergeSamples.sh`
+
+```
+sh workflow/scripts/S0_MergeSamples.sh \
+  {species_name} {sample_name.txt} \
+  {use_merge_dict} {dict_file.txt} \
+  {reads_dir} {output_dir} \
+  {log_dir}
+```
+
+-----
+
+#### Step 1: Repeat masking and suffix array creation
+
+- Rule name: `s1_mask_repeats`
+- Programs: RepeatMasker, ngskit4b
+
+**RepeatMasker**:
+```
+RepeatMasker -pa {threads} \
+    -dir {outdir} \
+    -qq -lib {adapter.fa} \
+    {ref_genome.fa} \
+    {repeatmasker_engine} \
+    >> {repeatmasker_log.log} 2>&1
+```
+
+Recommended:
+
+- `{repeatmasker_engine}`: `-engine rmblast`
+
+**ngskit4b index**:
+```
+ngskit4b index \
+    -i {masked_ref_genome.fa} \
+    -o {masked_ref_genome.index} \
+    -r '{species_name}' \
+    -T {threads} \
+    -F {ngskit4b_log.log} 
+```
+
+-----
+
+#### Step 2: Perform quality control
+
+- Rule name: `s2_raw_read_QC`
+- Programs: FastQC
+
+**fastqc**:
+```
+fastqc -t {threads} {r1.fasta.qz} {r2.fasta.qz} -o {outdir/} >> {log.log} 2>&1
+```
+
+-----
+
+#### Step 3: UMI extraction
+
+- Rule name: `s3_extract_UMI`
+- Programs: Picard, FGBio
+
+**picard FastqToSam**:
+```
+java -Xmx4g -jar $PICARD_HOME/picard.jar FastqToSam \
+  -F1 {r1.fastq.gz} -F2 {r1.fastq.gz} \
+  -O {unmapped.bam} -SM {sample_name}
+```
+
+**fgbio ExtractUmisFromBam**:
+```
+java -Xmx4g -jar $FGBIO_HOME/fgbio-2.0.2.jar ExtractUmisFromBam \
+  -i {unmapped.bam} \
+  -o {unmapped_withUMI.bam} \
+  {fgbio_params}
+```
+
+Recommended:
+
+- `{fgbio_params}`: `-r 8M143T 8M143T -t ZA ZB -s RX`
+
+**picard SamToFastq**:
+```
+java -Xmx4g -jar $PICARD_HOME/picard.jar SamToFastq \
+  -I {params.unmapped_bam_withUMI} \
+  -F {umi_r1.fastq.gz} -F2 {umi_r2.fastq.gz}" 
+```
+
+-----
+
+#### Step 4: Align reads
+
+- Rule name: `s4_read_alignment`
+- Programs: ngskit4b
+
+**ngskit4b kalign**:
+```
+ngskit4b kalign \
+  {kalign_params} \
+  -i {umi_r1.fastq.gz} -u {umi_r2.fastq.gz} \
+  -I {masked_ref_genome.index} \
+  -o {alignment.sam} \
+  -T {threads} -F {log.log}
+```
+
+Recommended:
+
+- `{kalign_params}`: `-c25 -l25 -d50 -U4`
+
+-----
+
+#### Step 5: Remove PCR and optical duplicates
+
+- Rule name: `s5_alignment_deduplication`
+- Programs: Picard
+
+**picard MarkDuplicates**:
+
+```
+java -Xmx{java_mem}g -jar $PICARD_HOME/picard.jar MarkDuplicates \
+  --INPUT {alignment.sam} \
+  --OUTPUT {dedup_alignment.bam} \
+  --METRICS_FILE {metrics.txt} \
+  {picard_params}
+```
+
+Recommended:
+
+- `{java_mem}`: `20`
+- `{picard_params}`: `--REMOVE_DUPLICATES TRUE --BARCODE_TAG RX`
+
+-----
+
+#### Step 6a: Generate 2Bit genome
+
+- Rule name: `s6a_two_bit_genome`
+- Programs: faToTwoBit, twoBitInfo
+
+**faToTwoBit**:
+```
+faToTwoBit {masked_ref_genome.fa} {twobit_genome.2bit}
+```
+
+**twoBitInfo**:
+```
+twoBitInfo {twobit_genome.2bit} {info.txt}
+```
+
+-----
+
+#### Step 6b: Calculate effective genome size
+
+- Rule name: `s6b_effective_genome_size`
+- Programs: faCount
+
+**faCount**:
+```
+faCount {masked_ref_genome.fa} > {eff_gen_size.txt}
+```
+
+-----
+
+#### Step 6c: Compute GC bias 
+
+- Rule name: `s6c_compute_GC_bias`
+- Programs: Samtools, Deeptools
+
+**samtools index**:
+```
+samtools index {dedup_alignment.bam} >> {log.log} 2>&1
+```
+
+**computeGCBias**:
+```
+computeGCBias \
+  -b {dedup_alignment.bam} \
+  --effectiveGenomeSize {eff_gen_size} \
+  -g {twobit_genome.2bit} \
+  --GCbiasFrequenciesFile {freq_file.txt} \
+  -p {threads} >> {log.log} 2>&1
+```
+
+-----
+
+#### Step 6d: Correct GC bias
+
+- Rule name: `s6d_correct_GC_bias`
+- Programs: Samtools, Deeptools
+
+**correctGCBias_kalign**:
+```
+correctGCBias_kalign \
+  --bamfile {dedup_alignment.bam} \
+  --effectiveGenomeSize {eff_gen_size} \
+  --genome {twobit_genome.2bit} \
+  --GCbiasFrequenciesFile {freq_file.txt} \
+  -o {gc_corrected_alignment.bam} \
+  -p {threads} >> {log.log} 2>&1
+```
+
+**samtools index**:
+```
+samtools index {gc_corrected_alignment.bam} >> {log.log} 2>&1
+```
+
+-----
+
+#### Step 7a: Calculate alignment statistics
+
+- Rule name: `s7a_size_metrics`
+- Programs: Picard
+
+**picard CollectInsertSizeMetrics**:
+```
+java -Xmx4g -jar $PICARD_HOME/picard.jar CollectInsertSizeMetrics \
+  -I {gc_corrected_alignment.bam} \
+  -O {output_size_metrics.txt} \
+  -H {output_histogram.pdf}
+```
+
+-----
+
+#### Step 7b: Estimate mean nuclear genome coverage
+
+- Rule name: `s7b_read_count`
+- Programs: Samtools
+
+**samtools view**:
+```
+samtools view -c {gc_corrected_alignment.bam} -o {read_count.txt}
+```
+
+-----
+
+#### Step 8: Peak analysis
+
+- Rule name: `s8_peak_analysis`
+- Programs: DANPOS3
+
+**danpos dtriple**:
+```
+python danpos.py dtriple {test_dir}:{control_dir} -o {out_dir}
+```
+
+-----
