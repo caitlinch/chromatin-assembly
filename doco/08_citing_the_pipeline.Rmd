@@ -5,12 +5,9 @@ date: "2025-06-12"
 output: html_document
 ---
 
-TODO DOCO add citation
-
 If you use this pipeline, please cite it:
 
-`{Authors here}` 2025. Chromatin assembly pipeline. GitHub 
-repository. https://github.com/caitlinch/chromatin-assembly
+Caitlin Cherryh, Kate O'Hara, Jiri Stiller, Erin Hahn 2026. Chromatin assembly pipeline. GitHub repository. https://github.com/caitlinch/chromatin-assembly
 
 ---------
 
