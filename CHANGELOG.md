@@ -5,13 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased] - yyyy-mm-dd
-
-### Added
+## [1.0.0] - 2026-05-01
+Iterating to version 1.0.0 for publishing manuscript.
 
 ### Changed
+- Citation updated
+- All `HANDOVER.md` comments resolved
 
-### Fixed
 
 ## [0.1.4] - 2025-06-20
 
