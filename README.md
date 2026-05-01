@@ -1,6 +1,6 @@
 # chromatin-assembly
 
-TODO DOCO Put citation here
+Caitlin Cherryh, Kate O'Hara, Jiri Stiller, Erin Hahn 2026. Chromatin assembly pipeline. Version 1.0.0. GitHub repository. https://github.com/caitlinch/chromatin-assembly
 
 ---
 
