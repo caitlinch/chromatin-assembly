@@ -19,9 +19,6 @@ data e.g., `data/{species}/`, where `{species}` is the name of your species.
 Reads can (but do not have to be) placed in the `data/{species}/reads/` directory of the
 `chromatin-assembly` repository.
 
-### Selecting reads
-TODO DOCO complete section on choice of reads
-
 ### Read filenames
 The Snakemake pipeline assumes that the file path for the reads fits the 
 pattern: 
@@ -100,13 +97,9 @@ For sample IDs `R31500_22W5TWLT3` and `R31500_22W5V5LT3`
 The reference genome can (but does not have to be) placed in the 
 `data/{species}/reference_genome/` directory of the `chromatin-assembly` repository.
 
-TODO DOCO complete section on choice of reference genome, including necessary file format
-
 ## iii. DANPOS input control
 The input control reads are placed in the same directory as the reads, usually
 the `data/{species}/reads/` directory of the `chromatin-assembly` repository.
-
-TODO DOCO complete section on choice of input control for DANPOS
 
 ## iv. Config file
 The path to the config file is `config/chromatin_assembly_config.yml`. You should
